@@ -3236,6 +3236,8 @@ def _build_cli_parser():
     build_memory_parser(subparsers, cmd_memory=cmd_memory)
     build_tools_parser(subparsers, cmd_tools=cmd_tools)
     build_computer_use_parser(subparsers)
+    from hermes_cli.subcommands.context_broker import build_context_broker_parser
+    build_context_broker_parser(subparsers)
     build_mcp_parser(subparsers, cmd_mcp=cmd_mcp)
     build_sessions_parser(subparsers, cmd_sessions=_cmd_sessions_lazy)
     build_insights_parser(subparsers, cmd_insights=cmd_insights)

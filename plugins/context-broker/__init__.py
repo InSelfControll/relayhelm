@@ -134,7 +134,14 @@ def _history_context(ctx, *, user_message=None, platform="", **_kwargs):
 
 def _command(ctx, raw_args):
     if raw_args.strip() not in {"index", "status"}:
-        return "Usage: /context-broker index | status. Index asks you to choose Index or No index."
+        return (
+            "Context Broker commands:\n"
+            "/context-broker status — show the configured project and broker state\n"
+            "/context-broker index — choose Index or No index; both read relevant history\n"
+            "Terminal: relayhelm context-broker --help\n"
+            "Start the shared service: relayhelm context-broker serve\n"
+            "Standalone CLI: context-broker --help"
+        )
     try:
         runtime = _runtime(ctx, tool="configure_history_indexing" if raw_args.strip() == "index" else "lookup_project_history")
         if runtime is None:

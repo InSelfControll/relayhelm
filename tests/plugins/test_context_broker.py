@@ -93,3 +93,11 @@ def test_index_choice_uses_native_elicitation_and_failures_remain_failed(broker)
     before = len(calls)
     result = manager.invoke_hook("pre_llm_call", user_message="database pool exhausted")[0]
     assert result["status"] == "failed" and len(calls) == before
+
+
+def test_command_help_is_available_without_mcp_calls(broker):
+    manager, _, _, _, calls, _ = broker
+    command = manager._plugin_commands["context-broker"]["handler"]
+    assert "relayhelm context-broker --help" in command("")
+    assert "No index" in command("help")
+    assert calls == []
