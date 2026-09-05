@@ -28,6 +28,10 @@ def cmd_context_broker(args) -> int:
         command += ["--project-root", args.project_root]
         if args.broker_command == "integration-config":
             command += ["--host", args.host]
+            if args.print_only:
+                command += ["--print"]
+            if args.config_path:
+                command += ["--config-path", args.config_path]
             if args.runtime_dir:
                 command += ["--runtime-dir", args.runtime_dir]
     try:
@@ -58,7 +62,9 @@ def build_context_broker_parser(subparsers) -> None:
     serve.add_argument("--port", type=int, default=8771)
     connect = commands.add_parser("connect", help="Connect an MCP client for one project")
     connect.add_argument("--project-root", required=True)
-    config = commands.add_parser("integration-config", help="Print native client config")
+    config = commands.add_parser("integration-config", help="Merge Context Broker into native client config")
     config.add_argument("--host", choices=("codex", "hermes", "relayhelm", "cursor", "claude-code"), required=True)
     config.add_argument("--project-root", required=True)
     config.add_argument("--runtime-dir", default="")
+    config.add_argument("--config-path", default="", help="Override target config path")
+    config.add_argument("--print", dest="print_only", action="store_true", help="Preview without writing")
