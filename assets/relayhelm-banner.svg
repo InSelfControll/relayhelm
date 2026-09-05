@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-labelledby="title desc">
+  <title id="title">Relayhelm</title>
+  <desc id="desc">Your models. Your context. Your helm. A gold navigation wheel on a midnight blue background.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1"><stop stop-color="#101d32"/><stop offset="1" stop-color="#070d18"/></linearGradient>
+    <linearGradient id="gold" x2="1" y2="1"><stop stop-color="#ffe1a0"/><stop offset="1" stop-color="#d8a64b"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#e8b963" stop-opacity=".13"/><stop offset="1" stop-color="#e8b963" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0V44" fill="none" stroke="#b6c9e3" stroke-opacity=".045"/></pattern>
+  </defs>
+  <rect width="1280" height="400" rx="22" fill="url(#background)"/>
+  <rect width="1280" height="400" rx="22" fill="url(#grid)"/>
+  <circle cx="224" cy="204" r="260" fill="url(#glow)"/>
+  <path d="M0 345H1280" stroke="#e6bd73" stroke-opacity=".17"/>
+  <g transform="translate(216 184)" fill="none">
+    <circle r="112" stroke="#cfac72" stroke-opacity=".15" stroke-dasharray="2 11"/>
+    <circle r="88" stroke="#cfac72" stroke-opacity=".26"/>
+    <circle r="65" stroke="url(#gold)" stroke-width="7"/>
+    <g stroke="url(#gold)" stroke-width="7" stroke-linecap="round">
+      <path d="M0-89V-26M0 26V89M-89 0H-26M26 0H89"/>
+      <path d="M-63-63L-19-19M19 19L63 63M-63 63L-19 19M19-19L63-63"/>
+    </g>
+    <circle r="25" fill="#101b2d" stroke="url(#gold)" stroke-width="5"/>
+    <path d="M0-16L10 10L0 5L-10 10Z" fill="#f4d08a"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="366" y="107" fill="#dfb86f" font-size="13" font-weight="700" letter-spacing="5">TAKE THE HELM</text>
+    <text x="360" y="199" fill="#f4f7fc" font-size="88" font-weight="700" letter-spacing="-3">Relayhelm</text>
+    <text x="366" y="246" fill="#a9bbd1" font-size="23">Your models. Your context. Your helm.</text>
+    <g font-size="13" fill="#dce5f1" letter-spacing="1.5">
+      <text x="366" y="303">TERMINAL</text><circle cx="478" cy="298" r="2" fill="#d8ac61"/>
+      <text x="500" y="303">CODING HOSTS</text><circle cx="658" cy="298" r="2" fill="#d8ac61"/>
+      <text x="680" y="303">MESSAGING</text>
+    </g>
+    <text x="56" y="377" fill="#8196af" font-size="12" letter-spacing="2">OPEN SOURCE · INDEPENDENT · BUILT ON HERMES</text>
+    <text x="1224" y="377" text-anchor="end" fill="#cfac72" font-size="12" letter-spacing="2">INSELFCONTROLL / RELAYHELM</text>
+  </g>
+  <g fill="#dcb975"><circle cx="1121" cy="89" r="3"/><circle cx="1170" cy="156" r="2"/><circle cx="1063" cy="238" r="2"/></g>
+  <path d="M1121 89L1170 156L1063 238" fill="none" stroke="#dcb975" stroke-opacity=".18"/>
+</svg>

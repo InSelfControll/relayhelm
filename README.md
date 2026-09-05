@@ -1,10 +1,78 @@
-# Relayhelm
+<a id="top"></a>
 
-Relayhelm is an independent agent harness maintained at [InSelfControll/relayhelm](https://github.com/InSelfControll/relayhelm), built from [NousResearch's Hermes Agent](https://github.com/NousResearch/hermes-agent). Its updates and contributions belong to this repository. The original MIT license and contributor history are preserved.
+<p align="center">
+  <img src="assets/relayhelm-banner.svg" alt="Relayhelm — Your models. Your context. Your helm." width="100%">
+</p>
 
-Run the agent in a terminal, desktop interface, or messaging gateway. The inherited provider and platform adapters include Telegram, Discord, Slack, Microsoft Teams and other channels; each requires its own credentials and setup.
+<p align="center">
+  <strong>An independent agent harness for coding, shared context, and everyday automation.</strong><br>
+  Work in your terminal. Connect your coding agents. Continue through your messaging gateway.
+</p>
 
-## Install
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> ·
+  <a href="#-context-that-stays-useful">Context Broker</a> ·
+  <a href="#-your-tools-your-workflow">Integrations</a> ·
+  <a href="#-documentation">Documentation</a> ·
+  <a href="https://github.com/InSelfControll/relayhelm/issues">Report a Bug</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-D8AC61?style=for-the-badge&amp;labelColor=101D32" alt="MIT License"></a>
+  <a href="#-quick-start"><img src="https://img.shields.io/badge/Python-3.11–3.13-89B4D9?style=for-the-badge&amp;logo=python&amp;logoColor=white&amp;labelColor=101D32" alt="Python 3.11 through 3.13"></a>
+  <a href="https://github.com/InSelfControll/context-broker-mcp"><img src="https://img.shields.io/badge/Context_Broker-MCP-A8C9AC?style=for-the-badge&amp;labelColor=101D32" alt="Context Broker MCP"></a>
+  <a href="https://github.com/InSelfControll/relayhelm/stargazers"><img src="https://img.shields.io/github/stars/InSelfControll/relayhelm?style=for-the-badge&amp;color=D8AC61&amp;labelColor=101D32" alt="GitHub stars"></a>
+</p>
+
+---
+
+## 🧭 Take the helm
+
+**Relayhelm brings your models, tools, and project context into one agent workflow.** Built on [Hermes Agent](https://github.com/NousResearch/hermes-agent), it keeps the terminal, desktop, skills, provider adapters, and messaging gateway, then adds an opt-in connection to [Context Broker MCP](https://github.com/InSelfControll/context-broker-mcp).
+
+Share the broker's model and memory pool across sessions. Keep each project's context separate. Bring back relevant issue history when it helps, and ask before splitting work between agents.
+
+<table>
+  <tr>
+    <td width="50%"><h3>💻 A real working environment</h3>Terminal and browser tools, a TUI, streaming output, slash commands, and a desktop interface inherited from Hermes.</td>
+    <td width="50%"><h3>🧠 Context with boundaries</h3>One shared broker pool, separate project histories, and bounded retrieval instead of loading unrelated memory into every new session.</td>
+  </tr>
+  <tr>
+    <td><h3>🤝 Agents on your terms</h3>Choose whether to split a task. Delegated work keeps the selected model, and failures retain their reasons and partial results.</td>
+    <td><h3>📬 Beyond the terminal</h3>Connect Telegram, Discord, Slack, Microsoft Teams, and other inherited messaging adapters through the gateway.</td>
+  </tr>
+  <tr>
+    <td><h3>🧩 Extend your workflow</h3>Native Hermes Python plugins plus adapters for supported Claude Code, Codex, and Cursor skills, MCP definitions, and command hooks.</td>
+    <td><h3>⏰ Keep useful work running</h3>Reusable skills, scheduled jobs, and platform delivery through the inherited automation system.</td>
+  </tr>
+</table>
+
+## ⚡ Quick start
+
+### Linux · macOS · WSL2
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/InSelfControll/relayhelm/main/scripts/install.sh | bash
+```
+
+### Windows · PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/InSelfControll/relayhelm/main/scripts/install.ps1 -OutFile install.ps1
+.\install.ps1
+```
+
+Then choose your provider and start a conversation:
+
+```bash
+relayhelm setup
+relayhelm
+```
+
+> **Your own installation.** Relayhelm uses `~/.relayhelm` on Linux/macOS and `%LOCALAPPDATA%/relayhelm` on Windows. Its updater points to this repository. Existing Hermes state is not migrated automatically.
+
+<details>
+<summary><strong>Install from source / development setup</strong></summary>
 
 ```bash
 git clone https://github.com/InSelfControll/relayhelm.git
@@ -14,36 +82,107 @@ uv run relayhelm setup
 uv run relayhelm
 ```
 
-For the guided platform installer:
+The source setup above includes development and MCP dependencies. Additional messaging and provider integrations may require their corresponding extras and credentials; see the [installation guide](website/docs/getting-started/installation.md).
+
+</details>
+
+<details>
+<summary><strong>Commands and custom installation paths</strong></summary>
+
+| Command | Purpose |
+| --- | --- |
+| `relayhelm` | Interactive CLI and subcommands |
+| `relayhelm-agent` | Direct agent entry point |
+| `relayhelm-acp` | ACP entry point for compatible clients |
+
+The Windows installer accepts `-RelayhelmHome`; `-HermesHome` remains accepted for compatibility. Explicit `HERMES_*` overrides and existing Python API identifiers are preserved for extensions. Use separate Relayhelm profiles for separate project bindings.
+
+</details>
+
+## 🧠 Context that stays useful
+
+**Context Broker is the shared service. Relayhelm is one of its clients.** Codex, Claude Code, Cursor, and Hermes can connect to the same broker using their own host configuration.
+
+Start the installed broker once:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/InSelfControll/relayhelm/main/scripts/install.sh | bash
+context-broker serve
 ```
 
-The commands are `relayhelm`, `relayhelm-agent` and `relayhelm-acp`. Default state is `~/.relayhelm` on Linux/macOS and `%LOCALAPPDATA%/relayhelm` on Windows. Existing Hermes state is not migrated automatically. Internal `hermes_cli`/`hermes_*` Python imports, plugin API names and explicitly supplied `HERMES_*` environment variables remain compatible with existing extensions. Use separate profiles for separate project bindings. The Windows installer accepts `-RelayhelmHome`; `-HermesHome` remains a compatibility alias.
+Connect a coding host to its project:
 
-## Context Broker MCP
+```bash
+context-broker connect --project-root /absolute/project
+```
 
-[Context Broker](https://github.com/InSelfControll/context-broker-mcp) supplies one shared model/memory pool with project-scoped history and exact model handoffs. Run `context-broker serve` once, then connect each coding host through `context-broker connect --project-root /absolute/project`.
+Then follow the **[Relayhelm integration setup →](docs/context-broker-integration.md)** to enable the plugin and bind the active profile to that project.
 
-Relayhelm's opt-in [Context Broker plugin](docs/context-broker-integration.md) looks up relevant issue history on each prompt, adds only bounded matching excerpts, and leaves unrelated sessions free of project-memory preload. `/context-broker index` asks whether to index; both choices continue reading original history. Disabling a required MCP disables the dependent plugin and releases its hooks.
+| What matters | How it works |
+| --- | --- |
+| **One shared pool** | The broker owns the shared model and memory pool; the Relayhelm plugin does not load another embedding model. |
+| **Separate project context** | Explicit project roots scope history and handoffs. |
+| **Relevant history only** | Each text-bearing prompt gets a bounded lookup. No matching history means no added history context. |
+| **Your indexing choice** | `/context-broker index` asks **Index / No index**. Both choices continue reading original history. |
+| **Explicit model handoffs** | Save and load checkpoints with messages, constraints, decisions, task states, and file freshness checks. |
+| **A working off switch** | Disabling a required MCP disables its dependent plugin and closes that transport while preserving unrelated servers. |
 
-The broker's delegation tool asks before splitting a task and retains the requested model. Handoffs preserve explicit messages, constraints, decisions, task states and file freshness checks. Failed work retains a failure reason; proposals still require integration and verification before completion.
+### Split big tasks—with your say-so
 
-## Plugins and coding hosts
+Relayhelm asks before starting delegated work. You can keep one agent or split the task between agents using the selected model.
 
-Native Hermes Python plugins retain their API. Installed Claude Code, Codex and Cursor packages can use supported skills, MCP definitions and command hooks through the [host compatibility adapter](docs/plugin-compatibility.md). Packages must be explicitly enabled. Unsupported host-specific components fail with a reason; this is not a claim of complete compatibility with every proprietary plugin or UI feature.
+**A partial result is not a completed task.** Provider errors, timeouts, and exhausted budgets remain failed with a reason. Broker proposals still need integration and verification before completion.
 
-Codex, Claude Code, Cursor and Hermes can also connect directly to Context Broker using its host configuration generator. Provider authentication, native host behavior and messaging delivery should be validated on your own setup.
+[Read the delegation contract →](docs/native-delegation.md)
 
-## Development
+## 🔌 Your tools, your workflow
+
+| Surface | Connection |
+| --- | --- |
+| **Codex · Claude Code · Cursor · Hermes** | Connect directly to Context Broker using its host configuration generator. |
+| **Claude Code · Codex · Cursor plugin packages** | Load supported skills, MCP definitions, and command hooks through Relayhelm's package adapters. |
+| **Native Hermes Python plugins** | Continue using the existing `register(ctx)` APIs. |
+| **Telegram · Discord · Slack · Microsoft Teams** | Configure credentials and enable the corresponding messaging gateway adapter. |
+| **Model providers** | Choose from the inherited provider adapters and supported compatible endpoints. |
+
+**[Plugin compatibility matrix →](docs/plugin-compatibility.md)** · **[Provider guide →](website/docs/integrations/providers.md)**
+
+<details>
+<summary><strong>Compatibility and validation status</strong></summary>
+
+Plugin packages must be explicitly enabled. Some host-specific components—such as native LSP, apps, and unsupported hook types—require their original host. Relayhelm reports unsupported components rather than silently dropping them.
+
+The integration work passed **548 Python tests and 152 selected Node checks**, with seven platform-specific skips. Full Windows/Electron builds and every third-party native plugin have not been validated. Provider authentication and messaging delivery require testing with your configured services.
+
+</details>
+
+## 📚 Documentation
+
+| Start here | Go deeper |
+| --- | --- |
+| [Installation](website/docs/getting-started/installation.md) | [Context Broker integration](docs/context-broker-integration.md) |
+| [CLI guide](website/docs/user-guide/cli.md) | [Plugin compatibility](docs/plugin-compatibility.md) |
+| [Configuration](website/docs/user-guide/configuration.md) | [Delegation and failure reporting](docs/native-delegation.md) |
+| [Skills](website/docs/user-guide/features/skills.md) | [Scheduled jobs](website/docs/user-guide/features/cron.md) |
+| [Model providers](website/docs/integrations/providers.md) | [Project separation and attribution](UPSTREAM.md) |
+
+### Build with us
+
+Found a bug or have an integration to improve? [Open an issue](https://github.com/InSelfControll/relayhelm/issues) or contribute here in Relayhelm.
 
 ```bash
 scripts/run_tests.sh -j 4
 ```
 
-Use the repository test runner so tests run with isolated state and credentials. See [AGENTS.md](AGENTS.md) for engineering conventions and [the documentation source](website/docs) for inherited functionality.
+Use the repository test runner for isolated state and credentials. Read [AGENTS.md](AGENTS.md) before contributing.
 
-## Attribution
+---
 
-Relayhelm derives from Hermes Agent by Nous Research and its contributors. See [LICENSE](LICENSE) and [UPSTREAM.md](UPSTREAM.md). Hermes model names, third-party service URLs and compatibility identifiers are retained where they refer to those original interfaces or products.
+<p align="center">
+  <strong>Independent direction. Open-source roots.</strong><br>
+  Built from <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a> by Nous Research and its contributors.<br>
+  Maintained independently by <a href="https://github.com/InSelfControll">InSelfControll</a> · <a href="LICENSE">MIT licensed</a> · <a href="UPSTREAM.md">Upstream attribution</a>
+</p>
+
+<p align="center">
+  <a href="#top">↑ Back to top</a>
+</p>
