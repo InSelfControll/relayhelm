@@ -139,7 +139,9 @@ def _command(ctx, raw_args):
             "/context-broker status — show the configured project and broker state\n"
             "/context-broker index — choose Index or No index; both read relevant history\n"
             "Terminal: relayhelm context-broker --help\n"
-            "Start the shared service: relayhelm context-broker serve\n"
+            "The shared service starts automatically when MCP connects.\n"
+            "Install: relayhelm context-broker install --project-root /absolute/project\n"
+            "Update: relayhelm context-broker update\n"
             "Standalone CLI: context-broker --help"
         )
     try:

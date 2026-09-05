@@ -103,19 +103,20 @@ The Windows installer accepts `-RelayhelmHome`; `-HermesHome` remains accepted f
 
 **Context Broker is the shared service. Relayhelm is one of its clients.** Codex, Claude Code, Cursor, and Hermes can connect to the same broker using their own host configuration.
 
-Start the installed broker once:
+Install the broker runtime, MCP configuration, usage skill, and plugin for a project:
 
 ```bash
-context-broker serve
+relayhelm context-broker install --project-root /absolute/project
 ```
 
-Connect a coding host to its project:
+The agent starts the shared broker automatically on its first MCP connection. Update it with:
 
 ```bash
-context-broker connect --project-root /absolute/project
+relayhelm context-broker update --check
+relayhelm context-broker update
 ```
 
-Then follow the **[Relayhelm integration setup →](docs/context-broker-integration.md)** to enable the plugin and bind the active profile to that project.
+Restart your agent after installation. See **[Relayhelm integration setup →](docs/context-broker-integration.md)** for profiles and other coding hosts.
 
 | What matters | How it works |
 | --- | --- |

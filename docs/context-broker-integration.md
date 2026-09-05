@@ -1,8 +1,33 @@
 # Context Broker in Relayhelm
 
-Relayhelm uses the existing Context Broker MCP service instead of loading another embedding model or copying session memory into a new pool. Start `context-broker serve` once, then connect each coding agent with `context-broker connect --project-root /absolute/project`. The service owns the shared model pool; project roots separate history and handoffs.
+Relayhelm connects to one Context Broker service, which owns the shared model pool;
+project roots separate history and handoffs. Each agent's `connect` process automatically
+starts or reuses the service. No manual `serve` command is required.
 
-Merge this into the active Relayhelm profile's `config.yaml` (preserve existing entries):
+```sh
+relayhelm context-broker install --project-root /absolute/project
+relayhelm context-broker update --check
+relayhelm context-broker update
+```
+
+Install bootstraps a missing runtime through uv using a pinned source revision and
+the dashboard/integrations extras. It installs the broker usage skill under the
+active profile's `skills/context-broker`, merges MCP configuration, and enables the
+bundled history plugin. Existing configuration is backed up and unrelated entries
+are preserved. Restart the agent to load the integration in a new session.
+`--runtime-dir` selects a separate private shared service directory.
+
+Update delegates to the broker's installation-aware updater and refreshes the
+active enabled integration's configuration and skill. Disabled integrations remain
+disabled. It restarts an active service after success; existing agents must reconnect.
+An update failure leaves the service stopped for repair. Nix and other externally
+managed installations must be updated with their package manager. An older broker
+without the new update command needs its package/repository updated first.
+`relayhelm update` continues to own Relayhelm's own code and gateway lifecycle;
+`relayhelm context-broker update` owns the separate broker runtime.
+
+The installer generates the equivalent of these entries in the active profile's
+`config.yaml`, using an absolute interpreter path and 90-second connection timeout:
 
 ```yaml
 mcp_servers:
