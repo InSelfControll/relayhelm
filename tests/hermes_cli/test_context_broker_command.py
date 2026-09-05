@@ -22,7 +22,7 @@ def test_help_without_installed_broker(monkeypatch, capsys):
     with pytest.raises(SystemExit) as exc:
         parser().parse_args(['context-broker', '--help'])
     assert exc.value.code == 0
-    assert '/context-broker index' in capsys.readouterr().out
+    assert '/context-broker index' in ' '.join(capsys.readouterr().out.split())
 
 
 def test_forwarding_preserves_project_and_failure(monkeypatch):

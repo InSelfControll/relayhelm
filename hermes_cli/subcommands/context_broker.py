@@ -12,16 +12,27 @@ def cmd_context_broker(args) -> int:
     if args.broker_command is None:
         args.broker_parser.print_help()
         return 0
+    if args.broker_command == "install":
+        from hermes_cli.context_broker_install import install_broker
+        try:
+            return install_broker(args)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            sys.stderr.write(f"Context Broker installation failed ({type(exc).__name__}); "
+                             "check uv, Python 3.13, project path, and network access.\n")
+            return 1
     executable = shutil.which("context-broker")
     if executable is None:
         sys.stderr.write(
             "Context Broker is not installed on PATH. Install its separate runtime:\n"
             "  uv tool install --python 3.13 "
             "git+https://github.com/InSelfControll/context-broker-mcp.git\n"
-            "Then run: relayhelm context-broker serve\n"
+            "Or install and configure together: "
+            "relayhelm context-broker install --project-root /absolute/project\n"
         )
         return 127
     command = [executable, args.broker_command]
+    if args.broker_command == "update" and args.check:
+        command.append("--check")
     if args.broker_command == "serve":
         command += ["--port", str(args.port)]
     elif args.broker_command in {"connect", "integration-config"}:
@@ -35,9 +46,18 @@ def cmd_context_broker(args) -> int:
             if args.runtime_dir:
                 command += ["--runtime-dir", args.runtime_dir]
     try:
-        result = subprocess.run(command, check=False)
+        options = {}
+        if args.broker_command in {"start", "stop", "update", "serve", "connect"}:
+            from hermes_cli.context_broker_install import broker_environment
+            env = broker_environment()
+            if env is not None:
+                options["env"] = env
+        result = subprocess.run(command, check=False, **options)
+        if args.broker_command == "update" and not args.check and result.returncode == 0:
+            from hermes_cli.context_broker_install import refresh_broker_integration
+            return refresh_broker_integration(executable)
         return result.returncode if result.returncode >= 0 else 128 - result.returncode
-    except OSError as exc:
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
         sys.stderr.write(f"Context Broker could not start ({type(exc).__name__}). Check its installation.\n")
         return 1
 
@@ -48,7 +68,7 @@ def build_context_broker_parser(subparsers) -> None:
         "context-broker",
         help="Run Context Broker or discover its commands",
         description="Run the separately installed context-broker runtime. "
-        "Start 'serve' once, then use 'connect' for each project. "
+        "Install for a project; 'connect' automatically starts the shared service. "
         "In chat, the enabled Context Broker plugin provides /context-broker status "
         "and /context-broker index (Index / No index choice).",
         epilog="Install: uv tool install --python 3.13 "
@@ -56,6 +76,13 @@ def build_context_broker_parser(subparsers) -> None:
     )
     parser.set_defaults(func=cmd_context_broker, broker_parser=parser)
     commands = parser.add_subparsers(dest="broker_command")
+    install = commands.add_parser("install", help="Install runtime, MCP config, skill, and plugin")
+    install.add_argument("--project-root", required=True)
+    install.add_argument("--runtime-dir", default="")
+    update = commands.add_parser("update", help="Update broker runtime and restart its service")
+    update.add_argument("--check", action="store_true", help="Preview without changes")
+    commands.add_parser("start", help="Start or reuse the shared service in the background")
+    commands.add_parser("stop", help="Stop the shared service (disconnects all agents)")
     commands.add_parser("mcp", help="Start the standalone MCP server")
     commands.add_parser("dashboard", help="Run the broker dashboard")
     serve = commands.add_parser("serve", help="Start the shared memory service")
