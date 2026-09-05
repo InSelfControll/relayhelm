@@ -15,12 +15,30 @@ BROKER_SOURCE = (
 )
 
 
+def _uv_broker_path(uv: str) -> Path:
+    directory = subprocess.run([uv, "tool", "dir", "--bin"], check=True,
+                               capture_output=True, text=True, timeout=15).stdout.strip()
+    return Path(directory) / ("context-broker.exe" if os.name == "nt" else "context-broker")
+
+
+def find_broker() -> str | None:
+    """Find an installed broker even before uv's executable directory reaches PATH."""
+    executable = shutil.which("context-broker")
+    if executable:
+        return executable
+    uv = shutil.which("uv")
+    if not uv:
+        return None
+    candidate = _uv_broker_path(uv)
+    return str(candidate) if candidate.is_file() and os.access(candidate, os.X_OK) else None
+
+
 def install_broker(args) -> int:
     """Install missing runtime, then let the broker own native config and skill merging."""
     root = Path(args.project_root).expanduser().resolve(strict=True)
     if not root.is_dir():
         raise ValueError("project_root must be a directory")
-    executable = shutil.which("context-broker")
+    executable = find_broker()
     if not executable:
         uv = shutil.which("uv")
         if not uv:
@@ -28,10 +46,7 @@ def install_broker(args) -> int:
         subprocess.run([uv, "tool", "install", "--python", "3.13", BROKER_SOURCE],
                        check=True, timeout=1800)
         # uv's tool directory need not be in the invoking shell's PATH yet.
-        directory = subprocess.run([uv, "tool", "dir", "--bin"], check=True,
-                                   capture_output=True, text=True, timeout=15).stdout.strip()
-        executable = str(Path(directory) / ("context-broker.exe" if os.name == "nt"
-                                            else "context-broker"))
+        executable = str(_uv_broker_path(uv))
     return configure_broker(executable, str(root), args.runtime_dir)
 
 

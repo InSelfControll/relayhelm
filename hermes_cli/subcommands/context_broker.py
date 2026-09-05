@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 import subprocess
 import sys
 
@@ -20,7 +19,12 @@ def cmd_context_broker(args) -> int:
             sys.stderr.write(f"Context Broker installation failed ({type(exc).__name__}); "
                              "check uv, Python 3.13, project path, and network access.\n")
             return 1
-    executable = shutil.which("context-broker")
+    from hermes_cli.context_broker_install import find_broker
+    try:
+        executable = find_broker()
+    except (OSError, subprocess.SubprocessError) as exc:
+        sys.stderr.write(f"Context Broker discovery failed ({type(exc).__name__}). Check uv.\n")
+        return 1
     if executable is None:
         sys.stderr.write(
             "Context Broker is not installed on PATH. Install its separate runtime:\n"

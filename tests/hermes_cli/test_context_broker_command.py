@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 from hermes_cli.subcommands import context_broker as command
+from hermes_cli import context_broker_install as installer
 
 
 def parser():
@@ -13,7 +14,7 @@ def parser():
 
 
 def test_help_without_installed_broker(monkeypatch, capsys):
-    monkeypatch.setattr(command.shutil, 'which', Mock(side_effect=AssertionError('resolved executable')))
+    monkeypatch.setattr(installer.shutil, 'which', Mock(side_effect=AssertionError('resolved executable')))
     args = parser().parse_args(['context-broker'])
     assert args.func(args) == 0
     output = capsys.readouterr()
@@ -26,7 +27,7 @@ def test_help_without_installed_broker(monkeypatch, capsys):
 
 
 def test_forwarding_preserves_project_and_failure(monkeypatch):
-    monkeypatch.setattr(command.shutil, 'which', lambda _: '/bin/context-broker')
+    monkeypatch.setattr(installer.shutil, 'which', lambda _: '/bin/context-broker')
     run = Mock(return_value=Mock(returncode=7))
     monkeypatch.setattr(command.subprocess, 'run', run)
     args = parser().parse_args(['context-broker', 'connect', '--project-root', '/project with spaces'])
@@ -35,7 +36,7 @@ def test_forwarding_preserves_project_and_failure(monkeypatch):
 
 
 def test_missing_installation_is_failure(monkeypatch, capsys):
-    monkeypatch.setattr(command.shutil, 'which', lambda _: None)
+    monkeypatch.setattr(installer.shutil, 'which', lambda _: None)
     args = parser().parse_args(['context-broker', 'serve'])
     assert args.func(args) == 127
     assert 'uv tool install --python 3.13' in capsys.readouterr().err
@@ -49,7 +50,7 @@ def test_main_parser_discovers_command():
 
 
 def test_relayhelm_native_configuration_forwarding(monkeypatch):
-    monkeypatch.setattr(command.shutil, 'which', lambda _: '/bin/context-broker')
+    monkeypatch.setattr(installer.shutil, 'which', lambda _: '/bin/context-broker')
     run = Mock(return_value=Mock(returncode=0))
     monkeypatch.setattr(command.subprocess, 'run', run)
     args = parser().parse_args(['context-broker', 'integration-config', '--host', 'relayhelm',
