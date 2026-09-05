@@ -59,6 +59,6 @@ def build_context_broker_parser(subparsers) -> None:
     connect = commands.add_parser("connect", help="Connect an MCP client for one project")
     connect.add_argument("--project-root", required=True)
     config = commands.add_parser("integration-config", help="Print native client config")
-    config.add_argument("--host", choices=("codex", "hermes", "cursor", "claude-code"), required=True)
+    config.add_argument("--host", choices=("codex", "hermes", "relayhelm", "cursor", "claude-code"), required=True)
     config.add_argument("--project-root", required=True)
     config.add_argument("--runtime-dir", default="")

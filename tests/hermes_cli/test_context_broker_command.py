@@ -46,3 +46,14 @@ def test_main_parser_discovers_command():
     main, _ = _build_cli_parser()
     args = main.parse_args(['context-broker', 'serve'])
     assert args.func is command.cmd_context_broker
+
+
+def test_relayhelm_native_configuration_forwarding(monkeypatch):
+    monkeypatch.setattr(command.shutil, 'which', lambda _: '/bin/context-broker')
+    run = Mock(return_value=Mock(returncode=0))
+    monkeypatch.setattr(command.subprocess, 'run', run)
+    args = parser().parse_args(['context-broker', 'integration-config', '--host', 'relayhelm',
+                               '--project-root', '/project with spaces'])
+    assert args.func(args) == 0
+    run.assert_called_once_with(['/bin/context-broker', 'integration-config', '--project-root',
+                                 '/project with spaces', '--host', 'relayhelm'], check=False)
