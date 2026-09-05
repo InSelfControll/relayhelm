@@ -30,6 +30,7 @@ param(
     # existing tree pass -ForceCommit.
     [switch]$ForceCommit,
     [string]$Tag = "",
+    [Alias("RelayhelmHome")]
     [string]$HermesHome = $(if ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\relayhelm" }),
     [string]$InstallDir = $(if ($env:HERMES_HOME) { "$env:HERMES_HOME\relayhelm" } else { "$env:LOCALAPPDATA\relayhelm\relayhelm" }),
 

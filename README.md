@@ -20,7 +20,7 @@ For the guided platform installer:
 curl -fsSL https://raw.githubusercontent.com/InSelfControll/relayhelm/main/scripts/install.sh | bash
 ```
 
-The commands are `relayhelm`, `relayhelm-agent` and `relayhelm-acp`. Default state is `~/.relayhelm` on Linux/macOS and `%LOCALAPPDATA%/relayhelm` on Windows. Existing Hermes state is not migrated automatically. Internal `hermes_cli`/`hermes_*` Python imports, plugin API names and explicitly supplied `HERMES_*` environment variables remain compatible with existing extensions. Use separate profiles for separate project bindings.
+The commands are `relayhelm`, `relayhelm-agent` and `relayhelm-acp`. Default state is `~/.relayhelm` on Linux/macOS and `%LOCALAPPDATA%/relayhelm` on Windows. Existing Hermes state is not migrated automatically. Internal `hermes_cli`/`hermes_*` Python imports, plugin API names and explicitly supplied `HERMES_*` environment variables remain compatible with existing extensions. Use separate profiles for separate project bindings. The Windows installer accepts `-RelayhelmHome`; `-HermesHome` remains a compatibility alias.
 
 ## Context Broker MCP
 
