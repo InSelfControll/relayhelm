@@ -1,4 +1,4 @@
-"""Run the read-tool eval through the REAL Hermes AIAgent.
+"""Run the read-tool eval through the REAL Relayhelm AIAgent.
 
 For each task: fresh temp HERMES_HOME, fresh fixture workspace, real
 AIAgent with the file+terminal+search toolsets, real provider API. Collects
@@ -74,7 +74,7 @@ def _count_metrics(messages: list) -> dict:
 def run_task(task, model: str, provider: str, timeout_mult: float,
              toolsets: list[str]) -> dict:
     ws = Path(tempfile.mkdtemp(prefix=f"readtool-{task.task_id}-"))
-    hermes_home = Path(tempfile.mkdtemp(prefix="readtool-home-")) / ".hermes"
+    hermes_home = Path(tempfile.mkdtemp(prefix="readtool-home-")) / ".relayhelm"
     hermes_home.mkdir(parents=True)
     build_workspace(ws)
 
@@ -162,7 +162,7 @@ def main() -> int:
     if not os.environ.get("OPENROUTER_API_KEY"):
         raise SystemExit(
             "OPENROUTER_API_KEY not in environment. Run: set -a; "
-            "source ~/.hermes/.env; set +a  — then relaunch."
+            "source ~/.relayhelm/.env; set +a  — then relaunch."
         )
 
     slate = (

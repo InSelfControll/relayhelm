@@ -5,8 +5,8 @@ from hermes_cli import uninstall
 
 
 def test_dry_run_prints_plan_without_mutating(monkeypatch, tmp_path, capsys):
-    project_root = tmp_path / "hermes-agent"
-    hermes_home = tmp_path / ".hermes"
+    project_root = tmp_path / "relayhelm"
+    hermes_home = tmp_path / ".relayhelm"
     project_root.mkdir()
     hermes_home.mkdir()
     (hermes_home / "config.yaml").write_text("model: {}\n")

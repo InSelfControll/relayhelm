@@ -80,7 +80,7 @@ def cmd_migrate_xai(args: Any) -> int:
         f"  {color('✓', Colors.GREEN)} Updated {len(result.issues_resolved)} "
         f"slot(s) in {result.file_path}")
     print()
-    print(color("Run `hermes doctor` to confirm no retired xAI models remain.", Colors.DIM))
+    print(color("Run `relayhelm doctor` to confirm no retired xAI models remain.", Colors.DIM))
     return 0
 
 

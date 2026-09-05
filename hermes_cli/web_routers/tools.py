@@ -294,7 +294,7 @@ async def toggle_toolset(name: str, body: ToolsetToggle, profile: Optional[str] 
 
     # Install-on-enable: a provider whose post_setup install predicate is
     # UNSATISFIED (cua-driver binary missing, etc.) gets the same background
-    # install `hermes tools` runs — otherwise the toggle "saves" but the tool
+    # install `relayhelm tools` runs — otherwise the toggle "saves" but the tool
     # never appears.  Best-effort: a spawn failure never fails the toggle.
     post_setup_started: Optional[str] = None
     if body.enabled and name not in _CONFIG_ONLY_TOOLSETS:
@@ -477,7 +477,7 @@ async def select_toolset_model(
 async def select_toolset_provider(
     name: str, body: ToolsetProviderSelect, profile: Optional[str] = None):
     """Persist a provider selection via ``apply_provider_selection`` (shared with
-    ``hermes tools``, so both write identical keys).
+    ``relayhelm tools``, so both write identical keys).
 
     ``web`` only: ``capability`` ('search' | 'extract') writes
     ``web.<capability>_backend`` (the override the dispatchers resolve first);
@@ -598,7 +598,7 @@ async def save_toolset_env(name: str, body: ToolsetEnvUpdate, profile: Optional[
 @router.post("/api/tools/toolsets/{name}/post-setup")
 async def run_toolset_post_setup(
     name: str, body: ToolsetPostSetup, profile: Optional[str] = None):
-    """Spawn ``hermes tools post-setup <key>`` (long-running installs) as a
+    """Spawn ``relayhelm tools post-setup <key>`` (long-running installs) as a
     background action tailed via ``GET /api/actions/tools-post-setup/status``;
     ``profile`` is threaded so hooks see the drawer's HERMES_HOME."""
     from hermes_cli.tools_config import valid_post_setup_keys

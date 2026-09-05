@@ -12,7 +12,7 @@ const WINDOWS_SCRIPT = path.join(REPO_ROOT, 'scripts', 'desktop-update', 'window
 
 function sandbox(tag: string) {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), `hermes-handoff-marker-${tag}-`))
-  const installRoot = path.join(home, 'hermes-agent')
+  const installRoot = path.join(home, 'relayhelm')
   fs.mkdirSync(installRoot)
 
   return { home, installRoot }

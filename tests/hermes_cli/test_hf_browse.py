@@ -23,8 +23,8 @@ GIB = 1 << 30
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
-    (tmp_path / ".hermes").mkdir()
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".relayhelm"))
+    (tmp_path / ".relayhelm").mkdir()
     from hermes_cli import web_server
 
     test_client = TestClient(web_server.app)

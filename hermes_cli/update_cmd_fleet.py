@@ -1,4 +1,4 @@
-"""Gateway fleet restart + post-update verification for ``hermes update``.
+"""Gateway fleet restart + post-update verification for ``relayhelm update``.
 
 Split out of ``hermes_cli/update_cmd.py``; every name is re-imported there so
 ``hermes_cli.update_cmd.<name>`` keeps resolving/monkeypatching. Origin helpers are
@@ -28,7 +28,7 @@ _FLEET_RESTART_PENDING_NAME = "fleet_restart_pending"
 _FRESH_RESTART_SUPERVISORS = frozenset({"systemd", "launchd", "service", "s6"})
 
 _SYSTEMD_SCOPES = (("user", ["systemctl", "--user"]), ("system", ["systemctl"]))
-_LIST_GATEWAY_UNITS = ["list-units", "hermes-gateway*", "hermes-serve*", "--plain", "--no-legend", "--no-pager"]
+_LIST_GATEWAY_UNITS = ["list-units", "relayhelm-gateway*", "hermes-serve*", "--plain", "--no-legend", "--no-pager"]
 
 
 def _write_gateway_update_exit_code(ok: bool) -> None:
@@ -145,10 +145,10 @@ def _pending_fleet_restart_needed() -> bool:
 def _warn_pending_fleet_restart(*, startup: bool = False) -> None:
     """Print the specific interrupted-update fleet-restart warning."""
     stream = sys.stderr if startup else sys.stdout
-    print("⚠ A previous `hermes update` pulled new code but did not restart running gateways.", file=stream)
+    print("⚠ A previous `relayhelm update` pulled new code but did not restart running gateways.", file=stream)
     print("  Gateways may still be serving pre-update modules (mixed sys.modules).", file=stream)
     if startup:
-        print("  Run `hermes update` or `hermes gateway restart`.", file=stream)
+        print("  Run `relayhelm update` or `relayhelm gateway restart`.", file=stream)
 
 
 def _warn_pending_fleet_restart_on_startup() -> None:
@@ -185,7 +185,7 @@ def _needs_sudo(scope: str) -> bool:
 
 
 def _restart_systemd_gateway_units_best_effort(failed: list) -> None:
-    """Best-effort ``systemctl restart`` of every hermes-gateway/serve unit."""
+    """Best-effort ``systemctl restart`` of every relayhelm-gateway/serve unit."""
     for scope, scope_cmd, result in _systemd_gateway_unit_listings():
         if result.returncode != 0:
             continue
@@ -214,9 +214,9 @@ def _run_pending_fleet_restart() -> bool:
     print("→ Restarting gateways left on pre-update code...")
     with suppress(Exception):
         _m()._purge_stale_hermes_modules()
-    # Warn if legacy Hermes gateway unit files are still installed. When both hermes.service (from a
-    # pre-rename install) and the current hermes-gateway.service are enabled, they SIGTERM-fight for the
-    # same bot token (see PR #11909). Flagging here means every `hermes update` surfaces the issue until the
+    # Warn if legacy Relayhelm gateway unit files are still installed. When both hermes.service (from a
+    # pre-rename install) and the current relayhelm-gateway.service are enabled, they SIGTERM-fight for the
+    # same bot token (see PR #11909). Flagging here means every `relayhelm update` surfaces the issue until the
     # user migrates.
     try:
         from hermes_cli.gateway import (
@@ -239,11 +239,11 @@ def _run_pending_fleet_restart() -> bool:
 
     failed: list = []
     try:
-        # --- Systemd services (Linux) --- Discover all hermes-gateway* units (default + profiles) plus
+        # --- Systemd services (Linux) --- Discover all relayhelm-gateway* units (default + profiles) plus
         # hermes-serve* units (the Desktop app's backend, #83438).
         if supports_systemd_services():
             _restart_systemd_gateway_units_best_effort(failed)
-        # --- Launchd services (macOS) --- Restart EVERY ai.hermes.gateway* LaunchAgent, not only the
+        # --- Launchd services (macOS) --- Restart EVERY io.github.inselfcontroll.relayhelm.gateway* LaunchAgent, not only the
         # invoking profile's — parity with the systemd branch above (#41403). Per-label TimeoutExpired
         # isolation happens inside.
         if is_macos():
@@ -283,7 +283,7 @@ def _run_pending_fleet_restart() -> bool:
 
 
 def _apply_pending_fleet_restart_catchup() -> None:
-    """On an already-up-to-date ``hermes update``, finish a skipped restart.
+    """On an already-up-to-date ``relayhelm update``, finish a skipped restart.
 
     No-op when nothing is pending; exits 1 on incomplete catch-up so automation
     does not treat the fleet as healthy.
@@ -297,7 +297,7 @@ def _apply_pending_fleet_restart_catchup() -> None:
     if _run_pending_fleet_restart():
         _clear_fleet_restart_pending_marker()
         return
-    print("  ⚠ Fleet restart incomplete. Recover with: hermes gateway restart")
+    print("  ⚠ Fleet restart incomplete. Recover with: relayhelm gateway restart")
     sys.exit(1)
 
 
@@ -319,15 +319,15 @@ def _is_hermes_gateway_unit(unit: str) -> bool:
     return (
         # list-units is already pattern-filtered, but keep the name gate so a stray non-gateway/serve line
         # cannot enter the restart path. See #83595.
-        unit == "hermes-gateway.service"
-        or unit.startswith("hermes-gateway-")
+        unit == "relayhelm-gateway.service"
+        or unit.startswith("relayhelm-gateway-")
         or unit == "hermes-serve.service"
         or unit.startswith("hermes-serve-")
     )
 
 
 def _for_each_systemd_gateway_unit(list_units_stdout: str, *, process_unit, on_unit_timeout) -> None:
-    """Process each hermes-gateway*/hermes-serve* unit from ``systemctl list-units``.
+    """Process each relayhelm-gateway*/hermes-serve* unit from ``systemctl list-units``.
 
     ``TimeoutExpired`` from ``process_unit`` is isolated per unit via ``on_unit_timeout``
     so one wedged systemctl call cannot abort the rest of the fleet.
@@ -351,14 +351,14 @@ def _for_each_systemd_gateway_unit(list_units_stdout: str, *, process_unit, on_u
 def _service_unit_supports_graceful_sigusr1_restart(svc_name: str) -> bool:
     """Whether *svc_name* wires SIGUSR1 to a graceful drain-then-restart.
 
-    Only ``hermes-gateway*`` runs ``gateway/run.py`` (the handler); SIGUSR1 would just
+    Only ``relayhelm-gateway*`` runs ``gateway/run.py`` (the handler); SIGUSR1 would just
     kill ``hermes-serve*`` and burn the drain budget, so those go straight to the blunt
     restart. Same exact/hyphenated shape as ``_for_each_systemd_gateway_unit`` so a
-    near-prefix unit like ``hermes-gatewayd`` is never signalled.
+    near-prefix unit like ``relayhelm-gatewayd`` is never signalled.
 
     See #83438.
     """
-    return svc_name == "hermes-gateway" or svc_name.startswith("hermes-gateway-")
+    return svc_name == "relayhelm-gateway" or svc_name.startswith("relayhelm-gateway-")
 
 
 def _warn_incomplete_gateway_fleet_restart(failed_units: list) -> None:
@@ -377,17 +377,17 @@ def _warn_incomplete_gateway_fleet_restart(failed_units: list) -> None:
         # See #88848.
         print("  Listed services may be deregistered from launchd, or still")
         print("  running pre-update code (mixed sys.modules). Recover with:")
-        print("    hermes gateway status")
+        print("    relayhelm gateway status")
         print("    launchctl list | grep <label>")
         print("    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/<label>.plist")
         return
     print("  Skipped units may still be running pre-update code (mixed")
     print("  sys.modules). Restart them manually, then verify:")
-    print("    hermes gateway status")
-    if any(not name.startswith("ai.hermes.") for name in ordered):
+    print("    relayhelm gateway status")
+    if any(not name.startswith("io.github.inselfcontroll.relayhelm.") for name in ordered):
         print("    systemctl --user restart <unit>   # user-scope")
         print("    sudo systemctl restart <unit>     # system-scope")
-    if any(name.startswith("ai.hermes.") for name in ordered):
+    if any(name.startswith("io.github.inselfcontroll.relayhelm.") for name in ordered):
         print("    launchctl kickstart -k gui/$UID/<label>   # macOS (or user/$UID)")
 
 
@@ -422,7 +422,7 @@ def _restart_launchd_gateway_after_update(*, supervision_verify: bool = True) ->
             print(
                 f"  ⚠ Gateway restart failed: {stderr}\n"
                 "    The gateway may be DOWN on pre-update code. "
-                "Recover manually: hermes gateway restart"
+                "Recover manually: relayhelm gateway restart"
             )
             return [], [current_label]
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
@@ -432,7 +432,7 @@ def _restart_launchd_gateway_after_update(*, supervision_verify: bool = True) ->
             # The old code `pass`ed here (#74973's second silent variant); count it and tell the operator.
             "  ⚠ Could not restart the gateway "
             f"({e.__class__.__name__}: {e}).\n"
-            "    Recover manually: hermes gateway restart"
+            "    Recover manually: relayhelm gateway restart"
         )
         return [], [current_label]
 
@@ -449,7 +449,7 @@ def _restart_launchd_gateway_after_update(*, supervision_verify: bool = True) ->
         return [current_label], []
     print(
         f"  ✗ {current_label} restarted but launchd is not supervising it.\n"
-        "    Check logs, then: hermes gateway restart"
+        "    Check logs, then: relayhelm gateway restart"
     )
     return [], [current_label]
 
@@ -457,7 +457,7 @@ def _restart_launchd_gateway_after_update(*, supervision_verify: bool = True) ->
 def _restart_macos_launchd_gateways(restarted_services: list, failed_or_stale_units: list, drain_budget: float) -> None:
     """Restart every launchd-managed gateway after an update (macOS).
 
-    The pull is shared across profiles, so every ``ai.hermes.gateway*`` LaunchAgent
+    The pull is shared across profiles, so every ``io.github.inselfcontroll.relayhelm.gateway*`` LaunchAgent
     must reload it or siblings stay on pre-update ``sys.modules`` (systemd parity).
     Invoking profile uses ``launchd_restart()``; siblings get the same drain-first
     sequence with their domain (``gui/<uid>`` vs ``user/<uid>``) resolved per label so
@@ -535,12 +535,12 @@ def _surviving_gateway_pids_after_failed_restart():
 def _gateway_service_matches_profile(profile: str, service: object) -> bool:
     """Match an exact gateway service/label (systemd/launchd/s6 shapes) to a profile.
 
-    Never substring-match: ``foo`` must not claim ``hermes-gateway-foobar.service``.
+    Never substring-match: ``foo`` must not claim ``relayhelm-gateway-foobar.service``.
     """
     name = str(service).removesuffix(".service")
     if profile == "default":
-        return name in {"hermes-gateway", "ai.hermes.gateway", "gateway", "gateway-default"}
-    return name in {f"hermes-gateway-{profile}", f"ai.hermes.gateway-{profile}", f"gateway-{profile}"}
+        return name in {"relayhelm-gateway", "io.github.inselfcontroll.relayhelm.gateway", "gateway", "gateway-default"}
+    return name in {f"relayhelm-gateway-{profile}", f"io.github.inselfcontroll.relayhelm.gateway-{profile}", f"gateway-{profile}"}
 
 
 _MANUAL_GATEWAY_SKIP_REASON = (
@@ -616,8 +616,8 @@ def _warn_gateway_restart_phase_aborted(exc: BaseException, pids) -> None:
         print("  Any gateway still running is serving pre-update code")
         print("  (mixed sys.modules) against the updated checkout.")
     print("  Restart it manually, then verify:")
-    print("    hermes gateway restart")
-    print("    hermes gateway status")
+    print("    relayhelm gateway restart")
+    print("    relayhelm gateway status")
 
 
 def _drain_or_signal_gateway_for_update(pid: int, drain_budget: float, label: str) -> bool:
@@ -660,7 +660,7 @@ def _resolve_manage_cmd(cache: dict, scope_: str, scope_cmd_: list, svc_name_: s
     Manage-units verbs on a *system* service trigger a polkit prompt for non-root
     users, which flashes and dies inside our captured 10-15s subprocess. Root → plain
     systemctl; else ``sudo -n`` blanket probe, then a targeted ``reset-failed`` probe
-    so a least-privilege sudoers entry scoped to hermes-gateway* qualifies (idempotent
+    so a least-privilege sudoers entry scoped to relayhelm-gateway* qualifies (idempotent
     no-op we run before every privileged restart anyway). On None the caller must SKIP
     the restart (without draining first!). ``--no-ask-password`` prevents polkit hangs.
     """
@@ -747,13 +747,13 @@ def _restart_one_systemd_gateway_unit(
             f"  ⚠ {svc_name} is a system service and restarting it needs root.\n"
             f"    Restart it manually to load the new version:\n"
             f"      sudo systemctl restart {svc_name}\n"
-            f"    To let `hermes update` restart it automatically, allow\n"
+            f"    To let `relayhelm update` restart it automatically, allow\n"
             f"    passwordless sudo for systemctl, or run updates with sudo."
         )
         return
 
     # Blunt restart — only when the graceful path failed (no SIGUSR1 wiring, drain over
-    # budget, restart-policy mismatch). Mirrors `hermes gateway restart` (`systemd_restart()`).
+    # budget, restart-policy mismatch). Mirrors `relayhelm gateway restart` (`systemd_restart()`).
     restart = _systemctl_reset_and_restart(_manage_cmd, svc_name)
     if restart.returncode != 0:
         failed_or_stale_units.append(svc_name)
@@ -784,7 +784,7 @@ def _restart_one_systemd_gateway_unit(
 
 
 def _restart_systemd_gateway_units(restarted_services, failed_or_stale_units, restarted_scoped_units, drain_budget):
-    """Restart every active hermes-gateway*/hermes-serve* systemd unit (user + system).
+    """Restart every active relayhelm-gateway*/hermes-serve* systemd unit (user + system).
 
     Settled units → ``restarted_services`` (bare) and ``restarted_scoped_units``
     (``scope/name``); failures → ``failed_or_stale_units``. Per-unit timeouts isolated.
@@ -801,7 +801,7 @@ def _restart_systemd_gateway_units(restarted_services, failed_or_stale_units, re
         print(
             f"  ⚠ systemctl timed out listing {scope}-scope "
             f"gateway units ({exc.cmd if exc.cmd else 'unknown command'}). "
-            f"Check the gateway with: hermes gateway status"
+            f"Check the gateway with: relayhelm gateway status"
         )
 
     def _on_unit_timeout(svc_name: str, exc: subprocess.TimeoutExpired) -> None:
@@ -934,9 +934,9 @@ def _restart_manual_gateways(out: _GatewayRestartOutcome, _drain_budget) -> None
         unmapped_count = (len(out.killed_pids) - len(out.relaunched_profiles) - len(out.externally_supervised_profiles))
         if unmapped_count:
             print(f"  → Stopped {unmapped_count} manual gateway process(es)")
-            print("    Restart manually: hermes gateway run")
+            print("    Restart manually: relayhelm gateway run")
             if unmapped_count > 1:
-                print("    (or: hermes -p <profile> gateway run  for each profile)")
+                print("    (or: relayhelm -p <profile> gateway run  for each profile)")
 
 
 def _force_kill_stuck_gateways(killed_pids) -> None:
@@ -1064,7 +1064,7 @@ def _restart_gateway_fleet_after_update(_pre_update_plan, gateway_mode: bool):
     # already-restarted units to ``_finish_dashboard_update_cleanup`` (review on #83595).
     restarted_scoped_units: set = set()
 
-    # Purge stale cached Hermes modules FIRST: the import below loads new gateway
+    # Purge stale cached Relayhelm modules FIRST: the import below loads new gateway
     # source into this pre-update interpreter, and a cached sibling missing a
     # symbol the new source expects would ImportError and abort the whole phase.
     _m()._purge_stale_hermes_modules()
@@ -1099,7 +1099,7 @@ def _restart_gateway_fleet_after_update(_pre_update_plan, gateway_mode: bool):
             out.restarted_services, out.failed_or_stale_units, restarted_scoped_units, _drain_budget
         )
 
-        # macOS: EVERY ai.hermes.gateway* LaunchAgent (systemd parity).
+        # macOS: EVERY io.github.inselfcontroll.relayhelm.gateway* LaunchAgent (systemd parity).
         if is_macos():
             with suppress(FileNotFoundError, ImportError):
                 _restart_macos_launchd_gateways(out.restarted_services, out.failed_or_stale_units, _drain_budget)
@@ -1123,22 +1123,22 @@ def _restart_gateway_fleet_after_update(_pre_update_plan, gateway_mode: bool):
 
 
 def _print_legacy_units_warning() -> None:
-    """Legacy hermes.service fights hermes-gateway.service over the bot token; warn on
+    """Legacy hermes.service fights relayhelm-gateway.service over the bot token; warn on
     every update until migrated."""
     from hermes_cli.gateway import (has_legacy_hermes_units, _find_legacy_hermes_units, supports_systemd_services)
     if not (supports_systemd_services() and has_legacy_hermes_units()):
         return
     print()
-    print("⚠ Legacy Hermes gateway unit(s) detected:")
+    print("⚠ Legacy Relayhelm gateway unit(s) detected:")
     for name, path, is_sys in _find_legacy_hermes_units():
         scope = "system" if is_sys else "user"
         print(f"    {path}  ({scope} scope)")
     print()
     print("  These pre-rename units (hermes.service) fight the current")
-    print("  hermes-gateway.service for the bot token and cause SIGTERM")
+    print("  relayhelm-gateway.service for the bot token and cause SIGTERM")
     print("  flap loops. Remove them with:")
     print()
-    print("    hermes gateway migrate-legacy")
+    print("    relayhelm gateway migrate-legacy")
     print()
     print("  (add `sudo` if any are in system scope)")
 
@@ -1184,12 +1184,12 @@ def _verify_fleet_after_update(restart, *, _pre_update_plan, _windows_gateway_re
     _finish_dashboard_update_cleanup(node_failures, already_restarted_units=set(restart.restarted_services))
 
     # Success-path twin of the abort-recovery probe: the restart phase only touches
-    # units, so a unit-less `hermes serve` keeps stale sys.modules. Runs AFTER
+    # units, so a unit-less `relayhelm serve` keeps stale sys.modules. Runs AFTER
     # dashboard cleanup so a respawned manual dashboard isn't a survivor. Rows feed
     # reconciliation (survivor → exit 1); ``None`` = probe failed, stays fail-closed.
     # Check if any pre-update serve/dashboard runtimes survived on pre-update code generations (#100479).
     # This is the SUCCESS-path twin of the abort-recovery probe above: the restart phase only restarts
-    # units, so an sshd-spawned `serve --isolated` or a manual `hermes serve` (no unit) is left running its
+    # units, so an sshd-spawned `serve --isolated` or a manual `relayhelm serve` (no unit) is left running its
     # pre-update sys.modules graph — and its cron ticker keeps firing agent jobs that ImportError on every
     # symbol added in the pulled range. The rows also feed the plan-vs-execution reconciliation below, so a
     # survivor is escalated (exit 1) instead of merely printed.
@@ -1201,7 +1201,7 @@ def _verify_fleet_after_update(restart, *, _pre_update_plan, _windows_gateway_re
 
     print()
     print("Tip: You can now select a provider and model:")
-    print("  hermes model              # Select provider and model")
+    print("  relayhelm model              # Select provider and model")
 
     # Compare every live gateway's stamped code_sha against the fresh checkout
     # instead of assuming the restart phase worked.

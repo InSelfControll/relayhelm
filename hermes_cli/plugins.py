@@ -1,4 +1,4 @@
-"""Hermes Plugin System — discovers, loads, and manages plugins.
+"""Relayhelm Plugin System — discovers, loads, and manages plugins.
 
 Sources, later overriding earlier on key collision: bundled ``<repo>/plugins/<name>/`` (``memory/``
 and ``context_engine/`` have their own discovery), user ``~/.hermes/plugins/<name>/``, project
@@ -570,7 +570,7 @@ class PluginContext:
         choice, not privilege escalation); others need ``tools.override`` via
         :func:`plugin_capability_granted` (granted_capabilities OR legacy ``allow_tool_override: true``).
 
-        Bundled plugins (shipped with Hermes core) are trusted by default — an override there is a
+        Bundled plugins (shipped with Relayhelm core) are trusted by default — an override there is a
         deliberate maintainer choice, not a third-party plugin trying to elevate privilege. For every other
         source, the canonical check is :func:`plugin_capability_granted` with the ``tools.override``
         capability — satisfied by EITHER the consent-flow grant
@@ -1292,7 +1292,7 @@ class PluginManager(PluginLoaderMixin, PluginDispatchMixin, PluginLedgerMixin):
         enabled = _get_enabled_plugins()  # None = opt-in default (nothing enabled)
         stale_relay_keys = legacy_relay_plugin_keys(enabled)
         if stale_relay_keys:
-            logger.warning("Removed Hermes plugin %s is still listed in plugins.enabled; "
+            logger.warning("Removed Relayhelm plugin %s is still listed in plugins.enabled; "
                            "remove it and configure native Relay plugins with %s",
                            ", ".join(stale_relay_keys), RELAY_PLUGINS_CONFIG_ENV)
         # Later sources win on key collision (project > user > bundled); gate the winners, then
@@ -1394,8 +1394,12 @@ class PluginManager(PluginLoaderMixin, PluginDispatchMixin, PluginLedgerMixin):
                 continue
             try:  # lazy: this is a startup probe, keep agent_plugins unimported unless needed
                 from hermes_cli.agent_plugins import _discover_mcp
-                if _discover_mcp(Path(manifest.path), get_hermes_home() / "plugin-data"
-                                 / (manifest.skill_namespace or lookup_key), [], create_data=False):
+                from hermes_cli.host_plugin_compat import manifest_path, discover_mcp
+                root = Path(manifest.path)
+                data = get_hermes_home() / "plugin-data" / (manifest.skill_namespace or lookup_key)
+                servers = (discover_mcp(root, data, create_data=False) if manifest_path(root) is not None
+                           else _discover_mcp(root, data, [], create_data=False))
+                if servers:
                     return True
             except (OSError, RuntimeError, ValueError):
                 continue  # fail closed on an unreadable package; full discovery reports it
@@ -1473,7 +1477,7 @@ class PluginManager(PluginLoaderMixin, PluginDispatchMixin, PluginLedgerMixin):
 # working — ``get_plugin_manager()`` still reads/writes this name.
 _plugin_manager: Optional[PluginManager] = None
 
-# Resolved Hermes home -> PluginManager. A process can switch profiles via
+# Resolved Relayhelm home -> PluginManager. A process can switch profiles via
 # ``set_hermes_home_override()``; a single slot would leak one profile's plugin/context-engine state
 # into another, and keying by resolved home lets a re-entered profile reuse its imported modules.
 _plugin_managers_by_home: Dict[Path, PluginManager] = {}
@@ -1481,7 +1485,7 @@ _plugin_managers_lock = threading.RLock()
 
 
 def _plugin_home_key() -> Path:
-    """Resolved active Hermes home — the key for per-profile plugin managers (plugins capture the
+    """Resolved active Relayhelm home — the key for per-profile plugin managers (plugins capture the
     home at registration, so a process serving several profiles cannot share one manager)."""
     try:
         return get_hermes_home().expanduser().resolve()
@@ -1506,7 +1510,7 @@ def _clear_plugin_submodules(manager: Optional[PluginManager]) -> None:
 
 
 def get_plugin_manager() -> PluginManager:
-    """Return the plugin manager for the active Hermes profile/home (cached per resolved home; a
+    """Return the plugin manager for the active Relayhelm profile/home (cached per resolved home; a
     profile switch gets its own manager and plugin submodules)."""
     global _plugin_manager
     current_home = _plugin_home_key()

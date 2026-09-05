@@ -6,7 +6,7 @@ the whole command. An update started that way must therefore replace a file it
 is holding, which Windows refuses — so the DEPENDENCY SYNC re-runs itself under
 ``venv\\Scripts\\python.exe``.
 
-The hand-off sits at the sync boundary, not at the top of ``hermes update``:
+The hand-off sits at the sync boundary, not at the top of ``relayhelm update``:
 everything before it (the fetch, the stash question, the branch switch) runs
 in the user's own console, and an up-to-date run that never syncs never hands
 off at all.
@@ -26,7 +26,7 @@ from hermes_cli import main as cli_main
 from hermes_cli import update_cmd
 from hermes_cli import main_install_repair
 
-SHIM_NAMES = ["hermes.exe", "hermes-agent.exe", "hermes-acp.exe", "hermes-gateway.exe"]
+SHIM_NAMES = ["hermes.exe", "relayhelm.exe", "hermes-acp.exe", "relayhelm-gateway.exe"]
 
 
 @pytest.fixture
@@ -196,7 +196,7 @@ def test_reexec_falls_through_when_spawn_fails(venv, monkeypatch, capsys):
 def test_up_to_date_run_never_hands_off(venv, monkeypatch, capsys):
     """The regression that started this: a no-op update must not detach.
 
-    The hand-off used to run before the fetch, so every ``hermes update`` —
+    The hand-off used to run before the fetch, so every ``relayhelm update`` —
     including the ``Already up to date!`` case that never touches the venv —
     spawned a child and returned to the shell, leaving the child printing
     into a console it no longer owned. ``--check`` is the cheapest real run
@@ -267,11 +267,11 @@ def test_reboot_deferred_rename_fallback_is_gone():
 
 
 def test_pending_rename_filter_drops_only_our_shim_pairs():
-    shims = [Path(r"C:\hermes\venv\Scripts\hermes.exe")]
+    shims = [Path(r"C:\hermes\venv\Scripts\relayhelm.exe")]
     entries = [
         r"\??\C:\other\thing.dll", r"!\??\C:\other\thing.dll.bak",
-        r"\??\C:\hermes\venv\Scripts\hermes.exe",
-        r"!\??\C:\hermes\venv\Scripts\hermes.exe.old.1755624735000",
+        r"\??\C:\hermes\venv\Scripts\relayhelm.exe",
+        r"!\??\C:\hermes\venv\Scripts\relayhelm.exe.old.1755624735000",
     ]
     kept, removed = main_install_repair._filter_pending_shim_renames(entries, shims)
     assert removed == 1
@@ -279,9 +279,9 @@ def test_pending_rename_filter_drops_only_our_shim_pairs():
 
 
 def test_pending_rename_filter_keeps_a_shim_pair_with_a_foreign_target():
-    shims = [Path(r"C:\hermes\venv\Scripts\hermes.exe")]
+    shims = [Path(r"C:\hermes\venv\Scripts\relayhelm.exe")]
     entries = [
-        r"\??\C:\hermes\venv\Scripts\hermes.exe", r"!\??\C:\somewhere\else.exe",
+        r"\??\C:\hermes\venv\Scripts\relayhelm.exe", r"!\??\C:\somewhere\else.exe",
     ]
     kept, removed = main_install_repair._filter_pending_shim_renames(entries, shims)
     assert removed == 0

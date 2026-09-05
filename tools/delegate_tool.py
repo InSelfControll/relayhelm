@@ -178,7 +178,8 @@ def _build_child_agent(
                 **rt, max_iterations=max_iterations, prefill_messages=getattr(parent_agent, "prefill_messages", None),
                 enabled_toolsets=child_toolsets, disabled_toolsets=child_disabled_toolsets, quiet_mode=True,
                 ephemeral_system_prompt=child_prompt, log_prefix=f"[subagent-{task_index}]", platform="subagent",
-                skip_context_files=True, skip_memory=True, clarify_callback=None,
+                skip_context_files=True, skip_memory=True,
+                clarify_callback=getattr(parent_agent, "clarify_callback", None),
                 thinking_callback=(
                     (lambda text: _safe_progress(child_progress_cb, "_thinking", text) if text else None)
                     if child_progress_cb else None
@@ -194,6 +195,14 @@ def _build_child_agent(
                     from hermes_state_registry import release_or_close
                     release_or_close(child_session_db)
             raise
+    if getattr(child, "model", None) != rt["model"]:
+        with _quiet("Could not close child after model mismatch"):
+            child.close()
+        if child_session_db is not None:
+            from hermes_state_registry import release_or_close
+            release_or_close(child_session_db)
+        raise ValueError(f"Requested delegation model {rt['model']!r}, but the provider resolved "
+                         f"{getattr(child, 'model', None)!r}. No task was started.")
     child._print_fn = getattr(parent_agent, "_print_fn", None)
     if child_session_db is not None:
         child._owns_session_db = True  # released by the child's close(), never by the parent
@@ -288,7 +297,7 @@ def _run_single_child(
         # Close steer acceptance before any completion callback (see _merge_late_steer).
         _late_pending_steer = run.close_steering()
         logging.exception(f"[subagent-{task_index}] failed")
-        # Entry status "error" (contract), progress event status "failed" (UI vocabulary).
+        # Preserve the exception reason while reporting the task as failed.
         return run.finish_failed(
             _fabricated_entry(task_index, "error", str(exc), child, run.elapsed()), _late_pending_steer,
             preview=str(exc), summary=str(exc), status="failed",
@@ -326,6 +335,9 @@ def _build_children(
                 parent_agent=parent_agent, role=_normalize_role(t.get("role") or top_role), **overrides,
             )
         except ValueError as exc:
+            for _, _, built_child in children:
+                with _quiet("Could not close unstarted child after preflight failure"):
+                    built_child.close()
             return [], str(exc)
         if _task_schema is not None:
             with _quiet("Could not attach output schema to child %d", i):
@@ -343,6 +355,27 @@ def _build_children(
                 _ident_ref["delegation_id"] = live_deleg_id
         children.append((i, t, child))
     return children, None
+
+
+def _request_split_consent(parent_agent, task_list, creds):
+    """Only a host-delivered user response can authorize this particular spawn."""
+    from tools.clarify_tool import clarify_tool
+
+    model = creds.get("model") or getattr(parent_agent, "model", None)
+    if not isinstance(model, str) or not model.strip():
+        return "Delegation requires an explicitly resolved model. Keep working with one agent."
+    callback = getattr(parent_agent, "clarify_callback", None)
+    if not callable(callback):
+        return "Delegation requires the user's split-task choice through an interactive host. Keep one agent."
+    goals = "\n".join(f"{i + 1}. {task['goal']}" for i, task in enumerate(task_list))
+    answer = json.loads(clarify_tool(
+        question=(f"Split this task between you and {len(task_list)} additional agent(s), "
+                  f"using model {model}?\n{goals}"),
+        choices=["Keep one agent", "Split task"], callback=callback,
+    ))
+    if answer.get("user_response") != "Split task":
+        return "The user did not choose to split this task. Continue with one agent."
+    return None
 
 
 def delegate_task(
@@ -408,6 +441,10 @@ def delegate_task(
         task_schemas, err = _coerce_task_schemas(task_list, output_schema)
     if err:
         return tool_error(err)
+
+    consent_error = _request_split_consent(parent_agent, task_list, creds)
+    if consent_error:
+        return json.dumps({"status": "not_started", "completed": False, "error": consent_error})
 
     overall_start = time.monotonic()
     # Live transcripts: cache/delegation/live/<id>/task-<n>.log per task, a side channel with zero effect on message
@@ -478,7 +515,9 @@ _DESCRIPTION_HEAD = (
     "succeeded.\n"
 )
 _DESCRIPTION_TAIL = (
-    "- Children inherit the parent model unless pinned via delegation.provider / delegation.model in config.yaml."
+    "- The user must choose Split task in the host prompt before agents start. "
+    "Children inherit the parent model unless pinned via delegation.provider / delegation.model in config.yaml; "
+    "they never silently fall back to another model."
 )
 
 def _build_tasks_param_description() -> str:

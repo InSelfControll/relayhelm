@@ -132,7 +132,7 @@ def install_exit_flush_signal_handlers() -> bool:
 
 def _transport_is_dead(transport) -> bool:
     # _detached_ws_transport is the post-disconnect drop sentinel. _stdio_transport is the REAL transport for
-    # standalone `hermes --tui` and must NOT count as dead.
+    # standalone `relayhelm --tui` and must NOT count as dead.
     return transport is _detached_ws_transport or getattr(transport, "_closed", None) is True
 
 
@@ -366,7 +366,7 @@ def _start_backend_heartbeat_refresher() -> None:
                 db.clear_backend_heartbeat(_backend_id_for_this_process())
 
     atexit.register(_atexit_clear)
-    threading.Thread(target=_loop, name="hermes-gateway-heartbeat", daemon=True).start()
+    threading.Thread(target=_loop, name="relayhelm-gateway-heartbeat", daemon=True).start()
 
 
 def _schedule_startup_orphan_sweep() -> None:

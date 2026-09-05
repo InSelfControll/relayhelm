@@ -120,7 +120,7 @@ async def _self_post_chat_completion(adapter: Any, *, text: str, session_id: str
         host = f"[{host}]"  # bare IPv6 literal
     url = f"http://{host}:{port}/v1/chat/completions"
     headers = {"Authorization": f"Bearer {api_key}", "X-Hermes-Session-Id": session_id}
-    payload = {"model": str(getattr(adapter, "_model_name", "") or "hermes-agent"),
+    payload = {"model": str(getattr(adapter, "_model_name", "") or "relayhelm"),
                "messages": [{"role": "user", "content": text}], "stream": False}
     last_err: Optional[BaseException] = None
     attempts = 1 + len(_RETRY_DELAYS_SECONDS)

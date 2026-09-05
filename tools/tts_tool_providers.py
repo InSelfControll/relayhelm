@@ -293,7 +293,7 @@ def _generate_xai_tts(text: str, output_path: str, tts_config: Dict[str, Any]) -
     creds = resolve_xai_http_credentials(prefer_api_key=True)
     api_key = str(creds.get("api_key") or "").strip()
     if not api_key:
-        raise ValueError("No xAI credentials found. Configure xAI OAuth in `hermes model` or set XAI_API_KEY.")
+        raise ValueError("No xAI credentials found. Configure xAI OAuth in `relayhelm model` or set XAI_API_KEY.")
     xai_config = tts_config.get("xai") or {}
     voice_id = str(xai_config.get("voice_id", DEFAULT_XAI_VOICE_ID)).strip() or DEFAULT_XAI_VOICE_ID
     language = str(xai_config.get("language", DEFAULT_XAI_LANGUAGE)).strip() or DEFAULT_XAI_LANGUAGE
@@ -594,7 +594,7 @@ def _generate_gemini_tts(text: str, output_path: str, tts_config: Dict[str, Any]
             version = str(hermes_cli.__version__)
         except Exception:
             version = "0.0.0"
-        headers["X-Goog-Api-Client"] = f"hermes-agent/{version}"  # partner-integration guidance
+        headers["X-Goog-Api-Client"] = f"relayhelm/{version}"  # partner-integration guidance
     response = _post_json(f"{base_url}/models/{model}:generateContent", payload, headers, params={"key": api_key})
     if response.status_code != 200:
         raise RuntimeError(f"Gemini TTS API error (HTTP {response.status_code}): {_gemini_error_detail(response)}")

@@ -22,7 +22,7 @@ import pytest
 @pytest.fixture
 def curator_status_env(tmp_path, monkeypatch):
     """Isolated HERMES_HOME with real agent-created skills on disk."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     skills = home / "skills"
     skills.mkdir(parents=True)
     (home / "logs").mkdir()

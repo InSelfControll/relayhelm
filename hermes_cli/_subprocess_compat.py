@@ -234,12 +234,12 @@ def noninteractive_git_env(base: "Mapping[str, str] | None" = None) -> dict[str,
     prompting), ``GCM_INTERACTIVE=Never`` (no Git Credential Manager dialog), and isolated git
     config: inherited ``GIT_CONFIG_*`` injection, global/system config, pagers, editors, fsmonitor,
     external diff and hooks are all disabled so a user's repo/global config cannot hang or mutate
-    Hermes's plumbing calls. ``GIT_ASKPASS``/``SSH_ASKPASS`` are deliberately left alone: a
+    Relayhelm's plumbing calls. ``GIT_ASKPASS``/``SSH_ASKPASS`` are deliberately left alone: a
     *working* askpass helper or ssh-agent should still succeed non-interactively. Pair with
     ``stdin=subprocess.DEVNULL``. Internal plumbing only — the agent-facing terminal tool has its
     own policy layer and visible PTY.
 
-    Hermes shells out to git from many non-interactive contexts — MCP catalog installs, plugin
+    Relayhelm shells out to git from many non-interactive contexts — MCP catalog installs, plugin
     install/update, profile distribution staging, worktree base fetches, desktop review-pane fetch/push.
     When the remote is private, misconfigured, or requires auth, git's default behavior is to prompt on the
     inherited terminal (or via an askpass helper), which silently hangs the operation until its timeout — or
@@ -280,17 +280,17 @@ def _process_start_time(pid: int) -> int | None:
 
 
 def _text_names_hermes(text: str) -> bool:
-    r"""True when *text* names Hermes at a path-segment / token boundary.
+    r"""True when *text* names Relayhelm at a path-segment / token boundary.
 
     A bare ``"hermes" in text`` substring test would also match unrelated processes whose paths
     merely contain the letters (``...\shermesa\...``) — the false-positive class this prevents.
     """
-    return any(token.startswith(("hermes", ".hermes"))
+    return any(token.startswith(("hermes", ".relayhelm"))
                for token in re.split(r"[\\/\s=,;\"']+", text.lower()))
 
 
 def _process_command_is_hermes(pid: int) -> bool:
-    """Best-effort check that *pid* currently runs Hermes code."""
+    """Best-effort check that *pid* currently runs Relayhelm code."""
     try:
         import psutil
 
@@ -305,7 +305,7 @@ def _process_command_is_hermes(pid: int) -> bool:
 def pid_is_hermes(pid: int, *, expected_start_time: int | None = None) -> bool:
     """Whether it is safe to use ``taskkill`` for *pid*.
 
-    The PID must be valid, currently exist, and identify a Hermes process. When the caller captured
+    The PID must be valid, currently exist, and identify a Relayhelm process. When the caller captured
     a start-time fingerprint before the destructive action, the live process must still have the
     same ``(pid, start_time)`` identity. Any ambiguity fails closed.
     """
@@ -405,7 +405,7 @@ def bounded_probe_run(
     ``communicate()`` after killing the direct child. Killing it can leave a descendant (``git.exe`` under a
     launcher shim, ``conhost.exe`` under wmic/powershell) holding duplicates of the captured stdout/stderr
     handles, so the pipes never reach EOF and the reader-thread join blocks forever. The wmic /
-    ``Get-CimInstance Win32_Process`` gateway scan hit exactly this during ``hermes update`` on slow-WMI
+    ``Get-CimInstance Win32_Process`` gateway scan hit exactly this during ``relayhelm update`` on slow-WMI
     machines (#87134); the git probes hit it first (#68609 / #66037).
     """
     _popen_kwargs: dict = {"creationflags": windows_hide_flags()} if IS_WINDOWS else {"process_group": 0}

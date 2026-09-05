@@ -264,8 +264,8 @@ test('POSIX managed launcher is detached, correlation-scoped, and never publishe
     {
       ssh: { exec: async () => '' },
       platform: 'Linux',
-      hermesPath: '~/.local/bin/hermes',
-      hermesHome: '~/.hermes'
+      hermesPath: '~/.local/bin/relayhelm',
+      hermesHome: '~/.relayhelm'
     },
     CORRELATION
   )
@@ -318,9 +318,9 @@ test('Windows managed launcher starts a hidden child and leaves exit 75 to the e
     {
       ssh: { exec: async () => '' },
       platform: 'Windows',
-      hermesPath: 'C:\\Hermes\\hermes.exe',
-      hermesHome: 'C:\\Users\\alice\\.hermes',
-      pythonPath: 'C:\\Hermes\\python.exe'
+      hermesPath: 'C:\\Relayhelm\\relayhelm.exe',
+      hermesHome: 'C:\\Users\\alice\\.relayhelm',
+      pythonPath: 'C:\\Relayhelm\\python.exe'
     },
     CORRELATION
   )
@@ -453,9 +453,9 @@ test('Windows coordinator handoff is pending until its marker clears and correla
 
   const target = {
     platform: 'Windows' as const,
-    hermesPath: 'C:\\Hermes\\hermes.exe',
-    hermesHome: 'C:\\Users\\alice\\.hermes',
-    pythonPath: 'C:\\Hermes\\python.exe',
+    hermesPath: 'C:\\Relayhelm\\relayhelm.exe',
+    hermesHome: 'C:\\Users\\alice\\.relayhelm',
+    pythonPath: 'C:\\Relayhelm\\python.exe',
     ssh: {
       exec: async () => {
         const reply = replies[Math.min(calls, replies.length - 1)]
@@ -481,8 +481,8 @@ test('terminal status without its durable receipt fails instead of claiming succ
 
   const target = {
     platform: 'Linux' as const,
-    hermesPath: '~/.local/bin/hermes',
-    hermesHome: '~/.hermes',
+    hermesPath: '~/.local/bin/relayhelm',
+    hermesHome: '~/.relayhelm',
     ssh: { exec: async () => observation({ marker: 'absent', exitCode: 0 }) }
   }
 
@@ -504,8 +504,8 @@ test('live or malformed remote markers fail actionably at bounded update and rec
 
     const target = {
       platform: 'Linux' as const,
-      hermesPath: '~/.local/bin/hermes',
-      hermesHome: '~/.hermes',
+      hermesPath: '~/.local/bin/relayhelm',
+      hermesHome: '~/.relayhelm',
       ssh: { exec: async () => observation({ marker, ...(marker === 'live' ? { markerPid: 44 } : {}) }) }
     }
 
@@ -529,8 +529,8 @@ test('a journaled launch requires correlated terminal proof or an observed live-
 
   const target = {
     platform: 'Linux' as const,
-    hermesPath: '~/.local/bin/hermes',
-    hermesHome: '~/.hermes',
+    hermesPath: '~/.local/bin/relayhelm',
+    hermesHome: '~/.relayhelm',
     ssh: { exec: async () => observation({ marker: 'absent' }) }
   }
 
@@ -563,8 +563,8 @@ test('remote launch intent fences crash recovery even before the local journal r
 
   const target = {
     platform: 'Linux' as const,
-    hermesPath: '~/.local/bin/hermes',
-    hermesHome: '~/.hermes',
+    hermesPath: '~/.local/bin/relayhelm',
+    hermesHome: '~/.relayhelm',
     ssh: { exec: async () => observation({ marker: 'absent', launchIntent: 'present' }) }
   }
 

@@ -188,7 +188,7 @@ def _resolve_hermes_bin_for_desktop_entry(
     module_lexical_root = _project_root()
     original_argv0 = sys.argv[0]
 
-    # An external primary (another install's /opt/.../bin/hermes, a venv console script) wins
+    # An external primary (another install's /opt/.../bin/relayhelm, a venv console script) wins
     # BEFORE any known-location probing, which could silently switch the entry to a different
     # installation. Only rerun the resolver with argv[0] hidden when the primary could actually
     # be checkout-internal (also shortens the window a concurrent reader sees mutated sys.argv).
@@ -197,7 +197,7 @@ def _resolve_hermes_bin_for_desktop_entry(
         return primary
 
     # A primary that is NOT checkout-internal and not the invoking interpreter is an external launcher (e.g.
-    # /opt/.../bin/hermes from another install method, or a venv console script). It must be evaluated
+    # /opt/.../bin/relayhelm from another install method, or a venv console script). It must be evaluated
     # BEFORE any known-location probing: probing first could silently switch the entry to a different
     # installation (#94443 review case 3).
     # Only reroute when argv[0] actually drove the resolution: re-run the resolver with argv[0] hidden and
@@ -323,7 +323,7 @@ def _known_wrapper_candidates():
     if prefix:
         candidates.append(Path(prefix) / "bin" / "hermes")
     if hasattr(os, "geteuid") and os.geteuid() == 0:
-        candidates.append(Path("/usr/local/bin/hermes"))
+        candidates.append(Path("/usr/local/bin/relayhelm"))
     candidates.append(Path.home() / ".local" / "bin" / "hermes")
     return candidates
 
@@ -392,15 +392,15 @@ def render_desktop_entry(exec_command: str, icon: str) -> str:
     return (
         "[Desktop Entry]\n"
         "Type=Application\n"
-        "Name=Hermes\n"
-        "GenericName=Hermes Desktop\n"
-        "Comment=Launch Hermes Desktop\n"
+        "Name=Relayhelm\n"
+        "GenericName=Relayhelm Desktop\n"
+        "Comment=Launch Relayhelm Desktop\n"
         f"Exec={exec_command}\n"
         f"Icon={icon}\n"
         "Terminal=false\n"
         "Categories=Utility;\n"
         "StartupNotify=true\n"
-        "StartupWMClass=Hermes\n"
+        "StartupWMClass=Relayhelm\n"
     )
 
 
@@ -549,7 +549,7 @@ def _install_icon_to_hicolor(icon: Path) -> bool:
 
 
 def install_desktop_entry(project_root: Path) -> Optional[Path]:
-    """Write (or refresh) the Hermes desktop entry and return its path.
+    """Write (or refresh) the Relayhelm desktop entry and return its path.
 
     ``None`` on non-Linux platforms or when the write fails — a convenience, never a reason to
     fail a launch.

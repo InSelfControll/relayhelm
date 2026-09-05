@@ -798,7 +798,7 @@ class TestLazyMcpInstall:
 
         state = {
             "ready": False,
-            "reason": "Hermes computer use requires cua-driver 0.20.0 or newer",
+            "reason": "Relayhelm computer use requires cua-driver 0.20.0 or newer",
         }
         with patch.object(
                  cua_backend,
@@ -836,7 +836,7 @@ class TestContractAutoRepair:
     """An installed-but-incompatible driver is repaired automatically, once.
 
     The 0.20 runtime-contract gate fails closed; when the failure is an old
-    installed driver (a state Hermes' own version-floor bump created),
+    installed driver (a state Relayhelm' own version-floor bump created),
     start() runs the standard install/repair path once instead of failing
     every computer_use call until the user runs the CLI by hand.
     """
@@ -846,7 +846,7 @@ class TestContractAutoRepair:
             "ready": False,
             "binary": "/usr/local/bin/cua-driver",
             "version": "0.19.3",
-            "reason": "Hermes computer use requires cua-driver 0.20.0 or newer",
+            "reason": "Relayhelm computer use requires cua-driver 0.20.0 or newer",
         }
 
     def test_start_auto_repairs_incompatible_driver(self, monkeypatch):
@@ -1768,7 +1768,7 @@ class TestCuaCliFallbackResolution:
 
 
 class TestClickButtonPassthrough:
-    """Surface 5 (NousResearch/hermes-agent#47072) — `middle_click` must
+    """Surface 5 (InSelfControll/relayhelm#47072) — `middle_click` must
     actually reach cua-driver as a middle button, not silently degrade to
     left. Pre-fix, the backend's `click()` chose the tool by name
     (`button == "right"` → `right_click`, everything else → `click` with
@@ -1944,7 +1944,7 @@ class TestZIndexSorting:
         assert desktop["z_index"] == 0
 
 class TestImageMimeTypePropagation:
-    """Surface 7 (NousResearch/hermes-agent#47072): trycua/cua#1961 made
+    """Surface 7 (InSelfControll/relayhelm#47072): trycua/cua#1961 made
     `mimeType` part of every MCP image-part response, so the wrapper no
     longer has to sniff PNG vs JPEG by inspecting the first base64 bytes
     (`/9j/` for JPEG / `iVBOR` for PNG). The sniff is preserved as a
@@ -1990,10 +1990,10 @@ class TestImageMimeTypePropagation:
             )
 
 class TestMcpInvocationResolution:
-    """Surface 8 (NousResearch/hermes-agent#47072): instead of hardcoding
+    """Surface 8 (InSelfControll/relayhelm#47072): instead of hardcoding
     `["mcp"]` as the cua-driver subcommand, we ask the driver via its
     `manifest` JSON (trycua/cua#1961) so a future rename or relocation of
-    the MCP subcommand doesn't require a Hermes patch.
+    the MCP subcommand doesn't require a Relayhelm patch.
 
     The discovery hop must NEVER prevent the wrapper from starting — every
     failure mode (no manifest verb, non-zero exit, junk JSON, missing
@@ -2062,7 +2062,7 @@ class TestMcpInvocationResolution:
 
 
 class TestStructuredElementsConsumption:
-    """Surface 2 (NousResearch/hermes-agent#47072): trycua/cua#1961 made
+    """Surface 2 (InSelfControll/relayhelm#47072): trycua/cua#1961 made
     `structuredContent.elements` part of every `get_window_state` MCP
     response. The wrapper used to parse the markdown AX tree with a
     regex — lossy because bounds always came back (0,0,0,0). The
@@ -2138,7 +2138,7 @@ class TestStructuredElementsConsumption:
         assert cap.elements == []
 
 class TestCapabilityDiscovery:
-    """Surface 4 (NousResearch/hermes-agent#47072): the wrapper learns
+    """Surface 4 (InSelfControll/relayhelm#47072): the wrapper learns
     what cua-driver supports from the per-tool `capabilities[]` array on
     `tools/list` (trycua/cua#1961) instead of name-checking. The infra
     here is consumed by other surfaces (e.g. Surface 6 only carries
@@ -2178,7 +2178,7 @@ class TestCapabilityDiscovery:
 
 
 class TestElementTokenAttachment:
-    """Surface 6 (NousResearch/hermes-agent#47072): trycua/cua#1961 added
+    """Surface 6 (InSelfControll/relayhelm#47072): trycua/cua#1961 added
     an opaque `element_token` alongside `element_index` so the wrapper
     can carry per-snapshot handles instead of relying on raw indices that
     silently re-resolve when the snapshot is superseded.
@@ -2273,7 +2273,7 @@ class TestElementTokenAttachment:
 
 
 class TestSessionLifecycle:
-    """Surface gap (audit June 2026): Hermes never declared a cua-driver
+    """Surface gap (audit June 2026): Relayhelm never declared a cua-driver
     session, so the agent-cursor overlay was inert and per-run state
     (config overrides, recording ownership, cursor identity) was shared
     across concurrent runs. Wired now: backend.start() calls

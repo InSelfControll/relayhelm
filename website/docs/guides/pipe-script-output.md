@@ -7,7 +7,7 @@ description: "Send text from any shell script, cron job, CI hook, or monitoring 
 # Pipe Script Output to Messaging Platforms
 
 `hermes send` is a small, scriptable CLI that pushes a message to any
-messaging platform Hermes is already configured for. Think of it as a
+messaging platform Relayhelm is already configured for. Think of it as a
 cross-platform `curl` for notifications — you don't need a running
 gateway, you don't need an LLM, and you don't need to re-paste bot tokens
 into each of your scripts.
@@ -76,7 +76,7 @@ hermes send --list telegram
 | `platform:#channel` | `discord:#ops` | Human-friendly channel name (resolved against the channel directory) |
 | `platform:+E164` | `signal:+15551234567` | Phone-addressed platforms: Signal, SMS, WhatsApp |
 
-Any platform Hermes ships adapters for works as a target:
+Any platform Relayhelm ships adapters for works as a target:
 `telegram`, `discord`, `slack`, `signal`, `sms`, `whatsapp`, `matrix`,
 `mattermost`, `feishu`, `dingtalk`, `wecom`, `weixin`, `email`, and
 others.
@@ -102,7 +102,7 @@ branch on them the same way they would on `curl` or `grep`.
 2. **`--file PATH`** — `hermes send --to telegram --file msg.txt`
 3. **Piped stdin** — `echo hi | hermes send --to telegram`
 
-When stdin is a TTY (no pipe), Hermes does **not** wait for input — you'll
+When stdin is a TTY (no pipe), Relayhelm does **not** wait for input — you'll
 get a clear usage error instead. This keeps scripts from hanging if they
 accidentally omit the body.
 
@@ -124,8 +124,8 @@ if [ "$ram_pct" -ge 85 ]; then
 fi
 ```
 
-Because `hermes send` reuses your Hermes config, the same script works on
-any host where Hermes is installed — no need to export bot tokens into
+Because `hermes send` reuses your Relayhelm config, the same script works on
+any host where Relayhelm is installed — no need to export bot tokens into
 each machine's environment manually.
 
 :::tip Don't alert the gateway about itself
@@ -153,7 +153,7 @@ fi
 ```bash
 # Crontab entry
 0 9 * * * /usr/local/bin/generate-metrics.sh \
-  | /home/me/.hermes/bin/hermes send \
+  | /home/me/.relayhelm/bin/relayhelm send \
       --to telegram --subject "Daily metrics $(date +%Y-%m-%d)"
 ```
 
@@ -186,13 +186,13 @@ msg_id=$(hermes send --to discord:#ops --json "build started" \
 **Usually no.** For any bot-token platform — Telegram, Discord, Slack,
 Signal, SMS, WhatsApp Cloud API, and most others — `hermes send` calls
 the platform's REST endpoint directly using credentials from
-`~/.hermes/.env` and `~/.hermes/config.yaml`. It's a standalone subprocess
+`~/.relayhelm/.env` and `~/.relayhelm/config.yaml`. It's a standalone subprocess
 that exits as soon as the message is delivered.
 
 A live gateway is only required for **plugin platforms** that rely on a
 persistent adapter connection (for example, a custom plugin that keeps
 a long-lived WebSocket open). In that case you'll get a clear error
-pointing at the gateway; start it with `hermes gateway start` and retry.
+pointing at the gateway; start it with `relayhelm gateway start` and retry.
 
 ---
 
@@ -211,9 +211,9 @@ hermes send --list telegram
 hermes send --list --json
 ```
 
-The listing is built from `~/.hermes/channel_directory.json`, which the
+The listing is built from `~/.relayhelm/channel_directory.json`, which the
 gateway refreshes every few minutes while it's running. If you see
-"no channels discovered yet", start the gateway once (`hermes gateway
+"no channels discovered yet", start the gateway once (`relayhelm gateway
 start`) so it can populate the cache.
 
 Human-friendly names (`discord:#ops`, `slack:#engineering`) are resolved
@@ -224,7 +224,7 @@ IDs.
 
 ## Comparison with Other Approaches
 
-| Approach | Multi-platform | Reuses Hermes creds | Needs gateway | Best for |
+| Approach | Multi-platform | Reuses Relayhelm creds | Needs gateway | Best for |
 |----------|----------------|---------------------|---------------|----------|
 | `hermes send` | ✅ | ✅ | No (bot-token) | Everything below |
 | Raw `curl` to each platform | Each scripted separately | Manual | No | Critical watchdogs |

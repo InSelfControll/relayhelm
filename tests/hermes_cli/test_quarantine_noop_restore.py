@@ -29,7 +29,7 @@ from hermes_cli import main_install_repair
 def _make_scripts_dir(tmp_path: Path) -> Path:
     scripts = tmp_path / "venv" / "Scripts"
     scripts.mkdir(parents=True)
-    for name in ("hermes", "hermes-agent", "hermes-acp", "hermes-gateway"):
+    for name in ("hermes", "relayhelm", "hermes-acp", "relayhelm-gateway"):
         (scripts / f"{name}.exe").write_bytes(b"MZ-old-" + name.encode())
     return scripts
 
@@ -54,7 +54,7 @@ def test_main_noop_success_restores_shims(tmp_path):
     names = _shim_names(scripts)
     assert "hermes.exe" in names, "hermes.exe must be restored after a no-op install"
     assert "hermes-acp.exe" in names
-    assert "hermes-gateway.exe" in names
+    assert "relayhelm-gateway.exe" in names
     assert (scripts / "hermes.exe").read_bytes() == b"MZ-old-hermes"
 
 
@@ -63,7 +63,7 @@ def test_main_rewriting_success_keeps_fresh_shims(tmp_path):
     scripts = _make_scripts_dir(tmp_path)
 
     def fake_install(cmd, env=None):
-        for name in ("hermes", "hermes-agent", "hermes-acp", "hermes-gateway"):
+        for name in ("hermes", "relayhelm", "hermes-acp", "relayhelm-gateway"):
             (scripts / f"{name}.exe").write_bytes(b"MZ-new-" + name.encode())
 
     with patch.object(main_install_repair, "_is_windows", lambda: True), patch.object(main_install_repair, "_run_install_with_heartbeat", fake_install

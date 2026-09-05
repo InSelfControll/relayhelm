@@ -1,6 +1,6 @@
 # Plugin compatibility manifest (temporary)
 
-The September 2026 decomposition (PR #102117) split the large modules of Hermes Agent into focused
+The September 2026 decomposition (PR #102117) split the large modules of Relayhelm into focused
 files. **Internal import paths are not a stable API**, and after that PR the names below are no
 longer defined where they used to be. To give external plugin authors time to update, every name
 is still importable from its OLD module through a `PLUGIN-COMPAT` block appended to that module.
@@ -12,19 +12,19 @@ fails CI if it does).
 
 **What happens to an affected plugin.**
 
-| when | CLI banner / `hermes doctor` / `hermes update` | Desktop | the plugin |
+| when | CLI banner / `relayhelm doctor` / `relayhelm update` | Desktop | the plugin |
 |---|---|---|---|
-| before 2026-09-14 | yellow notice naming the plugin, the date, and `hermes plugins compat` | one-time modal (per set of affected plugins) | loads; each old-path resolution emits `HermesPluginCompatWarning` once |
-| from 2026-09-14 | red notice: plugin **DISABLED** | one-time modal | **not loaded**; `hermes plugins list` shows the reason |
+| before 2026-09-14 | yellow notice naming the plugin, the date, and `relayhelm plugins compat` | one-time modal (per set of affected plugins) | loads; each old-path resolution emits `HermesPluginCompatWarning` once |
+| from 2026-09-14 | red notice: plugin **DISABLED** | one-time modal | **not loaded**; `relayhelm plugins list` shows the reason |
 | after the revert lands | same | same | not loaded (the old paths no longer exist) |
 
 Escape hatch for users who cannot wait on an author: `plugins.allow_deprecated_imports: true` in
 `config.yaml` keeps affected plugins loading after the date, until the revert actually removes the paths.
 
-**For plugin authors:** run `hermes plugins compat <path-to-your-plugin>` — it prints every `file:line`,
+**For plugin authors:** run `relayhelm plugins compat <path-to-your-plugin>` — it prints every `file:line`,
 old path → new path, and exits 1 while anything remains. Import from the `new location` column.
 
-**You will see a warning.** The first time a process resolves a name through one of these blocks, Hermes emits a
+**You will see a warning.** The first time a process resolves a name through one of these blocks, Relayhelm emits a
 `HermesPluginCompatWarning` (a `FutureWarning`) naming the old path, the new path, and the removal target — once per
 name per process. Fix the import and it goes away. To silence during migration:
 `python -W ignore::hermes_cli.plugin_compat.HermesPluginCompatWarning` or `warnings.filterwarnings("ignore", category=HermesPluginCompatWarning)`.

@@ -371,7 +371,7 @@ interface CliExecResult {
   output?: string
 }
 
-/** Permanently delete a bot's Hermes profile, then remove plugin-local state
+/** Permanently delete a bot's Relayhelm profile, then remove plugin-local state
  * that would otherwise leave stale appearance/unread data behind.
  *
  * Prefer the SDK's `host.deleteProfile` when this Desktop build ships it: it
@@ -381,7 +381,7 @@ interface CliExecResult {
  * roster's hover pre-warm just woke (right-click hovers the row!) holds the
  * profile dir open — the CLI's rmtree races the live backend and the
  * renderer's socket reconnect respawns it mid-delete, resurrecting the
- * directory (hermes-agent#52279). That is the "can't delete a bot" error. */
+ * directory (relayhelm#52279). That is the "can't delete a bot" error. */
 export async function deleteBot(bot: RosterRow) {
   const route = botConnectionRoute(bot)
 

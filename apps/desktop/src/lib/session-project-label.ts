@@ -19,7 +19,7 @@ import type { ProjectInfo, SessionInfo } from '@/types/hermes'
  * such ambiguity: the backend already recorded which repo the session belongs
  * to, so we can name it. Without this, most of a sibling-worktree workflow's
  * rows would paint a blank line — and naming the repo is exactly the point of
- * showing the project instead of the cwd (`hermes-agent`, not
+ * showing the project instead of the cwd (`relayhelm`, not
  * `hermes-agent-cwd-copy`).
  *
  * This never widens membership — it only names a row that placement leaves

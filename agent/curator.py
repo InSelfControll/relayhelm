@@ -79,7 +79,7 @@ def _subdict(node: Any, *keys: str) -> Dict[str, Any]:
 
 
 def _read_config_section(*path: str, label: str, log: logging.Logger = logger) -> Dict[str, Any]:
-    """Read a nested section of ~/.hermes/config.yaml. Tolerates missing file."""
+    """Read a nested section of ~/.relayhelm/config.yaml. Tolerates missing file."""
     try:
         from hermes_cli.config import load_config_readonly
         cfg = load_config_readonly()
@@ -121,7 +121,7 @@ def get_archive_after_days() -> int:
 
 
 def get_prune_builtins() -> bool:
-    """Bundled built-ins are curation candidates (ON by default); a suppression list keeps them archived across `hermes update` re-seeds. Hub skills are never pruned."""
+    """Bundled built-ins are curation candidates (ON by default); a suppression list keeps them archived across `relayhelm update` re-seeds. Hub skills are never pruned."""
     return bool(_load_config().get("prune_builtins", True))
 
 
@@ -264,7 +264,7 @@ CURATOR_DRY_RUN_BANNER = (
 
 
 CURATOR_REVIEW_PROMPT = (
-    "You are running as Hermes' background skill CURATOR. This is an "
+    "You are running as Relayhelm' background skill CURATOR. This is an "
     "UMBRELLA-BUILDING consolidation pass, not a passive audit and not a "
     "duplicate-finder.\n\n"
     "The goal of the skill collection is a LIBRARY OF CLASS-LEVEL "
@@ -291,7 +291,7 @@ CURATOR_REVIEW_PROMPT = (
     "to local curator-managed skills only; external skills are externally "
     "owned and read-only to this background curator.\n"
     "2. DO NOT delete any skill. Archiving (moving the skill's directory "
-    "into ~/.hermes/skills/.archive/) is the maximum destructive action. "
+    "into ~/.relayhelm/skills/.archive/) is the maximum destructive action. "
     "Archives are recoverable; deletion is not.\n"
     "3. DO NOT touch skills shown as pinned=yes. Skip them entirely.\n"
     "3b. DO NOT archive, delete, consolidate, move, or otherwise modify any "
@@ -446,14 +446,14 @@ CURATOR_PRUNE_BUILTINS_NOTE = (
     "rule #1 for bundled skills ONLY. Hub-installed skills "
     "remain strictly off-limits. Treat a stale built-in the "
     "same as a stale agent-created skill: archive it (never "
-    "delete). It will be restored on `hermes update` only if "
+    "delete). It will be restored on `relayhelm update` only if "
     "the user explicitly restores it."
 )
 
 # --- Per-run reports — {YYYYMMDD-HHMMSS}/run.json + REPORT.md under logs/curator/ ---
 
 def _reports_root() -> Path:
-    """``~/.hermes/logs/curator/`` (telemetry next to agent.log, not under skills/). mkdir'd here too so gateway-only / bare-library entry paths work."""
+    """``~/.relayhelm/logs/curator/`` (telemetry next to agent.log, not under skills/). mkdir'd here too so gateway-only / bare-library entry paths work."""
     root = get_hermes_home() / "logs" / "curator"
     try:
         root.mkdir(parents=True, exist_ok=True)
@@ -754,11 +754,11 @@ def _cron_rewrite_lines(entry: Dict[str, Any]) -> List[str]:
 _REPORT_SECTIONS = (
     ("consolidated", "Consolidated into umbrella skills",
      "_These skills were **absorbed into another skill** during this run — their content still lives, just under a different name. "
-     "The original directory was moved to `~/.hermes/skills/.archive/` for safety and can be restored via "
+     "The original directory was moved to `~/.relayhelm/skills/.archive/` for safety and can be restored via "
      "`hermes curator restore <name>` if the consolidation was wrong._\n", _consolidated_lines, 50, "see `run.json`"),
     ("pruned", "Pruned — archived for staleness",
      "_These skills were archived without being merged into an umbrella (e.g. stale, unused, or judged irrelevant). "
-     "Directories live under `~/.hermes/skills/.archive/`. Restore any via `hermes curator restore <name>`._\n",
+     "Directories live under `~/.relayhelm/skills/.archive/`. Restore any via `hermes curator restore <name>`._\n",
      _pruned_lines, 50, "see `run.json`"),
     ("added", "New skills this run", "_Usually these are new class-level umbrellas created via `skill_manage action=create`._\n",
      lambda n: [f"- `{n}`"], None, ""),
@@ -804,7 +804,7 @@ def _render_report_markdown(p: Dict[str, Any]) -> str:
     elif not error and (p.get("llm_summary") or ""):
         lines += ["## LLM summary\n", p.get("llm_summary"), ""]
     lines += ["## Recovery\n", "- Restore an archived skill: `hermes curator restore <name>`",
-              "- All archives live under `~/.hermes/skills/.archive/` and are recoverable by `mv`",
+              "- All archives live under `~/.relayhelm/skills/.archive/` and are recoverable by `mv`",
               "- See `run.json` in this directory for the full machine-readable record.", ""]
     return "\n".join(lines)
 

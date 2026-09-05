@@ -185,7 +185,7 @@ class _SupermemoryClient:
                                    default_headers={"x-sm-source": "hermes"})
 
     def _merge_metadata(self, metadata: Optional[dict]) -> dict:
-        # sm_source routes Hermes writes into the "Hermes" Space in the Supermemory app so the user
+        # sm_source routes Relayhelm writes into the "Relayhelm" Space in the Supermemory app so the user
         # can filter / bulk-manage them per source agent (a routing key for the user, not telemetry).
         merged = {"sm_source": "hermes", **(metadata or {})}
         if (legacy_source := merged.pop("source", None)) and "type" not in merged:
@@ -331,7 +331,7 @@ class SupermemoryMemoryProvider(MemoryProvider):
         return bool(get_secret("SUPERMEMORY_API_KEY", ""))
 
     def get_config_schema(self):
-        # Only the API key is prompted during `hermes memory setup`; other options live in supermemory.json / env.
+        # Only the API key is prompted during `relayhelm memory setup`; other options live in supermemory.json / env.
         return [{"key": "api_key", "description": "Supermemory API key", "secret": True, "required": True, "env_var": "SUPERMEMORY_API_KEY", "url": _API_KEY_URL}]
 
     def save_config(self, values, hermes_home):

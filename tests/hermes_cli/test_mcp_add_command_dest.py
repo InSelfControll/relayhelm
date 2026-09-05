@@ -29,7 +29,7 @@ def _build_parser():
     the bug: top-level subparsers (dest="command") and ``mcp add`` with
     its ``--command`` flag.
     """
-    parser = argparse.ArgumentParser(prog="hermes")
+    parser = argparse.ArgumentParser(prog="relayhelm")
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("chat")

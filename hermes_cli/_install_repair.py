@@ -39,7 +39,7 @@ def _is_termux_env(env: dict | None = None) -> bool:
 def _stdout_to_stderr():
     """Route fd 1 (and sys.stdout) to stderr for the duration of an install.
 
-    ``hermes acp`` speaks JSON-RPC on stdout; an inherited-fd install child writing there would
+    ``relayhelm acp`` speaks JSON-RPC on stdout; an inherited-fd install child writing there would
     corrupt the protocol.
     """
     saved_sys_stdout = sys.stdout
@@ -92,8 +92,8 @@ def _venv_scripts_dir(root: Path) -> Path | None:
 
 
 #: Launcher names install.ps1's Set-PathVariable exposes from the managed binary dir (the default
-#: Hermes root's ``bin``, next to uv.exe). Keep in lockstep with scripts/install.ps1.
-_WINDOWS_BIN_LAUNCHERS = ("hermes", "hermes-acp")
+#: Relayhelm root's ``bin``, next to uv.exe). Keep in lockstep with scripts/install.ps1.
+_WINDOWS_BIN_LAUNCHERS = ("relayhelm", "relayhelm-agent", "relayhelm-acp")
 
 
 def _launcher_present(target: Path, name: str) -> bool:
@@ -105,7 +105,7 @@ def _launchers_missing(target: Path) -> bool:
 
 
 def _default_hermes_root() -> Path | None:
-    """The DEFAULT Hermes root (not ``get_hermes_home()``, which under ``hermes -p <name>`` is
+    """The DEFAULT Relayhelm root (not ``get_hermes_home()``, which under ``relayhelm -p <name>`` is
     ``profiles\\<name>`` and would fail the managed-clone gate for profile users); ``None`` when
     unresolvable."""
     from hermes_constants import get_default_hermes_root
@@ -166,10 +166,10 @@ def ensure_windows_bin_launchers(
     elsewhere never gain launchers) and the legacy ``<root>\bin`` (only while the user PATH still
     points at it). Never raises.
 
-    The canonical launcher home is the managed binary dir — the default Hermes root's ``bin``
+    The canonical launcher home is the managed binary dir — the default Relayhelm root's ``bin``
     (``%LOCALAPPDATA%\\hermes\\bin``, next to the managed uv) — which lives OUTSIDE the git checkout so no
     git operation can ever touch it. It is a per-machine dir shared by every profile: ``get_hermes_home()``
-    would point inside ``profiles\\<name>`` under ``hermes -p``, so the anchor here is
+    would point inside ``profiles\\<name>`` under ``relayhelm -p``, so the anchor here is
     :func:`hermes_constants.get_default_hermes_root`. See #83797.
     """
     if windows is None:
@@ -264,7 +264,7 @@ def _write_user_path_raw(entries: list[str], kind: int) -> None:
 def migrate_windows_bin_path(
     root, *, windows: bool | None = None, read_user_path=None, write_user_path=None,
 ) -> bool:
-    """One-time PATH migration to the ``HERMES_HOME\\bin`` launcher layout (``hermes update`` tail).
+    """One-time PATH migration to the ``HERMES_HOME\\bin`` launcher layout (``relayhelm update`` tail).
 
     1. stage launchers into the managed binary dir; 2. verify both are present — otherwise STOP,
     leaving the user PATH untouched (never strip a working entry before its replacement is proven);
@@ -371,8 +371,8 @@ def _quarantine_running_hermes_exe(
     if not _is_windows():
         return []
     names = set(_load_console_script_names(scripts_dir.parent.parent)) or {
-        "hermes", "hermes-agent", "hermes-acp"}
-    names.add("hermes-gateway")
+        "relayhelm", "relayhelm-agent", "relayhelm-acp"}
+    names.add("relayhelm-gateway")
     moved: list[tuple[Path, Path]] = []
     for name in sorted(names):
         shim = scripts_dir / f"{name}.exe"
@@ -393,7 +393,7 @@ def _restore_quarantined_exes(moved: list[tuple[Path, Path]]) -> None:
 
     Delegates to the shared helper in the stdlib-only ``_early_recovery`` module: one retry ladder and one
     recovery message for every restore site, instead of the near-identical copies that had already drifted
-    (#75584). Warnings land on stderr — this module runs in the early-recovery path and ``hermes acp``
+    (#75584). Warnings land on stderr — this module runs in the early-recovery path and ``relayhelm acp``
     speaks JSON-RPC on stdout.
     """
     _er.restore_quarantined_shims(moved)

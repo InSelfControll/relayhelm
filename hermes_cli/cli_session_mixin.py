@@ -302,7 +302,7 @@ class CLISessionMixin:
             ctx_label = None
 
         lines = [
-            "Hermes CLI Status", "", f"Session ID: {self.session_id}", f"Path: {display_hermes_home()}",
+            "Relayhelm CLI Status", "", f"Session ID: {self.session_id}", f"Path: {display_hermes_home()}",
         ]
         if title:
             lines.append(f"Title: {title}")
@@ -420,7 +420,7 @@ class CLISessionMixin:
                 _cli_visible_print(f"    {preview}{suffix}")
                 continue
 
-            _cli_visible_print(f"\n  [Hermes #{visible_index}]{_ts_suffix(msg)}")
+            _cli_visible_print(f"\n  [Relayhelm #{visible_index}]{_ts_suffix(msg)}")
             n_calls = len(msg.get("tool_calls") or [])
             if not content_text:
                 suffix = ""
@@ -696,7 +696,7 @@ class CLISessionMixin:
             # tools/subprocesses on this thread resolve HERMES_SESSION_ID to the child id after an
             # out-of-place rotation (idempotent when no rotation happened).
             if self.session_id:
-                print(f"       Resume the live session with: hermes --resume {self.session_id}")
+                print(f"       Resume the live session with: relayhelm --resume {self.session_id}")
         except Exception as e:
             print(f"(x_x) Failed to save: {e}")
 
@@ -925,7 +925,7 @@ class CLISessionMixin:
         return ""
 
     def _write_terminal_breadcrumb(self) -> None:
-        """Record this terminal's live session for bare ``hermes -c``. Called whenever
+        """Record this terminal's live session for bare ``relayhelm -c``. Called whenever
         ``self.session_id`` is (re)assigned so a later bare ``-c`` in THIS terminal resumes
         this conversation's live tip. Best-effort; no-op without a terminal identity."""
         with contextlib.suppress(Exception):
@@ -1314,9 +1314,9 @@ class CLISessionMixin:
         except Exception:
             _active_profile = "default"
         profile_flag = "" if _active_profile in ("default", "custom") else f" -p {_active_profile}"
-        print(f"  hermes --resume {self.session_id}{profile_flag}")
+        print(f"  relayhelm --resume {self.session_id}{profile_flag}")
         if session_title:
-            print(f"  hermes -c \"{session_title}\"{profile_flag}")
+            print(f"  relayhelm -c \"{session_title}\"{profile_flag}")
         print()
         print(f"Session:        {self.session_id}")
         if session_title:

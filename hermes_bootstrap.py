@@ -1,9 +1,9 @@
-"""Windows UTF-8 bootstrap for Hermes entry points (no-op on POSIX).
+"""Windows UTF-8 bootstrap for Relayhelm entry points (no-op on POSIX).
 
 Windows binds stdio to the console code page (cp1252), so ``print("café")`` raises
 ``UnicodeEncodeError``, and Python children inherit the same default unless
 ``PYTHONUTF8``/``PYTHONIOENCODING`` are set. Import this module first in every entry
-point (``hermes``, ``hermes-agent``, ``hermes-acp``, ``gateway.run``, ``batch_runner``,
+point (``hermes``, ``relayhelm``, ``hermes-acp``, ``gateway.run``, ``batch_runner``,
 ``cron/scheduler``). It does NOT re-exec with ``-X utf8``: ``open()`` in the current
 process still needs an explicit ``encoding="utf-8"`` (ruff ``PLW1514``). POSIX is left
 alone deliberately — users' ``LANG``/``LC_*`` choices are respected.
@@ -75,13 +75,13 @@ def suppress_platform_ver_console() -> None:
 
 
 def harden_import_path(src_root: str | None = None) -> None:
-    """Stop a package in the current directory from shadowing Hermes modules.
+    """Stop a package in the current directory from shadowing Relayhelm modules.
 
-    Hermes ships top-level modules with common names (``utils``, ``proxy``, ``ui``); a
+    Relayhelm ships top-level modules with common names (``utils``, ``proxy``, ``ui``); a
     project with its own ``utils/`` launched from its directory would win the import.
     The cwd reaches ``sys.path`` as ``""``/``"."`` (script/``-m`` launches) AND as an
     absolute path (venv activation, PYTHONPATH), so both are handled: relative forms are
-    dropped and the Hermes root is *relocated* to the front, not merely inserted when
+    dropped and the Relayhelm root is *relocated* to the front, not merely inserted when
     absent. ``src_root`` defaults to this module's directory (the repo root for every
     shipped entry point), so no spawner env var is required.
     """

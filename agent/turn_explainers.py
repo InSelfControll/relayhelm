@@ -89,21 +89,21 @@ _PERSISTENCE_CAUSE_EXPLANATIONS: Dict[str, str] = {
         "session id, then send your message again."
     ),
     "turn_lease": (
-        "the turn was stopped because another Hermes process "
+        "the turn was stopped because another Relayhelm process "
         "took over this session. Your reply was not saved — wait "
         "for the other process to finish, then send your message "
         "again."
     ),
     "locked": (
         "the turn was stopped because session storage was busy "
-        "(another Hermes process was writing to the state "
+        "(another Relayhelm process was writing to the state "
         "database). Your message should already be saved — "
         "please send it again in a moment."
     ),
     "replaced": (
         "the turn was stopped because the state database file "
         "was replaced underneath this process. Do not run "
-        "`hermes doctor --fix` or in-place FTS repair — stop "
+        "`relayhelm doctor --fix` or in-place FTS repair — stop "
         "the process, restore the intended state.db, then "
         "restart. Unwritten messages were diverted to "
         "sessions/<session_id>.jsonl and, on the gateway, "
@@ -114,7 +114,7 @@ _PERSISTENCE_CAUSE_EXPLANATIONS: Dict[str, str] = {
         "reported structural corruption (the transcript would "
         "have been lost on restart). Freeing disk space will "
         "not help. Recovery options:\n"
-        "1. Run `hermes doctor --fix`\n"
+        "1. Run `relayhelm doctor --fix`\n"
         "2. Stop the gateway, then recover with:\n"
         "   hermes sessions recover --source {db_path} --inspect-only\n"
         "   (if it reports recoverable) hermes sessions recover "
@@ -123,7 +123,7 @@ _PERSISTENCE_CAUSE_EXPLANATIONS: Dict[str, str] = {
         "run `sqlite3 ... \".recover\"` against the live "
         "state.db, a vulnerable sqlite3 CLI can corrupt it "
         "further\n"
-        "3. Restore from a backup in ~/.hermes/backups/\n"
+        "3. Restore from a backup in ~/.relayhelm/backups/\n"
         "Then send your message again."
     ),
     "disk": (
@@ -137,7 +137,7 @@ _PERSISTENCE_CAUSE_EXPLANATIONS: Dict[str, str] = {
 _PERSISTENCE_DEFAULT_EXPLANATION = (
     "the turn was stopped because session storage could not be "
     "written (the transcript would have been lost on restart). "
-    "Check the state database health (`hermes doctor`), then "
+    "Check the state database health (`relayhelm doctor`), then "
     "send your message again."
 )
 
@@ -294,7 +294,7 @@ class TurnExplainersMixin:
                 persistence_cause or "unknown", _PERSISTENCE_DEFAULT_EXPLANATION
             )
             if persistence_cause == "corrupt":
-                # Copy-pasteable, so name the real store (profiles / HERMES_HOME do not live under ~/.hermes).
+                # Copy-pasteable, so name the real store (profiles / HERMES_HOME do not live under ~/.relayhelm).
                 from hermes_state import _default_db_path
 
                 body = body.replace("{db_path}", str(_default_db_path()))

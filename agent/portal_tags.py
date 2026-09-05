@@ -1,8 +1,8 @@
 """Centralized Nous Portal request tags.
 
-Every Hermes request to the Nous Portal (main loop, auxiliary client, fallback
+Every Relayhelm request to the Nous Portal (main loop, auxiliary client, fallback
 paths) must carry the same product-attribution tags, sent in OpenAI-compatible
-``extra_body['tags']``: ``["product=hermes-agent", "client=hermes-client-v<__version__>"]``.
+``extra_body['tags']``: ``["product=relayhelm", "client=hermes-client-v<__version__>"]``.
 The version is read live from ``hermes_cli.__version__`` — do NOT pre-compute it
 as a module constant in consumers; it can change at runtime (editable installs,
 hot reload).
@@ -92,7 +92,7 @@ def nous_portal_tags(session_id: str | None = None) -> List[str]:
     The ambient conversation context (lineage ROOT id) wins over the explicit
     ``session_id``, a fallback for callers outside any agent turn.
     """
-    tags = ["product=hermes-agent", hermes_client_tag()]
+    tags = ["product=relayhelm", hermes_client_tag()]
     effective = get_conversation_context() or session_id
     if effective:
         tags.append(conversation_tag(effective))

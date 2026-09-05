@@ -6,7 +6,7 @@ description: "通过 Honcho 实现 AI 原生持久记忆——辩证推理、多
 
 # Honcho Memory
 
-[Honcho](https://github.com/plastic-labs/honcho) 是一个 AI 原生记忆后端，在 Hermes 内置记忆系统之上增加了辩证推理（dialectic reasoning）和深度用户建模能力。它不是简单的键值存储，而是通过对对话事后推理，持续维护一个关于用户的动态模型——涵盖其偏好、沟通风格、目标与行为模式。
+[Honcho](https://github.com/plastic-labs/honcho) 是一个 AI 原生记忆后端，在 Relayhelm 内置记忆系统之上增加了辩证推理（dialectic reasoning）和深度用户建模能力。它不是简单的键值存储，而是通过对对话事后推理，持续维护一个关于用户的动态模型——涵盖其偏好、沟通风格、目标与行为模式。
 
 :::info Honcho 是一个 Memory Provider 插件
 Honcho 已集成到 [Memory Providers](./memory-providers.md) 系统中。以下所有功能均可通过统一的 memory provider 接口使用。
@@ -28,24 +28,24 @@ Honcho 已集成到 [Memory Providers](./memory-providers.md) 系统中。以下
 
 **会话级上下文**：基础上下文现在包含会话摘要，以及用户表示和 peer 卡片。这使 agent 能感知当前会话中已讨论的内容，减少重复并保持连贯性。
 
-**多 agent 画像**：当多个 Hermes 实例与同一用户交互时（例如编程助手和个人助手），Honcho 为每个 peer 维护独立画像。每个 peer 只能看到自己的观察和结论，防止上下文交叉污染。
+**多 agent 画像**：当多个 Relayhelm 实例与同一用户交互时（例如编程助手和个人助手），Honcho 为每个 peer 维护独立画像。每个 peer 只能看到自己的观察和结论，防止上下文交叉污染。
 
 ## 设置
 
 ```bash
-hermes memory setup    # 从 provider 列表中选择 "honcho"
+relayhelm memory setup    # 从 provider 列表中选择 "honcho"
 ```
 
 或手动配置：
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.relayhelm/config.yaml
 memory:
   provider: honcho
 ```
 
 ```bash
-echo 'HONCHO_API_KEY=***' >> ~/.hermes/.env
+echo 'HONCHO_API_KEY=***' >> ~/.relayhelm/.env
 ```
 
 在 [honcho.dev](https://honcho.dev) 获取 API key。
@@ -183,7 +183,7 @@ Honcho 将对话建模为 peer 之间的消息交换。每个 peer 有两个观�
 | AI 不应根据自身回复重新建模用户 | `"ai": {"observeMe": true, "observeOthers": false}` |
 | AI peer 不应通过自我观察更新的强人设 | `"ai": {"observeMe": false, "observeOthers": true}` |
 
-通过 [Honcho 控制台](https://app.honcho.dev) 设置的服务端开关优先于本地默认值——Hermes 在会话初始化时同步回本地。
+通过 [Honcho 控制台](https://app.honcho.dev) 设置的服务端开关优先于本地默认值——Relayhelm 在会话初始化时同步回本地。
 
 ## Tools
 
@@ -199,11 +199,11 @@ Honcho 将对话建模为 peer 之间的消息交换。每个 peer 有两个观�
 
 ## CLI 命令
 
-`hermes honcho` 子命令**仅在 Honcho 为当前活跃 memory provider 时注册**（`config.yaml` 中 `memory.provider: honcho`）。先运行 `hermes memory setup` 并选择 Honcho，子命令将在下次调用时出现。
+`hermes honcho` 子命令**仅在 Honcho 为当前活跃 memory provider 时注册**（`config.yaml` 中 `memory.provider: honcho`）。先运行 `relayhelm memory setup` 并选择 Honcho，子命令将在下次调用时出现。
 
 ```bash
 hermes honcho status          # 连接状态、配置及关键设置
-hermes honcho setup           # 重定向到 `hermes memory setup`
+hermes honcho setup           # 重定向到 `relayhelm memory setup`
 hermes honcho strategy        # 查看或设置会话策略（per-session/per-directory/per-repo/global）
 hermes honcho peer            # 查看或更新 peer 名称及辩证推理级别
 hermes honcho mode            # 查看或设置 recall 模式（hybrid/context/tools）
@@ -226,7 +226,7 @@ hermes honcho migrate         # 从 openclaw-honcho 迁移的分步指南
 2. 你的服务端数据（记忆、结论、用户画像）完好无损
 3. 在 config.yaml 中设置 `memory.provider: honcho` 即可重新激活
 
-无需重新登录或重新设置。运行 `hermes memory setup` 并选择"honcho"——向导会自动检测你的现有配置。
+无需重新登录或重新设置。运行 `relayhelm memory setup` 并选择"honcho"——向导会自动检测你的现有配置。
 
 ## 完整文档
 

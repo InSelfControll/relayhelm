@@ -280,7 +280,7 @@ def _settings() -> dict:
     return {
         "issuer": issuer, "client_id": client_id,
         "scopes": setting("HERMES_DASHBOARD_OIDC_SCOPES", "scopes") or _DEFAULT_SCOPES,
-        # Credential: canonical home is the env var / ~/.hermes/.env. Empty ⇒ public client.
+        # Credential: canonical home is the env var / ~/.relayhelm/.env. Empty ⇒ public client.
         "client_secret": setting("HERMES_DASHBOARD_OIDC_CLIENT_SECRET", "client_secret")}
 
 

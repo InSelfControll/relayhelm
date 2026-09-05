@@ -66,8 +66,8 @@ export function skillHit(pattern: RegExp, haystack: string): boolean {
 
 /** Workspace homonym guard, exported for tests: a skill named like the
  *  working directory is the project's name, not a request for the skill.
- *  Working in `~/www/hermes-agent`, the draft says "hermes-agent" constantly
- *  — a "Use skill: hermes-agent" pill on every mention is noise (the reported
+ *  Working in `~/www/relayhelm`, the draft says "relayhelm" constantly
+ *  — a "Use skill: relayhelm" pill on every mention is noise (the reported
  *  annoyance that prompted this guard). Boundary containment, not exact
  *  segment equality, so worktree dirs (`hermes-agent-suggest`) suppress too. */
 export function collidesWithWorkspace(name: string, cwd: string): boolean {

@@ -1,9 +1,9 @@
 """Regression guard for #98790 — profile isolation in cron status.
 
-Issue #98790: `hermes cron status` in profile B reports profile A's gateway
+Issue #98790: `relayhelm cron status` in profile B reports profile A's gateway
 PID as proof that B's jobs will fire. Root causes:
 
-1. systemd branch of ``_get_service_pids()`` returns every hermes-gateway*
+1. systemd branch of ``_get_service_pids()`` returns every relayhelm-gateway*
    unit's MainPID even when ``all_profiles=False``, contradicting its
    docstring («Default-scope callers keep seeing only the current profile's
    service») and ``find_gateway_pids()``'s contract.
@@ -39,7 +39,7 @@ def tmp_cron_dir(tmp_path, monkeypatch):
 
 
 class TestCronStatusHeartbeatGuard:
-    """Ensure `hermes cron status` correctly warns when the heartbeat file is absent.
+    """Ensure `relayhelm cron status` correctly warns when the heartbeat file is absent.
 
     Issue #98790 (root cause 2): profiles with no `cron/ticker_heartbeat` fall
     through to the "✓ Gateway is running" branch even though ticks won't fire.
@@ -89,29 +89,29 @@ class TestGetServicePidsProfileScope:
             cmd_str = " ".join(str(a) for a in args)
             if "list-units" in cmd_str:
                 # systemctl now filters: return only the unit that matches the pattern
-                if "hermes-gateway-jarvis" in cmd_str:
-                    stdout = "hermes-gateway-jarvis.service loaded active running\n"
-                elif "hermes-gateway-coder" in cmd_str:
-                    stdout = "hermes-gateway-coder.service loaded active running\n"
-                elif "hermes-gateway*" in cmd_str:
+                if "relayhelm-gateway-jarvis" in cmd_str:
+                    stdout = "relayhelm-gateway-jarvis.service loaded active running\n"
+                elif "relayhelm-gateway-coder" in cmd_str:
+                    stdout = "relayhelm-gateway-coder.service loaded active running\n"
+                elif "relayhelm-gateway*" in cmd_str:
                     stdout = (
-                        "hermes-gateway-jarvis.service loaded active running\n"
-                        "hermes-gateway-coder.service loaded active running\n"
+                        "relayhelm-gateway-jarvis.service loaded active running\n"
+                        "relayhelm-gateway-coder.service loaded active running\n"
                     )
                 else:
                     stdout = ""
                 return MagicMock(returncode=0, stdout=stdout, stderr="")
             if "show" in cmd_str and "MainPID" in cmd_str:
-                if "hermes-gateway-jarvis" in cmd_str:
+                if "relayhelm-gateway-jarvis" in cmd_str:
                     return MagicMock(returncode=0, stdout="123\n", stderr="")
-                elif "hermes-gateway-coder" in cmd_str:
+                elif "relayhelm-gateway-coder" in cmd_str:
                     return MagicMock(returncode=0, stdout="456\n", stderr="")
             return MagicMock(returncode=0, stdout="", stderr="")
 
         with (
             patch("hermes_cli.gateway.is_macos", return_value=False),
             patch("hermes_cli.gateway.supports_systemd_services", return_value=True),
-            patch("hermes_cli.gateway.get_service_name", return_value="hermes-gateway-jarvis"),
+            patch("hermes_cli.gateway.get_service_name", return_value="relayhelm-gateway-jarvis"),
             patch("subprocess.run", side_effect=_run_side_effect),
         ):
             pids = gateway_mod._get_service_pids()
@@ -127,22 +127,22 @@ class TestGetServicePidsProfileScope:
                 return MagicMock(
                     returncode=0,
                     stdout=(
-                        "hermes-gateway.service loaded active running\n"
-                        "hermes-gateway-profile-b.service loaded active running\n"
+                        "relayhelm-gateway.service loaded active running\n"
+                        "relayhelm-gateway-profile-b.service loaded active running\n"
                     ),
                     stderr="",
                 )
             if "show" in cmd_str and "MainPID" in cmd_str:
-                if "hermes-gateway.service" in " ".join(args):
+                if "relayhelm-gateway.service" in " ".join(args):
                     return MagicMock(returncode=0, stdout="111\n", stderr="")
-                elif "hermes-gateway-profile-b.service" in " ".join(args):
+                elif "relayhelm-gateway-profile-b.service" in " ".join(args):
                     return MagicMock(returncode=0, stdout="222\n", stderr="")
             return MagicMock(returncode=0, stdout="", stderr="")
 
         with (
             patch("hermes_cli.gateway.is_macos", return_value=False),
             patch("hermes_cli.gateway.supports_systemd_services", return_value=True),
-            patch("hermes_cli.gateway.get_service_name", return_value="hermes-gateway"),
+            patch("hermes_cli.gateway.get_service_name", return_value="relayhelm-gateway"),
             patch("subprocess.run", side_effect=_run_side_effect),
         ):
             pids = gateway_mod._get_service_pids(all_profiles=True)

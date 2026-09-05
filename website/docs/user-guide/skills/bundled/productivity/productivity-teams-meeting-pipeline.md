@@ -17,7 +17,7 @@ Teams meeting summaries, job replay, Graph subscriptions.
 | Source | Bundled (installed by default) |
 | Path | `skills/productivity\teams-meeting-pipeline` |
 | Version | `1.1.0` |
-| Author | Hermes Agent + Teknium |
+| Author | Relayhelm + Teknium |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `Teams`, `Microsoft Graph`, `Meetings`, `Productivity`, `Operations` |
@@ -25,7 +25,7 @@ Teams meeting summaries, job replay, Graph subscriptions.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that Relayhelm loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
 :::
 
 # Teams Meeting Pipeline
@@ -51,7 +51,7 @@ Multilingual trigger examples (not exhaustive):
 
 ## Prerequisites
 
-Before using the pipeline, verify these are set in `${HERMES_HOME:-~/.hermes}/.env`:
+Before using the pipeline, verify these are set in `${HERMES_HOME:-~/.relayhelm}/.env`:
 
 ```bash
 MSGRAPH_TENANT_ID=...
@@ -112,7 +112,7 @@ Microsoft Graph caps webhook subscriptions at 72 hours and **will not auto-renew
 When the user reports "the pipeline worked yesterday but nothing is arriving today":
 1. Run `hermes teams-pipeline subscriptions` — if it's empty or all entries show `expirationDateTime` in the past, that's the cause.
 2. Recreate with `subscribe` as shown above.
-3. **Set up automated renewal immediately** via `hermes cron add`, a systemd timer, or plain crontab. The operator runbook at `/docs/guides/operate-teams-meeting-pipeline#automating-subscription-renewal-required-for-production` has all three options. 12-hour interval is safe (6x headroom against the 72h limit).
+3. **Set up automated renewal immediately** via `relayhelm cron add`, a systemd timer, or plain crontab. The operator runbook at `/docs/guides/operate-teams-meeting-pipeline#automating-subscription-renewal-required-for-production` has all three options. 12-hour interval is safe (6x headroom against the 72h limit).
 
 ## Other pitfalls
 

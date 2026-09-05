@@ -63,7 +63,7 @@ def http_failure(log_msg: str, status: int, prefix: Optional[str] = None, *, det
 def spawn_profile_action(
     profile: Optional[str], argv: list, name: str, *, log_msg: str, prefix: str
 ) -> dict:
-    """Spawn a background ``hermes -p <profile> <argv>`` action; a spawn
+    """Spawn a background ``relayhelm -p <profile> <argv>`` action; a spawn
     failure is logged and becomes ``500 "<prefix>: <exc>"``."""
     with http_failure(log_msg, 500, prefix):
         proc = _spawn_hermes_action(_profile_cli_args(profile) + argv, name)

@@ -1,7 +1,7 @@
 """Regression for #68523 — one systemctl timeout must not abort fleet restarts.
 
-On hosts with many profile-backed ``hermes-gateway*.service`` units,
-``hermes update`` used to wrap the entire per-scope unit loop in a single
+On hosts with many profile-backed ``relayhelm-gateway*.service`` units,
+``relayhelm update`` used to wrap the entire per-scope unit loop in a single
 ``except subprocess.TimeoutExpired``. A timeout on unit N skipped units
 N+1…, leaving later gateways on pre-update in-memory modules while the
 checkout on disk was already new (mixed-generation crashes).
@@ -23,21 +23,21 @@ def _list_units_stdout(names: list[str]) -> str:
 class TestFleetRestartTimeoutIsolation:
     def test_timeout_on_middle_unit_continues_remaining_units(self):
         units = [
-            "hermes-gateway-xiaomo1",
-            "hermes-gateway-xiaomo2",
-            "hermes-gateway-xiaomo3",
-            "hermes-gateway-xiaomo4",
-            "hermes-gateway-xiaomo5",
-            "hermes-gateway-xiaomo6",
-            "hermes-gateway-xiaomo7",
-            "hermes-gateway",
+            "relayhelm-gateway-xiaomo1",
+            "relayhelm-gateway-xiaomo2",
+            "relayhelm-gateway-xiaomo3",
+            "relayhelm-gateway-xiaomo4",
+            "relayhelm-gateway-xiaomo5",
+            "relayhelm-gateway-xiaomo6",
+            "relayhelm-gateway-xiaomo7",
+            "relayhelm-gateway",
         ]
         restarted: list[str] = []
         failed: list[str] = []
         timeout_cmds: list = []
 
         def process_unit(svc_name: str) -> None:
-            if svc_name == "hermes-gateway-xiaomo5":
+            if svc_name == "relayhelm-gateway-xiaomo5":
                 raise subprocess.TimeoutExpired(
                     cmd=["systemctl", "--user", "--no-ask-password", "restart", svc_name],
                     timeout=15,
@@ -54,19 +54,19 @@ class TestFleetRestartTimeoutIsolation:
             on_unit_timeout=on_unit_timeout,
         )
 
-        assert failed == ["hermes-gateway-xiaomo5"]
+        assert failed == ["relayhelm-gateway-xiaomo5"]
         assert restarted == [
-            "hermes-gateway-xiaomo1",
-            "hermes-gateway-xiaomo2",
-            "hermes-gateway-xiaomo3",
-            "hermes-gateway-xiaomo4",
-            "hermes-gateway-xiaomo6",
-            "hermes-gateway-xiaomo7",
-            "hermes-gateway",
+            "relayhelm-gateway-xiaomo1",
+            "relayhelm-gateway-xiaomo2",
+            "relayhelm-gateway-xiaomo3",
+            "relayhelm-gateway-xiaomo4",
+            "relayhelm-gateway-xiaomo6",
+            "relayhelm-gateway-xiaomo7",
+            "relayhelm-gateway",
         ]
         assert set(restarted) | set(failed) == set(units)
         assert timeout_cmds == [
-            ["systemctl", "--user", "--no-ask-password", "restart", "hermes-gateway-xiaomo5"]
+            ["systemctl", "--user", "--no-ask-password", "restart", "relayhelm-gateway-xiaomo5"]
         ]
 
     def test_non_gateway_units_in_list_output_are_ignored(self):
@@ -76,7 +76,7 @@ class TestFleetRestartTimeoutIsolation:
             "\n".join(
                 [
                     "ssh.service loaded active running",
-                    "hermes-gateway-coder.service loaded active running",
+                    "relayhelm-gateway-coder.service loaded active running",
                     "not-a-service loaded active running",
                     "",
                 ]
@@ -85,10 +85,10 @@ class TestFleetRestartTimeoutIsolation:
             on_unit_timeout=lambda *_: pytest.fail("unexpected timeout"),
         )
 
-        assert seen == ["hermes-gateway-coder"]
+        assert seen == ["relayhelm-gateway-coder"]
 
     def test_hermes_serve_units_are_included(self):
-        # #83438 — hermes update restarted hermes-gateway* units but left
+        # #83438 — relayhelm update restarted relayhelm-gateway* units but left
         # hermes-serve* (the Desktop app's backend) on stale pre-update code.
         seen: list[str] = []
 
@@ -98,7 +98,7 @@ class TestFleetRestartTimeoutIsolation:
                     "ssh.service loaded active running",
                     "hermes-serve.service loaded active running",
                     "hermes-serve-work.service loaded active running",
-                    "hermes-gateway.service loaded active running",
+                    "relayhelm-gateway.service loaded active running",
                     "",
                 ]
             ),
@@ -106,7 +106,7 @@ class TestFleetRestartTimeoutIsolation:
             on_unit_timeout=lambda *_: pytest.fail("unexpected timeout"),
         )
 
-        assert seen == ["hermes-serve", "hermes-serve-work", "hermes-gateway"]
+        assert seen == ["hermes-serve", "hermes-serve-work", "relayhelm-gateway"]
 
     def test_hermes_server_near_prefix_is_rejected(self):
         # Review on #83595: a bare ``startswith("hermes-serve")`` gate also
@@ -124,24 +124,24 @@ class TestFleetRestartTimeoutIsolation:
 
     def test_hermes_gateway_near_prefix_is_rejected(self):
         # Same strict shape on the gateway side: profile units are
-        # ``hermes-gateway-<profile>``, so a hypothetical
-        # ``hermes-gatewayd.service`` must not enter the restart path.
+        # ``relayhelm-gateway-<profile>``, so a hypothetical
+        # ``relayhelm-gatewayd.service`` must not enter the restart path.
         seen: list[str] = []
 
         _for_each_systemd_gateway_unit(
-            _list_units_stdout(["hermes-gatewayd", "hermes-gateway-coder"]),
+            _list_units_stdout(["relayhelm-gatewayd", "relayhelm-gateway-coder"]),
             process_unit=seen.append,
             on_unit_timeout=lambda *_: pytest.fail("unexpected timeout"),
         )
 
-        assert seen == ["hermes-gateway-coder"]
+        assert seen == ["relayhelm-gateway-coder"]
 
 
 class TestGracefulSigusr1Eligibility:
     def test_gateway_units_are_eligible(self):
-        assert _service_unit_supports_graceful_sigusr1_restart("hermes-gateway")
+        assert _service_unit_supports_graceful_sigusr1_restart("relayhelm-gateway")
         assert _service_unit_supports_graceful_sigusr1_restart(
-            "hermes-gateway-work"
+            "relayhelm-gateway-work"
         )
 
     def test_serve_units_are_not_eligible(self):
@@ -159,7 +159,7 @@ class TestGracefulSigusr1Eligibility:
 
         with pytest.raises(RuntimeError, match="not a timeout"):
             _for_each_systemd_gateway_unit(
-                _list_units_stdout(["hermes-gateway"]),
+                _list_units_stdout(["relayhelm-gateway"]),
                 process_unit=process_unit,
                 on_unit_timeout=lambda *_: pytest.fail("timeout handler must not run"),
             )
@@ -168,11 +168,11 @@ class TestGracefulSigusr1Eligibility:
 class TestIncompleteFleetRestartWarning:
     def test_warns_with_exact_unrestarted_units(self, capsys):
         _warn_incomplete_gateway_fleet_restart(
-            ["hermes-gateway-xiaomo5", "hermes-gateway-xiaomo6", "hermes-gateway-xiaomo5"]
+            ["relayhelm-gateway-xiaomo5", "relayhelm-gateway-xiaomo6", "relayhelm-gateway-xiaomo5"]
         )
         out = capsys.readouterr().out
         assert "Update incomplete" in out
-        assert out.count("hermes-gateway-xiaomo5") == 1
-        assert "hermes-gateway-xiaomo6" in out
+        assert out.count("relayhelm-gateway-xiaomo5") == 1
+        assert "relayhelm-gateway-xiaomo6" in out
         assert "pre-update code" in out
 

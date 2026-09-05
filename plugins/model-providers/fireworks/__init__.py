@@ -11,11 +11,11 @@ fireworks = ProviderProfile(
     description="Fireworks AI — OpenAI-compatible direct model API",
     signup_url="https://app.fireworks.ai/settings/users/api-keys", env_vars=("FIREWORKS_API_KEY",),
     base_url="https://api.fireworks.ai/inference/v1", auth_type="api_key",
-    # Attribution headers (canonical Hermes set); via default_headers so they
+    # Attribution headers (canonical Relayhelm set); via default_headers so they
     # survive switch_model and credential rotation.
     default_headers={
         "HTTP-Referer": "https://hermes-agent.nousresearch.com",
-        "X-Title": "Hermes Agent",
+        "X-Title": "Relayhelm",
         "User-Agent": f"HermesAgent/{_HERMES_VERSION}",
     },
     default_aux_model="accounts/fireworks/models/glm-5p2",

@@ -29,7 +29,7 @@ BOM = b"\xef\xbb\xbf"
 
 def _setup(tmp_path, *, ps1=b"WRITE-HOST current\n", sh=b"echo current\n"):
     home = tmp_path / "hermes_home"
-    root = tmp_path / "hermes-agent"
+    root = tmp_path / "relayhelm"
     (root / "scripts").mkdir(parents=True)
     (home / "bootstrap-cache").mkdir(parents=True)
     if ps1 is not None:

@@ -197,7 +197,7 @@ def _launchd_harness(monkeypatch, tmp_path, pid):
     patched ``_process_hermes_home``).
     """
     events = []
-    monkeypatch.setattr(gateway_cli, "get_launchd_label", lambda: "ai.hermes.gateway")
+    monkeypatch.setattr(gateway_cli, "get_launchd_label", lambda: "io.github.inselfcontroll.relayhelm.gateway")
     monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
     monkeypatch.setattr(gateway_cli, "_get_restart_drain_timeout", lambda: 180.0)
     monkeypatch.setattr("gateway.status.get_running_pid", lambda *a, **k: pid)
@@ -414,7 +414,7 @@ class TestLaunchdRestartWedgedIntegration:
 
     def _setup(self, monkeypatch, liveness):
         events = []
-        monkeypatch.setattr(gateway_cli, "get_launchd_label", lambda: "ai.hermes.gateway")
+        monkeypatch.setattr(gateway_cli, "get_launchd_label", lambda: "io.github.inselfcontroll.relayhelm.gateway")
         monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
         monkeypatch.setattr(gateway_cli, "_get_restart_drain_timeout", lambda: 180.0)
         # Wait budget covers after-turn deferral + drain + headroom (#77184).
@@ -582,7 +582,7 @@ class TestLoopTickWitness:
             # The restart path fed by the REAL probe must drain, not escalate.
             events = []
             monkeypatch.setattr(
-                gateway_cli, "get_launchd_label", lambda: "ai.hermes.gateway"
+                gateway_cli, "get_launchd_label", lambda: "io.github.inselfcontroll.relayhelm.gateway"
             )
             monkeypatch.setattr(gateway_cli, "_launchd_domain", lambda: "gui/501")
             monkeypatch.setattr(gateway_cli, "_get_restart_drain_timeout", lambda: 180.0)

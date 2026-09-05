@@ -113,18 +113,18 @@ function execProbeSync(
 }
 
 /**
- * Return the Python snippet used to verify Hermes can import far enough to
+ * Return the Python snippet used to verify Relayhelm can import far enough to
  * launch the CLI. Kept exported for tests so dependency regressions are
  * caught without needing a real broken venv fixture.
  *
  * @returns {string}
  */
 function hermesRuntimeImportProbe() {
-  return 'import yaml; import dotenv; import hermes_cli.config'
+  return 'import yaml; import dotenv; import hermes_cli.config; import importlib.metadata; importlib.metadata.version("relayhelm")'
 }
 
 /**
- * Return true iff the Hermes runtime import probe exits 0.
+ * Return true iff the Relayhelm runtime import probe exits 0.
  *
  * Used to gate the "fallback to system Python with hermes_cli installed"
  * rung of resolveHermesBackend. Without this, a system Python 3.11-3.13
@@ -164,7 +164,7 @@ function canImportHermesCli(pythonPath: string, opts: { env?: Record<string, str
  * Return true iff `<hermesCommand> --version` exits 0.
  *
  * Used to gate the "existing `hermes` on PATH" rung. Without this, a
- * stale hermes.cmd shim left behind by an uninstalled pip install (or
+ * stale relayhelm.cmd shim left behind by an uninstalled pip install (or
  * a half-built venv whose `hermes` entry-point points at a deleted
  * Python) survives findOnPath() and gets selected as the backend.
  *
@@ -183,7 +183,7 @@ function canImportHermesCli(pythonPath: string, opts: { env?: Record<string, str
 /**
  * An explicit desktop backend command is a deployment contract, not a PATH
  * discovery candidate. In particular, the Nix desktop wrapper points this at
- * its immutable, matching Hermes package; it must never fall through to the
+ * its immutable, matching Relayhelm package; it must never fall through to the
  * mutable install-script bootstrap path if a best-effort probe is slow.
  */
 function shouldTrustHermesOverride(hermesOverride?: string) {

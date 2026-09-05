@@ -66,7 +66,7 @@ def _isolate(monkeypatch, tmp_path, env):
     for key in list(os.environ):
         if key.startswith(_PLATFORM_ENV_PREFIXES):
             monkeypatch.delenv(key, raising=False)
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(hermes_home))
     for k, v in env.items():

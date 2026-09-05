@@ -1,9 +1,9 @@
-"""Venv ownership preflight for ``hermes update`` (#83529).
+"""Venv ownership preflight for ``relayhelm update`` (#83529).
 
 A venv touched by ``sudo pip`` / ``sudo hermes`` contains root-owned files
 (e.g. ``site-packages/hermes_agent-*.dist-info/INSTALLER``). A later normal
-``hermes update`` then dies mid-mutation inside ``uv pip install -e .``
-("Permission denied (os error 13)") with ``venv/bin/hermes`` already deleted,
+``relayhelm update`` then dies mid-mutation inside ``uv pip install -e .``
+("Permission denied (os error 13)") with ``venv/bin/relayhelm`` already deleted,
 bricking the CLI. The preflight refuses BEFORE the first venv mutation and
 prints the exact chown recovery command.
 

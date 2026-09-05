@@ -162,7 +162,7 @@ class ModalEnvironment(BaseEnvironment):
 
         def _create(image_spec: Any) -> None:
             async def _create_sandbox():
-                app = await _modal.App.lookup.aio("hermes-agent", create_if_missing=True)
+                app = await _modal.App.lookup.aio("relayhelm", create_if_missing=True)
                 create_kwargs = dict(modal_sandbox_kwargs or {})
                 if cred_mounts:
                     create_kwargs["mounts"] = list(create_kwargs.pop("mounts", [])) + cred_mounts
@@ -189,7 +189,7 @@ class ModalEnvironment(BaseEnvironment):
             raise
         logger.info("Modal: sandbox created (task=%s)", self._task_id)
         self._sync_manager = FileSyncManager(
-            get_files_fn=lambda: iter_sync_files("/root/.hermes"),
+            get_files_fn=lambda: iter_sync_files("/root/.relayhelm"),
             upload_fn=self._modal_upload, delete_fn=self._modal_delete,
             bulk_upload_fn=self._modal_bulk_upload, bulk_download_fn=self._modal_bulk_download)
         self._sync_manager.sync(force=True)
@@ -230,8 +230,8 @@ class ModalEnvironment(BaseEnvironment):
         self._exec(cmd, stdin=payload, timeout=120, fail_label="bulk upload")
 
     def _modal_bulk_download(self, dest: Path) -> None:
-        """Download remote .hermes/ as a tar archive (sandboxes run as root, so /root/.hermes)."""
-        data = self._exec("tar cf - -C / root/.hermes", timeout=120, fail_label="bulk download", capture=True)
+        """Download remote .relayhelm/ as a tar archive (sandboxes run as root, so /root/.relayhelm)."""
+        data = self._exec("tar cf - -C / root/.relayhelm", timeout=120, fail_label="bulk download", capture=True)
         dest.write_bytes(data.encode() if isinstance(data, str) else data)
 
     def _modal_delete(self, remote_paths: list[str]) -> None:

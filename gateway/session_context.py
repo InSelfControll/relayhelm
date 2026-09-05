@@ -1,4 +1,4 @@
-"""Session-scoped context variables for the Hermes gateway.
+"""Session-scoped context variables for the Relayhelm gateway.
 
 Replaces the old ``os.environ``-based ``HERMES_SESSION_*`` state with task-local ``ContextVar``s
 (inherited by ``run_in_executor`` threads), so concurrently handled messages no longer clobber each
@@ -178,7 +178,7 @@ def declare_stateless_channel() -> None:
     ``set_session_vars(async_delivery=False)`` this does NOT latch ``_session_context_engaged``
     (flipping the subprocess env bridge), which a one-shot CLI must not do as a side effect.
 
-    See NousResearch/hermes-agent#53027 and #63142.
+    See InSelfControll/relayhelm#53027 and #63142.
     """
     _SESSION_ASYNC_DELIVERY.set(False)
 

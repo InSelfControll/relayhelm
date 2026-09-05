@@ -34,7 +34,7 @@ import hermes_state_guard
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Probe run in the child: resolve the REAL platform state root (not a
-# hardcoded ~/.hermes — that root is %LOCALAPPDATA%\hermes on Windows) and
+# hardcoded ~/.relayhelm — that root is %LOCALAPPDATA%\hermes on Windows) and
 # report whether the guard refuses it.
 _CHILD_PROBE = """
 import sys
@@ -143,7 +143,7 @@ class TestPytestProcessRecognition:
     @pytest.mark.parametrize(
         "cmdline",
         [
-            ["hermes", "gateway", "start"],
+            ["relayhelm", "gateway", "start"],
             ["/usr/bin/python", "-m", "hermes_cli.main", "sessions", "list"],
             # A path that merely *contains* "pytest" is not a pytest process:
             # tmp paths like /tmp/pytest-of-dev/... show up in real argv.

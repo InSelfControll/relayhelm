@@ -67,12 +67,12 @@ def generate_bash(parser: argparse.ArgumentParser) -> str:
                 f"            return\n"
                 f"            ;;")
     cases_str = "\n".join(cases)
-    return f"""# Hermes Agent bash completion
+    return f"""# Relayhelm bash completion
 # Add to ~/.bashrc:
 #   eval "$(hermes completion bash)"
 
 _hermes_profiles() {{
-    local profiles_dir="$HOME/.hermes/profiles"
+    local profiles_dir="$HOME/.relayhelm/profiles"
     local profiles="default"
     if [ -d "$profiles_dir" ]; then
         for f in "$profiles_dir"/*/; do
@@ -153,15 +153,15 @@ def generate_zsh(parser: argparse.ArgumentParser) -> str:
                 f"                    ;;")
     sub_cases_str = "\n".join(sub_cases)
     return f"""#compdef hermes
-# Hermes Agent zsh completion
+# Relayhelm zsh completion
 # Add to ~/.zshrc:
 #   eval "$(hermes completion zsh)"
 
 _hermes_profiles() {{
     local -a profiles
     profiles=(default)
-    if [[ -d "$HOME/.hermes/profiles" ]]; then
-        profiles+=($HOME/.hermes/profiles/*(N/:t))
+    if [[ -d "$HOME/.relayhelm/profiles" ]]; then
+        profiles+=($HOME/.relayhelm/profiles/*(N/:t))
     fi
     _describe 'profile' profiles
 }}
@@ -201,31 +201,31 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
     subcommands = _sorted_subcommands(parser)
     top_cmds_str = " ".join(cmd for cmd, _ in subcommands)
     lines: list[str] = [
-        "# Hermes Agent fish completion",
+        "# Relayhelm fish completion",
         "# Add to your config:",
         "#   hermes completion fish | source",
         "",
         "# Helper: list available profiles",
         "function __hermes_profiles",
         "    echo default",
-        "    if test -d $HOME/.hermes/profiles",
-        "        for d in $HOME/.hermes/profiles/*/",
+        "    if test -d $HOME/.relayhelm/profiles",
+        "        for d in $HOME/.relayhelm/profiles/*/",
         "            basename $d",
         "        end",
         "    end",
         "end",
         "",
         "# Disable file completion by default",
-        "complete -c hermes -f",
+        "complete -c relayhelm -f",
         "",
         "# Complete profile names after -p / --profile",
-        "complete -c hermes -f -s p -l profile"
+        "complete -c relayhelm -f -s p -l profile"
         " -d 'Profile name' -xa '(__hermes_profiles)'",
         "",
         "# Top-level subcommands"]
     for cmd, info in subcommands:
         lines.append(
-            f"complete -c hermes -f "
+            f"complete -c relayhelm -f "
             f"-n 'not __fish_seen_subcommand_from {top_cmds_str}' "
             f"-a {cmd} -d '{_clean(info.get('help', ''))}'")
     lines += ["", "# Subcommand completions"]
@@ -235,13 +235,13 @@ def generate_fish(parser: argparse.ArgumentParser) -> str:
         lines.append(f"# {cmd}")
         for sc, sinfo in sorted(info["subcommands"].items()):
             lines.append(
-                f"complete -c hermes -f "
+                f"complete -c relayhelm -f "
                 f"-n '__fish_seen_subcommand_from {cmd}' "
                 f"-a {sc} -d '{_clean(sinfo.get('help', ''))}'")
         if cmd == "profile":  # profile names for the actions that take one
             for action in sorted(_PROFILE_NAME_ACTIONS):
                 lines.append(
-                    f"complete -c hermes -f "
+                    f"complete -c relayhelm -f "
                     f"-n '__fish_seen_subcommand_from {action}; "
                     f"and __fish_seen_subcommand_from profile' "
                     f"-a '(__hermes_profiles)' -d 'Profile name'")

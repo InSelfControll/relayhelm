@@ -113,7 +113,9 @@ def scan_directory(
         if not child.is_dir() or (depth == 0 and skip_names and child.name in skip_names):
             continue
         manifest_file = next((f for f in (child / "plugin.yaml", child / "plugin.yml") if f.exists()), None)
-        portable_file = child / "plugin.json"
+        from hermes_cli.host_plugin_compat import MANIFESTS
+        portable_file = next((child / name for name in ("plugin.json", *MANIFESTS)
+                              if (child / name).exists() or (child / name).is_symlink()), child / "plugin.json")
         if manifest_file is not None:
             manifest = parse_manifest_file(manifest_file, child, source, prefix)
             if manifest is not None:
@@ -185,10 +187,10 @@ def gate_manifest(
     # Relay lifecycle is core-owned; an old plugin copy would compete for its registries.
     if names & LEGACY_RELAY_PLUGIN_KEYS:
         error = (
-            "removed — Relay lifecycle is owned by Hermes core; configure "
+            "removed — Relay lifecycle is owned by Relayhelm core; configure "
             f"{RELAY_PLUGINS_CONFIG_ENV} instead"
         )
-        return _placeholder(error, logging.WARNING, "Refusing to load removed Hermes Relay plugin '%s'; %s", error)
+        return _placeholder(error, logging.WARNING, "Refusing to load removed Relayhelm Relay plugin '%s'; %s", error)
     if names & disabled:
         return _placeholder("disabled via config", logging.DEBUG, "Skipping disabled plugin '%s'")
     # Exclusive plugins (memory providers) have their own activation path; record only.

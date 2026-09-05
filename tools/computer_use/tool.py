@@ -33,7 +33,7 @@ def set_approval_callback(cb) -> None:
     global _approval_callback
     _approval_callback = cb
 
-# Hard-blocked regardless of approval level (e.g. logout kills the session Hermes runs in). Alt is
+# Hard-blocked regardless of approval level (e.g. logout kills the session Relayhelm runs in). Alt is
 # canonicalized to option, so the Windows variants are blocked before any backend sees them.
 # See #4562.
 _BLOCKED_KEY_COMBOS = {
@@ -84,14 +84,14 @@ _AUX_VISION_ROUTE_CACHE: Dict[Tuple[str, str], bool] = {}  # process-scoped: (pr
 # "always approve" into another; callers without a session_id share "".
 # Falls back to a shared "" bucket for callers that don't pass a session_id (e.g. the classic single-run
 # CLI). Values: _session_auto_approve[sid] -> bool   ("always_approve everything") _always_allow[sid]
-# -> set of (action, delivery_mode) scope keys See NousResearch/hermes-agent#67052 gap 4.
+# -> set of (action, delivery_mode) scope keys See InSelfControll/relayhelm#67052 gap 4.
 _approval_lock = threading.Lock()
 _session_auto_approve: Dict[str, bool] = {}   # sid -> "always_approve everything"
 _always_allow: Dict[str, set] = {}            # sid -> set of (action, delivery_mode) scope keys
 _escalation_warned: set = set()               # sids already warned that a bypass widened the driver mode
 
 def _cua_permission_mode(session_id: str) -> str:
-    """Map Hermes's approval bypass onto Cua's immutable mode; fails closed. Both identity namespaces are consulted
+    """Map Relayhelm's approval bypass onto Cua's immutable mode; fails closed. Both identity namespaces are consulted
     (DB ``session_id`` and gateway ``session_key`` contextvar) or a gateway ``/yolo`` would be invisible here.
     Warns once per session that ``-z``/``--yolo`` swapped the driver onto a private ``unrestricted`` daemon, dropping
     the configured ceiling: deliberate (``unrestricted`` is not a config value) but easy to trigger by accident."""
@@ -196,7 +196,7 @@ def _shutdown_backend_atexit() -> None:
     Never raises. Drops the global lock before stop(): teardown budgets 5s and must not block spawns.
 
     Each session backend holds a long-lived ``cua-driver`` subprocess, so without this a driver can survive
-    the Hermes process that spawned it (#28152 item 3). #69903 kept the orphan from burning a core by
+    the Relayhelm process that spawned it (#28152 item 3). #69903 kept the orphan from burning a core by
     disabling the cursor overlay; the process itself still lingered.
     """
     global _backend
@@ -627,7 +627,7 @@ def _write_cache_file(what: str, subdir: str, legacy: str, name: str, pattern: s
         return None
 
 def _persist_capture_image(cap: CaptureResult) -> Optional[str]:
-    """Copy of the capture in Hermes' media cache so attachment surfaces can deliver it (None without an image)."""
+    """Copy of the capture in Relayhelm' media cache so attachment surfaces can deliver it (None without an image)."""
     return _write_cache_file(
         "screenshot persistence", "cache/images", "image_cache", f"computer_use_{uuid.uuid4().hex}{_capture_image_format(cap)[1]}",
         "computer_use_*.*", _MAX_CAPTURE_FILES, lambda p: p.write_bytes(base64.b64decode(cap.png_b64, validate=False)),

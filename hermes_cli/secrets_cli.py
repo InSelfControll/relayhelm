@@ -16,7 +16,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 # The Bitwarden backend pulls in ``cryptography`` at import time; on Windows that mapped native
-# module makes the ``hermes update`` self-lock preflight defer. This module is registered
+# module makes the ``relayhelm update`` self-lock preflight defer. This module is registered
 # parse-time from ``hermes_cli.main``, so the backend import stays lazy (nothing touches ``bw``
 # until a handler runs) and ``_BWS_VERSION`` is duplicated here for the ``install --help`` text.
 # ``agent.secret_sources.bitwarden._BWS_VERSION`` is the source of truth; bump both together.
@@ -226,7 +226,7 @@ def cmd_setup(args: argparse.Namespace) -> int:
     save_config(cfg)
     console.print()
     console.print("[green]✓ Bitwarden Secrets Manager is enabled.[/green]  "
-                  "Secrets will be pulled at the start of every Hermes process.")
+                  "Secrets will be pulled at the start of every Relayhelm process.")
     console.print("  Status:  [cyan]hermes secrets bitwarden status[/cyan]\n"
                   "  Refresh: [cyan]hermes secrets bitwarden sync[/cyan]\n"
                   "  Disable: [cyan]hermes secrets bitwarden disable[/cyan]")
@@ -275,7 +275,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         console.print("\n  Run [cyan]hermes secrets bitwarden setup[/cyan] to enable.")
         return 0
     if not token:
-        console.print(f"\n  [yellow]Enabled but {token_env} is not set — Hermes will skip BSM "
+        console.print(f"\n  [yellow]Enabled but {token_env} is not set — Relayhelm will skip BSM "
                       "and warn on next startup.[/yellow]")
     if not project_id:
         console.print("\n  [yellow]Enabled but no project_id — nothing to fetch.[/yellow]")
@@ -390,7 +390,7 @@ def cmd_disable(args: argparse.Namespace) -> int:
     return disable_secret_source(
         "bitwarden",
         "[green]Disabled.[/green]  Bitwarden secrets will NOT be pulled on the next "
-        "Hermes invocation.\n"
+        "Relayhelm invocation.\n"
         "  Your access token is left in .env — remove it manually if you also want "
         "to revoke the credential.")
 

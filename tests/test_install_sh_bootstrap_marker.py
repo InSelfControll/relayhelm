@@ -43,7 +43,7 @@ write_bootstrap_marker
 
 
 def make_checkout(tmp_path):
-    install_dir = tmp_path / "hermes-agent"
+    install_dir = tmp_path / "relayhelm"
     install_dir.mkdir()
     subprocess.run(["git", "init", "-q"], cwd=install_dir, check=True)
     subprocess.run(

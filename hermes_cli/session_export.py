@@ -57,7 +57,7 @@ def render_sessions_export(sessions: Iterable[Dict[str, Any]], *, fmt: str = "js
         headings = (lambda s: f"User prompts for session {_heading_text(_session_id(s))}",
                     lambda s: f"Session {_heading_text(_session_id(s))}")
     else:
-        multi_title, append_body = "Hermes sessions export", _append_session_messages
+        multi_title, append_body = "Relayhelm sessions export", _append_session_messages
         headings = (lambda s: f"Session: {_heading_text(_session_title_or_id(s))}",) * 2
     lines: List[str] = []
     single = len(session_list) == 1
@@ -216,7 +216,7 @@ Formats:
 
 Options:
   filename   optional output name/path (default: auto-named;
-             CLI saves under ~/.hermes/sessions/saved/)
+             CLI saves under ~/.relayhelm/sessions/saved/)
   redact     scrub API keys, tokens, and credentials before writing
 
 Examples:

@@ -23,7 +23,7 @@ from hermes_cli import update_cmd
 @pytest.fixture()
 def receipt_home(tmp_path, monkeypatch):
     """Isolated HERMES_HOME for receipt writes."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     home.mkdir()
     monkeypatch.setattr(
         "hermes_cli.config.get_hermes_home", lambda: home, raising=False
@@ -44,7 +44,7 @@ class TestReceiptLifecycle:
         ur.record_step("pre_update_backup", True, "snapshot=abc123")
         ur.record_skip("gateway_restart", "no gateways running")
         ur.record_gateway_restart(
-            restarted_services=["hermes-gateway"],
+            restarted_services=["relayhelm-gateway"],
             relaunched_profiles=["work"],
             killed_pids=[123],
             failed_units=[],
@@ -61,7 +61,7 @@ class TestReceiptLifecycle:
         assert payload["steps"][0]["ok"] is True
         assert payload["skips"][0]["reason"] == "no gateways running"
         gr = payload["gateway_restart"]
-        assert gr["restarted_services"] == ["hermes-gateway"]
+        assert gr["restarted_services"] == ["relayhelm-gateway"]
         assert gr["relaunched_profiles"] == ["work"]
         assert gr["killed_pids"] == [123]
         assert gr["incomplete"] is False
@@ -345,7 +345,7 @@ class TestFleetClassification:
         assert stale is True
         out = capsys.readouterr().out
         assert "STALE" in out
-        assert "hermes -p <profile> gateway restart" in out
+        assert "relayhelm -p <profile> gateway restart" in out
 
     def test_unknown_does_not_fail_update(self, capsys):
         ok = ur.print_fleet_version_matrix(

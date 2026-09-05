@@ -339,7 +339,7 @@ def _runtime_provider_credentials(v: dict, explicit_request_overrides) -> dict:
     if not api_key:
         raise ValueError(
             f"Delegation provider '{configured_provider}' resolved but has no API key. "
-            f"Set the appropriate environment variable or run 'hermes auth'."
+            f"Set the appropriate environment variable or run 'relayhelm auth'."
         )
     # A pinned ACP transport command must exist — refuse the spawn loudly rather than letting the child
     # silently fall back to another transport (#80450).
@@ -428,7 +428,7 @@ def _resolve_child_runtime(
     # the parent — each provider has its own API surface (e.g. MiniMax uses anthropic_messages, DeepSeek
     # uses chat_completions). Inheriting the parent's mode causes 404 errors when the child routes to the
     # wrong endpoint. Derive the mode from the target provider when it differs. Same-provider inheritance
-    # would pin a child Hermes/Qwen subagent onto the parent's Claude Messages wire (or the reverse).
+    # would pin a child Relayhelm/Qwen subagent onto the parent's Claude Messages wire (or the reverse).
     # agent_init honors an explicit api_mode above its nous branch, so re-derive here before construction.
     _parent_provider = getattr(parent_agent, "provider", None) or ""
     if override_api_mode is not None:
@@ -485,9 +485,9 @@ def _resolve_child_runtime(
         "capabilities": _inherit_parent_capabilities(parent_agent, override_provider, override_base_url),
         "api_mode": effective_api_mode, "acp_command": effective_acp_command, "acp_args": effective_acp_args,
         "reasoning_config": child_reasoning,
-        # Inherit the parent's fallback chain EXCEPT under a pinned provider: a mid-run 429/auth failure must not
-        # silently reroute the quiet child onto the parent's fallbacks. Predictability > liveness for explicit pins.
-        "fallback_model": None if override_provider else (getattr(parent_agent, "_fallback_chain", None) or None),
+        # The split prompt names an exact model. Credential rotation is still allowed,
+        # but a provider failure must never silently substitute another model.
+        "fallback_model": None,
         "openrouter_min_coding_score": getattr(parent_agent, "openrouter_min_coding_score", None),
         # Routing filters reset to their defaults under a pinned provider (see _ROUTING_FILTER_DEFAULTS).
         **{a: d if override_provider else getattr(parent_agent, a, d) for a, d in _ROUTING_FILTER_DEFAULTS},

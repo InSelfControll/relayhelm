@@ -1,15 +1,15 @@
-# Hermes Agent - Development Guide
+# Relayhelm - Development Guide
 
-Instructions for AI coding assistants and developers working on the hermes-agent codebase.
+Instructions for AI coding assistants and developers working on the relayhelm codebase.
 This root file holds only what applies everywhere. Each area has its own `AGENTS.md` (aim for
 ~8k chars; `agent/subdirectory_hints.py` delivers up to 32k and truncates head/tail with a warning
 past that); see the **routing table** at the end and read the area file before editing in that area.
 
 **Never give up on the right solution.**
 
-## What Hermes Is
+## What Relayhelm Is
 
-Hermes is a personal AI agent that runs the same agent core across a CLI, a messaging
+Relayhelm is a personal AI agent that runs the same agent core across a CLI, a messaging
 gateway (Telegram, Discord, Slack, ~20 platforms), a TUI, and an Electron desktop app. It
 learns across sessions (memory + skills), delegates to subagents, runs scheduled jobs, and
 drives a real terminal and browser. It is extended primarily through **plugins and skills**,
@@ -35,7 +35,7 @@ sweeper, which may only close on `implemented_on_main`, `cannot_reproduce`, or `
 Taste-based "out of scope" closes are a human maintainer's call; the sweeper's job is to
 recognize design intent and *avoid wrongly closing a legitimate contribution*.
 
-Read the balance right: Hermes ships a **lot**. Most merges are bug fixes to reported
+Read the balance right: Relayhelm ships a **lot**. Most merges are bug fixes to reported
 behavior, and the product surface (platforms, providers, models, desktop/TUI features)
 expands aggressively on purpose. The restraint below targets the **core agent + model tool
 schema**, the one place where every addition is paid for on every API call. "Smallest
@@ -48,7 +48,7 @@ grow: expansive at the edges, conservative at the waist.
   where it manifests, and fix the whole bug class — sibling call paths included.
 - **Expand reach at the edges.** New adapters, channels, providers, models, desktop/TUI/
   dashboard features land routinely, including large ones — as long as they integrate with
-  the existing setup/config UX (`hermes tools`, `hermes setup`, auto-install) rather than
+  the existing setup/config UX (`relayhelm tools`, `relayhelm setup`, auto-install) rather than
   bolting on a raw env var.
 - **Refactor god-files into clean modules.** Huge mechanical `+N/-N` extraction PRs are
   wanted work. "Every line traces to the request" applies to *feature* PRs; a declared
@@ -89,14 +89,14 @@ grow: expansive at the edges, conservative at the waist.
   (`git log -p -S`) before restricting behavior; find a fix that preserves the feature.
 - **Outbound telemetry / usage attribution without opt-in gating.** No analytics,
   third-party identifier tagging, or attribution tags until a generic user-facing opt-in
-  (config gate + setup prompt + `hermes tools` toggle) exists. Park behind a label.
+  (config gate + setup prompt + `relayhelm tools` toggle) exists. Park behind a label.
 - **Change-detector tests, cache-breaking mid-conversation, dead code wired in without E2E
   proof, plugins that touch core files.** Plugins work within the ABCs/hooks we provide; if
   one needs more, widen the generic plugin surface, never special-case it in core.
 - **Third-party products integrated into the core tree.** Observability backends, vendor
   SaaS connectors, analytics dashboards, and other "someone else's product" plugins do NOT
   land under `plugins/` — every one becomes our burden against a fast-moving core for a
-  backend we don't own. Ship as a **standalone plugin repo** (`~/.hermes/plugins/` or pip
+  backend we don't own. Ship as a **standalone plugin repo** (`~/.relayhelm/plugins/` or pip
   entry point), promoted in the Nous Research Discord `#plugins-skills-and-skins`. This is a
   coupling decision, not a quality bar; such PRs are closed with a pointer to publish.
 
@@ -136,10 +136,10 @@ Choose the highest (least-footprint) rung that correctly solves the problem:
 1. **Extend existing code** — a variation of something that exists. Zero new surface.
 2. **CLI command + skill** — config/state/infra expressible as shell commands; the agent runs
    `hermes <subcommand>` guided by a skill. Default for subscriptions, scheduled tasks,
-   service setup (`hermes webhook`, `hermes cron`, `hermes tools`).
+   service setup (`hermes webhook`, `relayhelm cron`, `relayhelm tools`).
 3. **Service-gated tool (`check_fn`)** — needs structured params/returns AND only appears when
    a prerequisite is configured (Home Assistant tools, memory-provider tools).
-4. **Plugin** — third-party/niche/user-specific; lives in `~/.hermes/plugins/` or a pip
+4. **Plugin** — third-party/niche/user-specific; lives in `~/.relayhelm/plugins/` or a pip
    package, discovered at runtime.
 5. **MCP server (in the catalog)** — genuinely a tool but not core-fundamental. Zero permanent
    core-schema footprint, reusable by any MCP host, reached via the built-in MCP client.
@@ -152,10 +152,10 @@ Choose the highest (least-footprint) rung that correctly solves the problem:
 A tool that works only because of *who is on the other end* (desktop panes, in-app browser,
 message reactions, Projects) must resolve availability from the **session's own source**, not
 from an env var on the backend. Client and backend are separate machines: the desktop app may
-drive a locally spawned backend, one over SSH, one behind URL + token, or Hermes Cloud, and
+drive a locally spawned backend, one over SSH, one behind URL + token, or Relayhelm Cloud, and
 only the first two carry `HERMES_DESKTOP=1`. An env-keyed gate is a silent no-op on the other
 topologies — the tool is stripped from the schema while the platform hint tells the model it
-is "inside the Hermes desktop app". The pattern:
+is "inside the Relayhelm desktop app". The pattern:
 
 - **The toolset is the surface gate.** Keep such tools off `_HERMES_CORE_TOOLS` and in a named
   toolset (`desktop_ui`, `project`); the GUI gateway's `_load_enabled_toolsets(platform)`
@@ -165,7 +165,7 @@ is "inside the Hermes desktop app". The pattern:
   (`tools/registry.py`); a per-session answer does not belong there.
 - **Ask which identity you mean.** `HERMES_DESKTOP=1` legitimately means "this backend was
   spawned by the app" (cron ticker, web-dist handling). It does NOT mean "a GUI is watching";
-  the embedded terminal pane (`hermes --tui` against that backend) is the counterexample.
+  the embedded terminal pane (`relayhelm --tui` against that backend) is the counterexample.
 
 Test: if the capability still makes sense with the client on another machine, it is
 session-scoped. Assert the GUI session gets the tool **with the env var absent**.
@@ -175,7 +175,7 @@ session-scoped. Assert the GUI session gets the tool **with the env var absent**
 ```bash
 source .venv/bin/activate   # or: source venv/bin/activate
 ```
-`scripts/run_tests.sh` probes `.venv`, then `venv`, then `$HOME/.hermes/hermes-agent/venv`
+`scripts/run_tests.sh` probes `.venv`, then `venv`, then `$HOME/.relayhelm/relayhelm/venv`
 (worktrees sharing the main checkout's venv).
 
 ## Project Structure
@@ -183,7 +183,7 @@ source .venv/bin/activate   # or: source venv/bin/activate
 Counts shift constantly; the filesystem is canonical. Load-bearing entry points:
 
 ```
-hermes-agent/
+relayhelm/
 ├── run_agent.py          # AIAgent facade; the turn loop lives in agent/turn_*.py
 ├── model_tools.py        # Tool orchestration, discover_builtin_tools(), handle_function_call()
 ├── toolsets.py           # TOOLSETS dict, _HERMES_CORE_TOOLS
@@ -202,7 +202,7 @@ hermes-agent/
 │   └── builtin_hooks/    # Always-registered gateway hooks (extension point; none shipped)
 ├── plugins/              # memory/, context_engine/, model-providers/, kanban/, image_gen/, ...
 ├── skills/               # Built-in skills (by category)   optional-skills/: shipped, not active
-├── ui-tui/               # Ink (React) terminal UI — `hermes --tui`
+├── ui-tui/               # Ink (React) terminal UI — `relayhelm --tui`
 ├── tui_gateway/          # Python JSON-RPC backend for TUI + Desktop — server.py + methods_*.py
 ├── apps/desktop/         # Electron desktop app (+ apps/shared JSON-RPC client)   web/: dashboard SPA
 ├── acp_adapter/          # ACP server (VS Code / Zed / JetBrains)
@@ -213,8 +213,8 @@ hermes-agent/
 └── tests/                # Pytest suite (~39k tests / ~3.7k files, Sep 2026)
 ```
 
-**User state:** `~/.hermes/config.yaml` (settings), `~/.hermes/.env` (secrets only),
-`~/.hermes/logs/` (`agent.log` INFO+, `errors.log` WARNING+, `gateway.log`); all
+**User state:** `~/.relayhelm/config.yaml` (settings), `~/.relayhelm/.env` (secrets only),
+`~/.relayhelm/logs/` (`agent.log` INFO+, `errors.log` WARNING+, `gateway.log`); all
 profile-aware via `get_hermes_home()`. Browse logs with `hermes logs [--follow] [--level] [--session]`.
 
 **Dependency chain:** `tools/registry.py` (no deps) ← `tools/*.py` (register at import) ←
@@ -264,11 +264,11 @@ families: `hermes_state.py` (21), `gateway/run.py` (15), `tools/mcp_tool.py` (15
   `hermes_cli.update_cmd._hermes_holder_subcommand`; flag sets are DERIVED from the parser
   (`_holder_value_flags()`), never hand-written; match FULL cmdlines and truncate only for
   display. Details: `hermes_cli/AGENTS.md`.
-- **Never hardcode `~/.hermes`.** `get_hermes_home()` for code paths, `display_hermes_home()`
+- **Never hardcode `~/.relayhelm`.** `get_hermes_home()` for code paths, `display_hermes_home()`
   for user-facing text (both from `hermes_constants`). Hardcoding breaks profiles (5 bugs in
   PR #3575). Module-level constants are fine — they cache after `_apply_profile_override()`
   sets `HERMES_HOME`. Profile operations themselves are HOME-anchored
-  (`_get_profiles_root()` = `Path.home()/.hermes/profiles`) so `hermes -p x profile list`
+  (`_get_profiles_root()` = `Path.home()/.relayhelm/profiles`) so `relayhelm -p x profile list`
   sees all profiles — intentional, not a bug.
 - **Argparse alias dispatch:** `add_parser("list", aliases=["ls"])` sets `dest` to the literal
   the user typed (`"ls"`). Dispatch must accept both (caught PTY-testing `hermes webhook ls`).
@@ -331,20 +331,20 @@ scripts/run_tests.sh -v --tb=long                       # pytest flags pass thro
   asserting about `package.json`, `package-lock.json`, `tsconfig.json`, or `.ts/.tsx/.js/
   .mjs/.cjs` sources will not run on a JS-only PR (green on PR, red on `main` where the
   classifier fails open). Such tests belong in the vitest suite, not `tests/*.py`.
-- **Tests must not write to `~/.hermes/`.** The autouse `_isolate_hermes_home` fixture in
-  `tests/conftest.py` redirects `HERMES_HOME`; never hardcode `~/.hermes/` in tests. Profile
+- **Tests must not write to `~/.relayhelm/`.** The autouse `_isolate_hermes_home` fixture in
+  `tests/conftest.py` redirects `HERMES_HOME`; never hardcode `~/.relayhelm/` in tests. Profile
   tests also mock `Path.home()` so `_get_profiles_root()` / `_get_default_hermes_home()` stay
   in the temp dir (pattern: `tests/hermes_cli/test_profiles.py`):
   ```python
   @pytest.fixture
   def profile_env(tmp_path, monkeypatch):
-      home = tmp_path / ".hermes"; home.mkdir()
+      home = tmp_path / ".relayhelm"; home.mkdir()
       monkeypatch.setattr(Path, "home", lambda: tmp_path)
       monkeypatch.setenv("HERMES_HOME", str(home))
       return home
   ```
   Tests that `patch.object(Path, "home", ...)` must ALSO set `HERMES_HOME` — code reads the
-  env var, not `Path.home()/.hermes`.
+  env var, not `Path.home()/.relayhelm`.
 
 ### Don't fake the host OS
 
@@ -407,7 +407,7 @@ extract, not to regex around it.
 | Area | Read | Covers |
 |---|---|---|
 | `run_agent.py`, `agent/` | `agent/AGENTS.md` | AIAgent + mixins, turn phases, caching integrity, message-flow invariants, compression, model/aux resolution |
-| `cli.py`, `hermes_cli/`, `main.py` | `hermes_cli/AGENTS.md` | CLI mixins, `_SLASH_DISPATCH`, slash registry, config system + loaders, skins, `hermes update` pipeline, profiles / multiplex |
+| `cli.py`, `hermes_cli/`, `main.py` | `hermes_cli/AGENTS.md` | CLI mixins, `_SLASH_DISPATCH`, slash registry, config system + loaders, skins, `relayhelm update` pipeline, profiles / multiplex |
 | `gateway/` | `gateway/AGENTS.md` | Adapters, two message guards, streaming contract, background notifications, gateway vs desktop lifecycle, token locks, scoped secrets |
 | `tools/`, `toolsets.py`, `model_tools.py` | `tools/AGENTS.md` | Adding tools, registry, toolsets, delegation, cross-tool references, backends |
 | `plugins/`, `hermes_cli/plugins*.py` | `plugins/AGENTS.md` | Plugin kinds, native compat contract, in-tree policy, Sep-2026 compat window |

@@ -33,7 +33,7 @@ def _whatsapp_choose_mode(get_env_value, save_env_value):
         mode_label = "separate bot number" if current_mode == "bot" else "personal number (self-chat)"
         print(f"\n✓ Mode: {mode_label}")
         return current_mode
-    _say("", "How will you use WhatsApp with Hermes?", "",
+    _say("", "How will you use WhatsApp with Relayhelm?", "",
          "  1. Separate bot number (recommended)",
          "     People message the bot's number directly — cleanest experience.",
          "     Requires a second phone number with WhatsApp installed on a device.", "",
@@ -136,7 +136,7 @@ def cmd_whatsapp(args):
 
     # WHATSAPP_ENABLED=true is deliberately NOT written here: an aborted wizard (Ctrl+C, failed npm
     # install, missed QR scan) would leave .env claiming WhatsApp is ready with no creds.json, and
-    # every `hermes gateway` would pay a 30s bridge timeout + indefinite retries. Set only after
+    # every `relayhelm gateway` would pay a 30s bridge timeout + indefinite retries. Set only after
     # pairing succeeds; prior successful pairings stay enabled.
     print()
     if (get_env_value("WHATSAPP_ENABLED") or "").lower() == "true":
@@ -166,7 +166,7 @@ def cmd_whatsapp(args):
             # Older installs may have lost WHATSAPP_ENABLED; a kept pairing re-asserts it.
             if (get_env_value("WHATSAPP_ENABLED") or "").lower() != "true":
                 save_env_value("WHATSAPP_ENABLED", "true")
-            _say("\n✓ WhatsApp is configured and paired!", "  Start the gateway with: hermes gateway")
+            _say("\n✓ WhatsApp is configured and paired!", "  Start the gateway with: relayhelm gateway")
             return
 
     # QR code pairing
@@ -189,17 +189,17 @@ def cmd_whatsapp(args):
     save_env_value("WHATSAPP_ENABLED", "true")
     _say("✓ WhatsApp paired successfully!", "")
     if wa_mode == "bot":
-        _say("  Next steps:", "    1. Start the gateway:  hermes gateway",
+        _say("  Next steps:", "    1. Start the gateway:  relayhelm gateway",
              "    2. Send a message to the bot's WhatsApp number",
              "    3. The agent will reply automatically", "",
-             "  Tip: Agent responses are prefixed with '⚕ Hermes Agent'")
+             "  Tip: Agent responses are prefixed with '⚕ Relayhelm'")
     else:
-        _say("  Next steps:", "    1. Start the gateway:  hermes gateway",
+        _say("  Next steps:", "    1. Start the gateway:  relayhelm gateway",
              "    2. Open WhatsApp → Message Yourself",
              "    3. Type a message — the agent will reply", "",
-             "  Tip: Agent responses are prefixed with '⚕ Hermes Agent'",
+             "  Tip: Agent responses are prefixed with '⚕ Relayhelm'",
              "  so you can tell them apart from your own messages.")
-    _say("", "  Or install as a service: hermes gateway install")
+    _say("", "  Or install as a service: relayhelm gateway install")
 
 
 def cmd_whatsapp_cloud(args):
@@ -270,7 +270,7 @@ def _sync_toggle(args, sub: str) -> int:
     if not is_curation_eligible(skill):
         _err(f"'{skill}' is not sync-eligible (bundled, hub-installed, "
              f"external, or not found). Only agent-created / user-authored "
-             f"skills under ~/.hermes/skills/ can sync.")
+             f"skills under ~/.relayhelm/skills/ can sync.")
         return 1
     set_sync(skill, sub == "enable")
     print(f"sync {'enabled' if sub == 'enable' else 'disabled'} for '{skill}'.")

@@ -8,13 +8,13 @@
  *
  *   1. buildPathExtCandidates() — findOnPath() tried the empty extension
  *      FIRST, so an extensionless Git-Bash `hermes` shim shadowed the real
- *      hermes.cmd/hermes.exe; the shim then failed the --version probe and
+ *      relayhelm.cmd/relayhelm.exe; the shim then failed the --version probe and
  *      the desktop fell through to a spurious bootstrap/repair. The fix:
  *      PATHEXT extensions first, empty extension LAST.
  *   2. chooseUpdaterArgs() — handOffWindowsBootstrapRecovery() must separate
  *      install provenance from updater viability. A bootstrap-complete marker
  *      can outlive a deleted venv, while the updater needs BOTH the venv Python
- *      and Hermes launcher. Marker-only or partial runtimes must use --repair;
+ *      and Relayhelm launcher. Marker-only or partial runtimes must use --repair;
  *      only a runnable pair can use --update.
  *   3. resolveVenvHermesCommand() — unwrapWindowsVenvHermesCommand() returned
  *      the venv python with NO runtime probe (bypassing the caller's
@@ -40,7 +40,7 @@ import path from 'node:path'
  * default) BEFORE the bare/empty-extension name: a real command resolves via
  * its .exe/.cmd per Windows command-resolution semantics, and an
  * extensionless file (e.g. a Git-Bash shell-script shim named `hermes`) must
- * not shadow `hermes.cmd`/`hermes.exe`. The empty entry is kept LAST so
+ * not shadow `relayhelm.cmd`/`relayhelm.exe`. The empty entry is kept LAST so
  * callers that already include the extension (py.exe, pwsh.exe,
  * powershell.exe) still resolve.
  *
@@ -62,7 +62,7 @@ export function buildPathExtCandidates(pathext: string | undefined, isWindows: b
 /**
  * Choose the Windows bootstrap-recovery invocation. The gentle in-place
  * updater can only start when both pieces of its runtime contract exist: the
- * venv Python interpreter and the Hermes launcher that drives `hermes update`.
+ * venv Python interpreter and the Relayhelm launcher that drives `relayhelm update`.
  * A bootstrap-complete marker proves install provenance, not current runtime
  * usability, and may remain after the venv is removed or quarantined.
  *
@@ -187,11 +187,11 @@ export interface ResolveVenvHermesCommandDeps {
 }
 
 /**
- * If `command` is a Windows venv `hermes`/`hermes.exe` console-script shim
+ * If `command` is a Windows venv `hermes`/`relayhelm.exe` console-script shim
  * (i.e. `<venvRoot>/Scripts/hermes(.exe)`), resolve it to the underlying
  * venv python invoked as `python -m hermes_cli.main <backendArgs>` — but
  * ONLY after smoke-testing that interpreter with canImportHermesCli(). A
- * venv whose update died mid-`pip install` still has python.exe + hermes.exe
+ * venv whose update died mid-`pip install` still has python.exe + relayhelm.exe
  * on disk, but the backend dies on its first import (e.g.
  * ModuleNotFoundError: dotenv) before the gateway ever binds. Returning it
  * unprobed also bypasses the caller's `--version` probe, so Retry/"Repair
@@ -241,7 +241,7 @@ export function resolveVenvHermesCommand(
 
   const resolved = resolvePath(String(command))
 
-  if (!/^hermes(?:\.exe)?$/i.test(basename(resolved))) {
+  if (!/^relayhelm(?:\.exe)?$/i.test(basename(resolved))) {
     return null
   }
 
@@ -270,14 +270,14 @@ export function resolveVenvHermesCommand(
     })
   ) {
     rememberLog?.(
-      `Ignoring venv Hermes at ${python}: runtime import probe failed (broken/partial venv); falling through to bootstrap.`
+      `Ignoring venv Relayhelm at ${python}: runtime import probe failed (broken/partial venv); falling through to bootstrap.`
     )
 
     return null
   }
 
   return {
-    label: `existing Hermes Python at ${python}`,
+    label: `existing Relayhelm Python at ${python}`,
     command: python,
     args: ['-m', 'hermes_cli.main', ...backendArgs],
     bootstrap: false,

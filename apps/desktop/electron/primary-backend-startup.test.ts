@@ -10,7 +10,7 @@ import {
 } from './primary-backend-startup'
 
 const bootstrapBackend = {
-  activeRoot: '/tmp/hermes-home/hermes-agent',
+  activeRoot: '/tmp/hermes-home/relayhelm',
   kind: 'bootstrap-needed',
   platform: 'linux'
 }

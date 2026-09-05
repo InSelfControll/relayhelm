@@ -23,8 +23,8 @@ const ownershipId = '0123456789abcdef0123456789abcdef'
 
 test('Windows spawn holds the update mutex across marker check and helper spawn', () => {
   const command = atomicWindowsSpawnCommand({
-    hermesHome: 'C:\\Users\\andre\\.hermes',
-    python: 'C:\\Users\\andre\\.hermes\\python.exe'
+    hermesHome: 'C:\\Users\\andre\\.relayhelm',
+    python: 'C:\\Users\\andre\\.relayhelm\\python.exe'
   })
 
   const encoded = command.match(/-EncodedCommand\s+([^\s]+)$/)?.[1]
@@ -39,15 +39,15 @@ test('Windows spawn holds the update mutex across marker check and helper spawn'
 test('Windows spawn publishes the initial ownership record before releasing the mutex', () => {
   const command = atomicWindowsSpawnCommand(
     {
-      hermesHome: 'C:\\Users\\andre\\.hermes',
-      python: 'C:\\Users\\andre\\.hermes\\python.exe'
+      hermesHome: 'C:\\Users\\andre\\.relayhelm',
+      python: 'C:\\Users\\andre\\.relayhelm\\python.exe'
     },
     {
       ownershipId,
       spawnNonce: '0123456789abcdef',
       profile: 'default',
-      hermesPath: 'C:\\Hermes\\hermes.exe',
-      hermesHome: 'C:\\Users\\andre\\.hermes',
+      hermesPath: 'C:\\Relayhelm\\relayhelm.exe',
+      hermesHome: 'C:\\Users\\andre\\.relayhelm',
       tokenFingerprint: 'a'.repeat(32),
       startedAt: '2026-07-14T00:00:00.000Z'
     }
@@ -79,13 +79,13 @@ test('Windows relaunch gate refuses live and uncertain markers before executing 
       const script = Buffer.from(command.split(' ').at(-1) || '', 'base64').toString('utf16le')
       scripts.push(script)
 
-      if (script.includes('Get-Command hermes.exe')) {
+      if (script.includes('Get-Command relayhelm.exe')) {
         return JSON.stringify({
           os: 'Windows',
           arch: 'AMD64',
-          hermesHome: 'C:\\Users\\alice\\.hermes',
-          hermesPath: 'C:\\Hermes\\hermes.exe',
-          python: 'C:\\Hermes\\python.exe'
+          hermesHome: 'C:\\Users\\alice\\.relayhelm',
+          hermesPath: 'C:\\Relayhelm\\relayhelm.exe',
+          python: 'C:\\Relayhelm\\python.exe'
         })
       }
 
@@ -125,7 +125,7 @@ test('Windows relaunch gate uses strict install-wide marker parsing and fail-clo
     return 'CLEAR'
   })
 
-  await assertWindowsRemoteInstallUpdateClear(ssh, 'C:\\Users\\alice\\.hermes\\profiles\\research')
+  await assertWindowsRemoteInstallUpdateClear(ssh, 'C:\\Users\\alice\\.relayhelm\\profiles\\research')
   assert.match(script, /\.hermes-update-in-progress/)
   assert.match(script, /Split-Path -Leaf \$parent.*profiles/)
   assert.match(script, /UTF8Encoding.*true/)
@@ -134,7 +134,7 @@ test('Windows relaunch gate uses strict install-wide marker parsing and fail-clo
   assert.doesNotMatch(script, /ErrorAction SilentlyContinue/)
 })
 
-test('Windows probe validates Hermes and Python topology before selection', async () => {
+test('Windows probe validates Relayhelm and Python topology before selection', async () => {
   let script = ''
   await probeWindowsRemote(
     sshWith(async command => {
@@ -144,11 +144,11 @@ test('Windows probe validates Hermes and Python topology before selection', asyn
         os: 'Windows',
         arch: 'AMD64',
         hermesHome: 'C:\\\\h',
-        hermesPath: 'C:\\\\h\\\\hermes.exe',
+        hermesPath: 'C:\\\\h\\\\relayhelm.exe',
         python: 'C:\\\\h\\\\python.exe'
       })
     }),
-    'C:\\\\h\\\\hermes.exe'
+    'C:\\\\h\\\\relayhelm.exe'
   )
 
   const explicitCheck = script.indexOf('if($explicit){Assert-NoReparse $explicit $false;')
@@ -186,7 +186,7 @@ test('platform detection preserves POSIX and falls back to Windows PowerShell', 
         os: 'Windows',
         arch: 'ARM64',
         hermesHome: 'C:\\h',
-        hermesPath: 'C:\\h\\hermes.exe',
+        hermesPath: 'C:\\h\\relayhelm.exe',
         python: 'C:\\h\\python.exe'
       })
     })
@@ -218,23 +218,23 @@ test('platform detection surfaces transport failures as themselves, not unsuppor
           throw new Error('not recognized')
         }
 
-        throw new Error('Hermes is not installed on the remote Windows host.')
+        throw new Error('Relayhelm is not installed on the remote Windows host.')
       })
     ),
-    (err: any) => err.kind === 'unsupported-platform' && /Hermes is not installed/.test(err.message)
+    (err: any) => err.kind === 'unsupported-platform' && /Relayhelm is not installed/.test(err.message)
   )
 })
 
 test('helper command uses the fixed remote Python entry point and quotes path data', () => {
-  const command = helperCommand({ python: "C:\\Program Files\\Hermes's\\python.exe" }, 'inspect', [
-    'C:\\x y\\hermes.exe'
+  const command = helperCommand({ python: "C:\\Program Files\\Relayhelm's\\python.exe" }, 'inspect', [
+    'C:\\x y\\relayhelm.exe'
   ])
 
   const encoded = command.split(' ').pop()!
   const script = Buffer.from(encoded, 'base64').toString('utf16le')
   assert.match(script, /-m' 'hermes_cli\.windows_ssh_runtime' 'inspect'/)
-  assert.match(script, /Hermes''s/)
-  assert.match(script, /C:\\x y\\hermes\.exe/)
+  assert.match(script, /Relayhelm''s/)
+  assert.match(script, /C:\\x y\\relayhelm\.exe/)
 })
 
 test('Windows lock validation is scoped and exact', () => {
@@ -247,7 +247,7 @@ test('Windows lock validation is scoped and exact', () => {
     creationTimeNs: '1784219690452757504',
     port: 1234,
     tokenFingerprint: 'a'.repeat(32),
-    hermesPath: 'C:\\h\\hermes.exe',
+    hermesPath: 'C:\\h\\relayhelm.exe',
     hermesHome: 'C:\\h'
   }
 
@@ -273,7 +273,7 @@ test('Windows SSH reuse requires the requested remote profile to match the lock'
     port: 1234,
     profile: 'default',
     tokenFingerprint: crypto.createHash('sha256').update(token).digest('hex').slice(0, 32),
-    hermesPath: 'C:\\h\\hermes.exe',
+    hermesPath: 'C:\\h\\relayhelm.exe',
     hermesHome: 'C:\\h'
   }
 
@@ -303,7 +303,7 @@ test('managed update drain preserves a Windows owner when creation time does not
     port: 1234,
     profile: 'default',
     tokenFingerprint: 'a'.repeat(32),
-    hermesPath: 'C:\\h\\hermes.exe',
+    hermesPath: 'C:\\h\\relayhelm.exe',
     hermesHome: 'C:\\h'
   }
 
@@ -345,7 +345,7 @@ test('managed update drain rechecks Windows PID/create-time ownership before exa
     port: 1234,
     profile: 'default',
     tokenFingerprint: 'a'.repeat(32),
-    hermesPath: 'C:\\h\\hermes.exe',
+    hermesPath: 'C:\\h\\relayhelm.exe',
     hermesHome: 'C:\\h'
   }
 

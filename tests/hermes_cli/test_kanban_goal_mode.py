@@ -24,7 +24,7 @@ from hermes_cli import goals
 
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -42,7 +42,7 @@ def kanban_home(tmp_path, monkeypatch):
 
 def test_legacy_db_migrates_goal_columns(tmp_path, monkeypatch):
     """A tasks table created without goal columns must gain them on init."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -134,11 +134,11 @@ def test_loop_stops_when_worker_already_completed(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# CLI judge gate tests (hermes kanban complete bypass fix)
+# CLI judge gate tests (relayhelm kanban complete bypass fix)
 # ---------------------------------------------------------------------------
 
 class TestCLIJudgeGate:
-    """hermes kanban complete must apply the same goal_mode judge gate as the
+    """relayhelm kanban complete must apply the same goal_mode judge gate as the
     kanban_complete tool (Issue #38367 sibling gap).
 
     Uses mocks for kb.get_task and kb.complete_task to avoid depending on the

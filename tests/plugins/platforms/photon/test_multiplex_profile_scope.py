@@ -46,7 +46,7 @@ _PHOTON_ENV = (
 
 @pytest.fixture
 def tmp_hermes_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    """Isolate from the real ~/.hermes/auth.json fallback in load_project_credentials()."""
+    """Isolate from the real ~/.relayhelm/auth.json fallback in load_project_credentials()."""
     home = tmp_path / "hermes"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))

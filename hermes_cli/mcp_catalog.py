@@ -1,6 +1,6 @@
 """MCP catalog — curated, Nous-approved MCP servers shipped with the repo.
 
-Entries are added only by merging a PR into hermes-agent; presence in ``optional-mcps/`` = Nous
+Entries are added only by merging a PR into relayhelm; presence in ``optional-mcps/`` = Nous
 approval (no community tier, no other trust signals). Manifests pin transport details.
 """
 
@@ -53,7 +53,7 @@ class TransportSpec:
     url: Optional[str] = None
     version: Optional[str] = None  # informational, pinned
     # Static env for the stdio subprocess (telemetry opt-outs, mode flags). NOT for secrets — those
-    # go through auth.env so they are prompted for and land in ~/.hermes/.env.
+    # go through auth.env so they are prompted for and land in ~/.relayhelm/.env.
     env: Dict[str, str] = field(default_factory=dict)
 
 
@@ -245,7 +245,7 @@ def _parse_manifest(path: Path) -> CatalogEntry:
     if mv != _MANIFEST_VERSION:
         raise CatalogError(
             f"{path}: manifest_version {mv!r} unsupported "
-            f"(this Hermes understands version {_MANIFEST_VERSION})"
+            f"(this Relayhelm understands version {_MANIFEST_VERSION})"
         )
     name = data.get("name") or ""
     if not name or not re.match(r"^[A-Za-z0-9_-]+$", name):
@@ -276,7 +276,7 @@ def list_catalog() -> List[CatalogEntry]:
     """Return all valid catalog entries, sorted by name.
 
     Invalid manifests are skipped silently (CI catches them); future ``manifest_version`` ones are
-    skipped too but surfaced via :func:`catalog_diagnostics` so UIs can say "update Hermes".
+    skipped too but surfaced via :func:`catalog_diagnostics` so UIs can say "update Relayhelm".
     """
     root = _catalog_root()
     if not root.exists():
@@ -298,7 +298,7 @@ def list_catalog() -> List[CatalogEntry]:
 
 def catalog_diagnostics() -> List[tuple]:
     """``(entry_name, kind, message)`` tuples from the most recent :func:`list_catalog` call;
-    ``kind`` is ``future_manifest`` (newer than this Hermes) or ``invalid`` (malformed)."""
+    ``kind`` is ``future_manifest`` (newer than this Relayhelm) or ``invalid`` (malformed)."""
     return list(_CATALOG_DIAGNOSTICS)
 
 
@@ -361,7 +361,7 @@ def _run_bootstrap(cwd: Path, commands: List[str]) -> None:
 
 
 def _do_git_install(entry: CatalogEntry) -> Path:
-    """Clone the entry's repo into ``~/.hermes/mcp-installs/<name>`` and run bootstrap. Returns the dir."""
+    """Clone the entry's repo into ``~/.relayhelm/mcp-installs/<name>`` and run bootstrap. Returns the dir."""
     assert entry.install is not None and entry.install.type == "git"
     install = entry.install
     dest = _install_root() / entry.name
@@ -409,7 +409,7 @@ def _expand_install_dir(value: str, install_dir: Optional[Path]) -> str:
 
 
 def _prompt_env_vars(specs: List[EnvVarSpec]) -> Dict[str, str]:
-    """Prompt for each env spec; secrets and non-secrets alike go to ~/.hermes/.env."""
+    """Prompt for each env spec; secrets and non-secrets alike go to ~/.relayhelm/.env."""
     collected: Dict[str, str] = {}
     for spec in specs:
         existing = get_env_value(spec.name)
@@ -626,11 +626,11 @@ def install_entry(entry: CatalogEntry, *, enable: bool = True) -> None:
         _say("  Configure credentials:", Colors.CYAN)
         _prompt_env_vars(entry.auth.env)
     elif entry.auth.type == "oauth" and entry.auth.provider:
-        # Provider-mediated OAuth relies on the existing `hermes auth <provider>` flow; surface
+        # Provider-mediated OAuth relies on the existing `relayhelm auth <provider>` flow; surface
         # guidance rather than auto-running it to keep install decoupled from provider-auth lifecycle.
         _say(
             f"  This MCP uses {entry.auth.provider} OAuth. Run "
-            f"`hermes auth {entry.auth.provider}` if you have not "
+            f"`relayhelm auth {entry.auth.provider}` if you have not "
             "already authenticated.",
             Colors.YELLOW)
     elif entry.auth.type == "oauth":
@@ -657,7 +657,7 @@ def install_entry(entry: CatalogEntry, *, enable: bool = True) -> None:
     _say(
         f"  ✓ Installed '{entry.name}' "
         f"({'enabled' if enable else 'disabled'}). "
-        f"Start a new Hermes session to load its tools."
+        f"Start a new Relayhelm session to load its tools."
     )
     if entry.post_install:
         print()

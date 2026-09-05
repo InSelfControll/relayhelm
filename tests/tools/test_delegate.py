@@ -54,7 +54,18 @@ def _make_mock_parent(depth=0):
     parent._print_fn = None
     parent.tool_progress_callback = None
     parent.thinking_callback = None
+    parent.clarify_callback = lambda question, choices: "Split task"
     return parent
+
+
+def _configure_mock_agent(constructor, child):
+    """Fake construction honors the requested model and host callbacks."""
+    constructor.return_value = child
+    def build(**kwargs):
+        child.model = kwargs["model"]
+        child.clarify_callback = kwargs.get("clarify_callback")
+        return child
+    constructor.side_effect = build
 
 
 class TestDelegateRequirements(unittest.TestCase):
@@ -181,7 +192,7 @@ class TestStripBlockedTools(unittest.TestCase):
         parent.disabled_toolsets = ["browser"]
 
         with patch("run_agent.AIAgent") as MockAgent:
-            MockAgent.return_value = MagicMock()
+            _configure_mock_agent(MockAgent, MagicMock())
             _build_child_agent(
                 task_index=0,
                 goal="Inspect safely",
@@ -230,7 +241,7 @@ class TestStripBlockedTools(unittest.TestCase):
             patch("tools.delegate_tool._get_orchestrator_enabled", return_value=True),
             patch("tools.delegate_tool._get_max_spawn_depth", return_value=2),
         ):
-            MockAgent.return_value = MagicMock()
+            _configure_mock_agent(MockAgent, MagicMock())
             _build_child_agent(
                 task_index=0,
                 goal="Coordinate safely",
@@ -286,7 +297,7 @@ class TestDelegateTask(unittest.TestCase):
                 "completed": True,
                 "api_calls": 1,
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             delegate_task(goal="Test runtime inheritance", parent_agent=parent)
 
@@ -313,7 +324,7 @@ class TestDelegateTask(unittest.TestCase):
         try:
             with patch("run_agent.AIAgent") as MockAgent:
                 mock_child = MagicMock()
-                MockAgent.return_value = mock_child
+                _configure_mock_agent(MockAgent, mock_child)
 
                 _build_child_agent(
                     task_index=0,
@@ -356,7 +367,7 @@ class TestDelegateTask(unittest.TestCase):
         parent._session_db = None
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = MagicMock()
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             _build_child_agent(
                 task_index=0,
@@ -395,7 +406,7 @@ class TestDelegateTask(unittest.TestCase):
             child_db = None
             try:
                 with patch("run_agent.AIAgent") as MockAgent:
-                    MockAgent.return_value = MagicMock()
+                    _configure_mock_agent(MockAgent, MagicMock())
 
                     _build_child_agent(
                         task_index=0,
@@ -433,7 +444,7 @@ class TestDelegateTask(unittest.TestCase):
 
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = MagicMock()
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             _build_child_agent(
                 task_index=0,
@@ -453,7 +464,7 @@ class TestDelegateTask(unittest.TestCase):
 
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = MagicMock()
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
             parent.api_mode = "chat_completions"
             parent.model = "hermes-4-405b"
 
@@ -489,7 +500,7 @@ class TestToolNamePreservation(unittest.TestCase):
             mock_child.run_conversation.return_value = {
                 "final_response": "done", "completed": True, "api_calls": 1,
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             delegate_task(goal="Test tool preservation", parent_agent=parent)
 
@@ -515,7 +526,7 @@ class TestToolNamePreservation(unittest.TestCase):
                 return {"final_response": "ok", "completed": True, "api_calls": 1}
 
             mock_child.run_conversation.side_effect = capture_and_return
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             delegate_task(goal="capture test", parent_agent=parent)
 
@@ -548,13 +559,13 @@ class TestDelegateObservability(unittest.TestCase):
                     {"role": "assistant", "content": "done"},
                 ],
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             result = json.loads(delegate_task(goal="Test observability", parent_agent=parent))
             entry = result["results"][0]
 
             # Core observability fields
-            self.assertEqual(entry["model"], "claude-sonnet-4-6")
+            self.assertEqual(entry["model"], parent.model)
             self.assertEqual(entry["exit_reason"], "completed")
             self.assertEqual(entry["tokens"]["input"], 5000)
             self.assertEqual(entry["tokens"]["output"], 1200)
@@ -593,7 +604,7 @@ class TestDelegateObservability(unittest.TestCase):
                     ]},
                 ],
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             result = json.loads(delegate_task(goal="Test list content", parent_agent=parent))
             trace = result["results"][0]["tool_trace"]
@@ -627,7 +638,7 @@ class TestDelegateObservability(unittest.TestCase):
                     {"role": "assistant", "content": "done"},
                 ],
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             result = json.loads(delegate_task(goal="Test parallel", parent_agent=parent))
             trace = result["results"][0]["tool_trace"]
@@ -670,7 +681,7 @@ class TestDelegateObservability(unittest.TestCase):
                 "api_calls": 4,
                 "messages": [],
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             result = json.loads(delegate_task(goal="Test empty sentinel", parent_agent=parent))
             self.assertEqual(result["results"][0]["status"], "failed")
@@ -701,7 +712,7 @@ class TestDelegateObservability(unittest.TestCase):
                 "api_calls": 3,
                 "messages": [],
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             result = json.loads(
                 delegate_task(goal="Test failed child", parent_agent=parent)
@@ -734,7 +745,7 @@ class TestDelegateObservability(unittest.TestCase):
                 "api_calls": 2,
                 "messages": [],
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             result = json.loads(
                 delegate_task(goal="Test success control", parent_agent=parent)
@@ -766,7 +777,7 @@ class TestDelegateFailedChildStatus(unittest.TestCase):
             mock_child.session_prompt_tokens = 0
             mock_child.session_completion_tokens = 0
             mock_child.run_conversation.return_value = child_result
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
             result = json.loads(
                 delegate_task(goal="Test child status", parent_agent=parent)
             )
@@ -851,12 +862,8 @@ class TestDelegateFailedChildStatus(unittest.TestCase):
         self.assertEqual(entry["exit_reason"], "completed")
         self.assertFalse(entry["truncated"])
 
-    def test_genuine_truncation_stays_completed_max_iterations(self):
-        """REGRESSION GUARD: a child that genuinely exhausts its iteration
-        budget (completed=False, no failed flag, no error) but still returns a
-        summary must keep status=completed, exit_reason=max_iterations, and
-        truncated=True. This is the legitimate truncation path we must not
-        break while making failure labels honest."""
+    def test_genuine_truncation_reports_failed_max_iterations(self):
+        """Partial output cannot certify task completion after budget exhaustion."""
         entry = self._delegate_single(
             {
                 "final_response": "made partial progress before the budget ran out",
@@ -866,7 +873,9 @@ class TestDelegateFailedChildStatus(unittest.TestCase):
                 "messages": [],
             }
         )
-        self.assertEqual(entry["status"], "completed")
+        self.assertEqual(entry["status"], "failed")
+        self.assertFalse(entry["completed"])
+        self.assertIn("iteration budget", entry["failure_reason"])
         self.assertEqual(entry["exit_reason"], "max_iterations")
         self.assertTrue(entry["truncated"])
 
@@ -917,7 +926,7 @@ class TestSubagentCostRollup(unittest.TestCase):
                 "api_calls": 2,
                 "messages": [],
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             result = json.loads(delegate_task(goal="do stuff", parent_agent=parent))
 
@@ -1169,7 +1178,7 @@ class TestDelegationProviderIntegration(unittest.TestCase):
             mock_child.run_conversation.return_value = {
                 "final_response": "done", "completed": True, "api_calls": 1
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             delegate_task(goal="Test provider routing", parent_agent=parent)
 
@@ -1206,7 +1215,7 @@ class TestDelegationProviderIntegration(unittest.TestCase):
             mock_child.run_conversation.return_value = {
                 "final_response": "done", "completed": True, "api_calls": 1
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             delegate_task(goal="Cross-provider test", parent_agent=parent)
 
@@ -1241,7 +1250,7 @@ class TestDelegationProviderIntegration(unittest.TestCase):
             mock_child.run_conversation.return_value = {
                 "final_response": "done", "completed": True, "api_calls": 1
             }
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             delegate_task(goal="Direct endpoint test", parent_agent=parent)
 
@@ -1289,7 +1298,7 @@ class TestChildCredentialPoolResolution(unittest.TestCase):
 
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = MagicMock()
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
 
             _build_child_agent(
                 task_index=0,
@@ -1355,7 +1364,8 @@ class TestChildCredentialLeasing(unittest.TestCase):
             parent_agent=_make_mock_parent(),
         )
 
-        self.assertEqual(result["status"], "error")
+        self.assertEqual(result["status"], "failed")
+        self.assertFalse(result["completed"])
         child._credential_pool.release_lease.assert_called_once_with("cred-a")
 
 
@@ -1585,7 +1595,7 @@ class TestDelegationReasoningEffort(unittest.TestCase):
     def test_inherits_parent_reasoning_when_no_override(self, MockAgent, mock_cfg):
         """With no delegation.reasoning_effort, child inherits parent's config."""
         mock_cfg.return_value = {"max_iterations": 50, "reasoning_effort": ""}
-        MockAgent.return_value = MagicMock()
+        _configure_mock_agent(MockAgent, MagicMock())
         parent = _make_mock_parent()
         parent.reasoning_config = {"enabled": True, "effort": "xhigh"}
 
@@ -1602,7 +1612,7 @@ class TestDelegationReasoningEffort(unittest.TestCase):
     def test_override_reasoning_effort_from_config(self, MockAgent, mock_cfg):
         """delegation.reasoning_effort overrides the parent's level."""
         mock_cfg.return_value = {"max_iterations": 50, "reasoning_effort": "low"}
-        MockAgent.return_value = MagicMock()
+        _configure_mock_agent(MockAgent, MagicMock())
         parent = _make_mock_parent()
         parent.reasoning_config = {"enabled": True, "effort": "xhigh"}
 
@@ -1817,7 +1827,7 @@ class TestOrchestratorRoleSchema(unittest.TestCase):
             mock_child.session_prompt_tokens = 0
             mock_child.session_completion_tokens = 0
             mock_child.model = "test"
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
             kwargs = {"goal": "test", "parent_agent": parent}
             if role_arg is not _SENTINEL:
                 kwargs["role"] = role_arg
@@ -1898,7 +1908,7 @@ class TestOrchestratorRoleBehavior(unittest.TestCase):
         parent.enabled_toolsets = ["terminal", "file"]
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = _make_role_mock_child()
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
             delegate_task(goal="test", role="orchestrator", parent_agent=parent)
             kwargs = MockAgent.call_args[1]
             self.assertIn("delegation", kwargs["enabled_toolsets"])
@@ -1920,7 +1930,7 @@ class TestOrchestratorRoleBehavior(unittest.TestCase):
         parent.enabled_toolsets = ["terminal", "delegation"]
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = _make_role_mock_child()
-            MockAgent.return_value = mock_child
+            _configure_mock_agent(MockAgent, mock_child)
             delegate_task(goal="test", role="orchestrator", parent_agent=parent)
             kwargs = MockAgent.call_args[1]
             self.assertNotIn("delegation", kwargs["enabled_toolsets"])
@@ -1978,6 +1988,8 @@ class TestOrchestratorEndToEnd(unittest.TestCase):
             prompt = kw.get("ephemeral_system_prompt", "") or ""
             is_orchestrator = "Orchestrator Role" in prompt
             m = _make_role_mock_child()
+            m.model = kw["model"]
+            m.clarify_callback = kw.get("clarify_callback")
             built_agents.append({
                 "enabled_toolsets": list(kw.get("enabled_toolsets") or []),
                 "is_orchestrator_prompt": is_orchestrator,
@@ -2112,16 +2124,16 @@ class TestSubagentApprovalCallback(unittest.TestCase):
 
 
 class TestFallbackModelInheritance(unittest.TestCase):
-    """Subagents must inherit the parent's fallback provider chain."""
+    """Subagents must preserve the exact user-approved model."""
 
-    def test_child_inherits_fallback_chain(self):
-        """_build_child_agent passes parent._fallback_chain as fallback_model."""
+    def test_child_does_not_inherit_fallback_chain(self):
+        """_build_child_agent disables silent model substitution."""
         parent = _make_mock_parent(depth=0)
         fallback_entry = {"provider": "openrouter", "model": "gpt-4o-mini", "api_key": "sk-or-x"}
         parent._fallback_chain = [fallback_entry]
 
         with patch("run_agent.AIAgent") as MockAgent:
-            MockAgent.return_value = MagicMock()
+            _configure_mock_agent(MockAgent, MagicMock())
             _build_child_agent(
                 task_index=0,
                 goal="test fallback inheritance",
@@ -2134,7 +2146,7 @@ class TestFallbackModelInheritance(unittest.TestCase):
             )
 
         _, kwargs = MockAgent.call_args
-        self.assertEqual(kwargs["fallback_model"], [fallback_entry])
+        self.assertIsNone(kwargs["fallback_model"])
 
     def test_child_gets_no_fallback_when_parent_chain_empty(self):
         """When parent._fallback_chain is empty, fallback_model is None."""
@@ -2142,7 +2154,7 @@ class TestFallbackModelInheritance(unittest.TestCase):
         parent._fallback_chain = []
 
         with patch("run_agent.AIAgent") as MockAgent:
-            MockAgent.return_value = MagicMock()
+            _configure_mock_agent(MockAgent, MagicMock())
             _build_child_agent(
                 task_index=0,
                 goal="test no fallback",
@@ -2167,7 +2179,7 @@ class TestFallbackModelInheritance(unittest.TestCase):
         ]
 
         with patch("run_agent.AIAgent") as MockAgent:
-            MockAgent.return_value = MagicMock()
+            _configure_mock_agent(MockAgent, MagicMock())
             _build_child_agent(
                 task_index=0,
                 goal="test pinned provider",
@@ -2193,7 +2205,7 @@ class TestFallbackModelInheritance(unittest.TestCase):
         parent._fallback_chain = None
 
         with patch("run_agent.AIAgent") as MockAgent:
-            MockAgent.return_value = MagicMock()
+            _configure_mock_agent(MockAgent, MagicMock())
             with patch("shutil.which", return_value=None):
                 with self.assertRaises(ValueError) as ctx:
                     _build_child_agent(

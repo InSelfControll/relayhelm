@@ -1,11 +1,11 @@
-# nix/homeManagerModules.nix — the Home Manager module for hermes-agent
+# nix/homeManagerModules.nix — the Home Manager module for relayhelm
 #
-# This module is the user-level equivalent of nixosModules.default. Hermes is
+# This module is the user-level equivalent of nixosModules.default. Relayhelm is
 # an agent for one person. The credentials, the memory, the sessions and the
 # cron jobs all belong to that person. Thus a user-level module is correct on
 # each distribution, and not only on NixOS.
 #
-# `services.hermes-agent` is the same option set on both modules. All of the
+# `services.relayhelm` is the same option set on both modules. All of the
 # options except the system-level ones come from nix/moduleCommon.nix, so an
 # example from the NixOS documentation works here without a change. Only the
 # necessary parts are different:
@@ -17,20 +17,20 @@
 #   changed   systemd.services         -> systemd.user.services or
 #                                        launchd.agents
 #   changed   system.activationScripts -> home.activation
-#   changed   addToSystemPackages      -> programs.hermes-agent.enable and
+#   changed   addToSystemPackages      -> programs.relayhelm.enable and
 #                                        home.sessionVariables
-#   added     programs.hermes-agent    the CLI and the desktop application,
+#   added     programs.relayhelm    the CLI and the desktop application,
 #                                      because Home Manager separates an
 #                                      installation from a daemon
-#   changed   stateDir (+ "/.hermes")  -> hermesHome, set directly
+#   changed   stateDir (+ "/.relayhelm")  -> hermesHome, set directly
 #
 # To use the module:
-#   imports = [ hermes-agent.homeManagerModules.default ];
-#   programs.hermes-agent = {
+#   imports = [ relayhelm.homeManagerModules.default ];
+#   programs.relayhelm = {
 #     enable = true;          # the hermes CLI on your PATH
 #     desktop.enable = true;  # the Electron application and a launcher
 #   };
-#   services.hermes-agent = {
+#   services.relayhelm = {
 #     enable = true;
 #     gateway.enable = true;
 #     settings.model.default = "anthropic/claude-sonnet-4";
@@ -54,12 +54,12 @@
     }:
 
     let
-      cfg = config.services.hermes-agent;
-      cfgPrograms = config.programs.hermes-agent;
+      cfg = config.services.relayhelm;
+      cfgPrograms = config.programs.relayhelm;
       common = import ./moduleCommon.nix { inherit lib; };
 
       effectivePackage = common.effectivePackage cfg;
-      hermes-agent = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      relayhelm = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
       inherit (pkgs.stdenv.hostPlatform) isDarwin isLinux;
 
@@ -73,7 +73,7 @@
 
       # ── The desktop launcher ───────────────────────────────────────────
       # A GUI launcher reads no shell profile, so home.sessionVariables does
-      # not reach it, and the application would open ~/.hermes while the
+      # not reach it, and the application would open ~/.relayhelm while the
       # services use hermesHome. Thus the launcher carries the value itself.
       #
       # HERMES_MANAGED rides along only when the services are enabled. That
@@ -178,32 +178,32 @@
 
     in
     {
-      # ── programs.hermes-agent — the installation ───────────────────────
+      # ── programs.relayhelm — the installation ───────────────────────
       # Home Manager separates "install this application for me" from "run
-      # this daemon". Hermes needs both, and a person can want one without
+      # this daemon". Relayhelm needs both, and a person can want one without
       # the other: an application with no gateway, or a headless gateway on
       # a machine with no display.
       #
-      # `services.hermes-agent` stays the authority for the state and the
+      # `services.relayhelm` stays the authority for the state and the
       # configuration. This module reads hermesHome and the backend address
       # from it, and never the reverse.
-      options.programs.hermes-agent = {
+      options.programs.relayhelm = {
         enable = lib.mkEnableOption ''
-          the Hermes Agent command line application.
+          the Relayhelm command line application.
 
           This adds `hermes` to home.packages, and exports HERMES_HOME with
           home.sessionVariables. An interactive shell then uses the same
-          state as `services.hermes-agent`
+          state as `services.relayhelm`
         '';
 
         package = lib.mkOption {
           type = lib.types.package;
           default = effectivePackage;
-          defaultText = lib.literalExpression "config.services.hermes-agent.package";
+          defaultText = lib.literalExpression "config.services.relayhelm.package";
           description = ''
-            The hermes-agent package to install.
+            The relayhelm package to install.
 
-            The default follows `services.hermes-agent.package`, and applies
+            The default follows `services.relayhelm.package`, and applies
             `extraPythonPackages` and `extraDependencyGroups` from that
             module. Thus the command line and the services are one build,
             and a plugin that the services can load is a plugin that your
@@ -213,64 +213,64 @@
 
         desktop = {
           enable = lib.mkEnableOption ''
-            the Hermes Desktop application (Electron).
+            the Relayhelm Desktop application (Electron).
 
             This adds `hermes-desktop` to home.packages, with an XDG
-            launcher entry on Linux. The launcher starts the same Hermes
+            launcher entry on Linux. The launcher starts the same Relayhelm
             runtime that `package` gives, and reads the HERMES_HOME of
-            `services.hermes-agent`. Thus the application, the interactive
+            `services.relayhelm`. Thus the application, the interactive
             shell and the services share one state directory.
 
-            The Electron application carries its own Hermes runtime with
+            The Electron application carries its own Relayhelm runtime with
             the usual distribution. This module gives it the Nix package
             instead, with HERMES_DESKTOP_HERMES. It installs no second copy
-            of Hermes, and it downloads nothing on the first start
+            of Relayhelm, and it downloads nothing on the first start
           '';
 
           package = lib.mkOption {
             type = lib.types.package;
             default = cfgPrograms.package.hermesDesktop;
-            defaultText = lib.literalExpression "config.programs.hermes-agent.package.hermesDesktop";
+            defaultText = lib.literalExpression "config.programs.relayhelm.package.hermesDesktop";
             description = ''
               The hermes-desktop package to use.
 
               The default follows `package`, and thus also
-              `services.hermes-agent.extraPythonPackages` and
+              `services.relayhelm.extraPythonPackages` and
               `extraDependencyGroups`, because the desktop application is a
               passthru of the agent package. A package that you set here
-              carries its own Hermes runtime, and this module cannot make
+              carries its own Relayhelm runtime, and this module cannot make
               it agree with the services.
             '';
           };
         };
       };
 
-      options.services.hermes-agent =
+      options.services.relayhelm =
         common.sharedOptions {
-          defaultPackage = hermes-agent;
-          defaultPackageText = lib.literalExpression "hermes-agent.packages.\${system}.default";
+          defaultPackage = relayhelm;
+          defaultPackageText = lib.literalExpression "relayhelm.packages.\${system}.default";
           defaultWorkingDirectory = config.home.homeDirectory;
           defaultWorkingDirectoryText = lib.literalExpression "config.home.homeDirectory";
         }
         // {
           hermesHome = lib.mkOption {
             type = lib.types.str;
-            default = "${config.home.homeDirectory}/.hermes";
-            defaultText = lib.literalExpression ''"''${config.home.homeDirectory}/.hermes"'';
+            default = "${config.home.homeDirectory}/.relayhelm";
+            defaultText = lib.literalExpression ''"''${config.home.homeDirectory}/.relayhelm"'';
             description = ''
               The value of HERMES_HOME. This state directory holds
               config.yaml, .env, auth.json, the sessions, the skills, the
               memory and the cron jobs.
 
-              The NixOS module takes a `stateDir` and adds `/.hermes` to it.
+              The NixOS module takes a `stateDir` and adds `/.relayhelm` to it.
               This module sets HERMES_HOME directly. Thus an existing
-              ~/.hermes continues to work, and you can give the directory any
+              ~/.relayhelm continues to work, and you can give the directory any
               name.
             '';
             example = "/home/alice/.hermes-work";
           };
 
-          # `installPackage` moved to `programs.hermes-agent.enable`. The
+          # `installPackage` moved to `programs.relayhelm.enable`. The
           # option is dead, but it must not be silent: it defaulted to true,
           # so a person who never named it still got the command line, and a
           # quiet removal gives them a machine with no `hermes` and no
@@ -282,7 +282,7 @@
             default = null;
             visible = false;
             description = ''
-              Removed. Use `programs.hermes-agent.enable` instead.
+              Removed. Use `programs.relayhelm.enable` instead.
             '';
           };
 
@@ -291,7 +291,7 @@
 
       config = lib.mkMerge [
 
-        # ── programs.hermes-agent — the installation ──────────────────────
+        # ── programs.relayhelm — the installation ──────────────────────
         # Outside the `services.enable` guard on purpose. A person can want
         # the command line or the application on a machine that runs no
         # daemon at all.
@@ -327,30 +327,30 @@
 
             # ── Merge MCP servers into settings ────────────────────────────
             (lib.mkIf (cfg.mcpServers != { }) {
-              services.hermes-agent.settings.mcp_servers = common.mcpServersToConfig cfg.mcpServers;
+              services.relayhelm.settings.mcp_servers = common.mcpServersToConfig cfg.mcpServers;
             })
 
             {
               assertions =
                 common.pluginNameAssertions {
                   inherit cfg;
-                  optionPath = "services.hermes-agent";
+                  optionPath = "services.relayhelm";
                 }
                 ++ common.workspaceFilesAssertions {
                   inherit cfg;
-                  opt = options.services.hermes-agent.workingDirectory;
-                  optionPath = "services.hermes-agent";
+                  opt = options.services.relayhelm.workingDirectory;
+                  optionPath = "services.relayhelm";
                 }
                 ++ common.backendBindAssertions {
                   inherit cfg;
-                  optionPath = "services.hermes-agent";
+                  optionPath = "services.relayhelm";
                 }
                 ++ [
                   {
                     # The interface poll reads `ip`, which iproute2 supplies on
                     # Linux only.
                     assertion = !isDarwin || cfg.backend.waitFor != "interface";
-                    message = "services.hermes-agent.backend.waitFor = \"interface\" works on Linux only. Use \"hostname\" on Darwin.";
+                    message = "services.relayhelm.backend.waitFor = \"interface\" works on Linux only. Use \"hostname\" on Darwin.";
                   }
                 ];
             }
@@ -394,8 +394,8 @@
 
             # ── Linux: systemd user services ───────────────────────────────
             (lib.mkIf (isLinux && cfg.gateway.enable) {
-              systemd.user.services.hermes-agent = mkUnit {
-                description = "Hermes Agent Gateway";
+              systemd.user.services.relayhelm = mkUnit {
+                description = "Relayhelm Gateway";
                 argv = common.gatewayArgv cfg;
               };
             })
@@ -409,9 +409,9 @@
 
             # ── Darwin: launchd agents ─────────────────────────────────────
             (lib.mkIf (isDarwin && cfg.gateway.enable) {
-              launchd.agents.hermes-agent = mkAgent {
+              launchd.agents.relayhelm = mkAgent {
                 argv = common.gatewayArgv cfg;
-                logName = "hermes-agent";
+                logName = "relayhelm";
               };
             })
 

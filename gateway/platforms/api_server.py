@@ -183,14 +183,14 @@ async def _call_verifier(verifier, *args, **kwargs):
 
 
 def _hermes_version() -> str:
-    """Canonical Hermes version: ``hermes_cli.__version__`` (dist-info can be stale on
+    """Canonical Relayhelm version: ``hermes_cli.__version__`` (dist-info can be stale on
     source checkouts), then distribution metadata, then "dev". Never raises."""
     with suppress(Exception):
         from hermes_cli import __version__
         return __version__
     try:
         from importlib.metadata import version
-        return version("hermes-agent")
+        return version("relayhelm")
     except Exception:
         return "dev"
 
@@ -338,7 +338,7 @@ def _request_agent_overrides(
 ) -> Dict[str, Any]:
     """Extract per-request model/provider/options for _run_agent.
 
-    The virtual model (``hermes-agent``) means "gateway default". A bare ``model`` without
+    The virtual model (``relayhelm``) means "gateway default". A bare ``model`` without
     ``provider`` is honored only when ``allow_bare_model`` (generic clients hardcode "gpt-4o";
     OpenAI-compatible handlers pass the ``direct_model_requests`` opt-in, Hermes-native
     endpoints always allow it). An explicit ``provider`` is always honored.
@@ -1003,7 +1003,7 @@ def _make_request_fingerprint(body: Dict[str, Any], keys: List[str]) -> str:
 
 def _derive_chat_session_id(system_prompt: Optional[str], first_user_message: str) -> str:
     """Stable session id from the system prompt + first user message (constant across all
-    turns of an Open WebUI-style conversation), so one Hermes session/sandbox is reused."""
+    turns of an Open WebUI-style conversation), so one Relayhelm session/sandbox is reused."""
     seed = f"{system_prompt or ''}\n{first_user_message}"
     digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:16]
     return f"api-{digest}"
@@ -1100,7 +1100,7 @@ def _run_route_delegate(name: str):
 
 
 class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
-    """aiohttp server routing OpenAI-format requests through hermes-agent's AIAgent."""
+    """aiohttp server routing OpenAI-format requests through relayhelm's AIAgent."""
 
     # Stateless request/response (``send()`` is a stub): async-delivery tools must not promise
     # delivery here, and a resumed turn completes the work rather than asking.
@@ -1261,7 +1261,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     @staticmethod
     def _resolve_model_name(explicit: str) -> str:
-        """Advertised /v1/models name: explicit override > active profile name > "hermes-agent"
+        """Advertised /v1/models name: explicit override > active profile name > "relayhelm"
         (precedence owned by ``hermes_cli.model_switch.resolve_effective_model``)."""
         from hermes_cli.model_switch import resolve_effective_model
         profile_name = ""
@@ -1270,7 +1270,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             profile = get_active_profile_name()
             if profile and profile not in {"default", "custom"}:
                 profile_name = profile
-        return resolve_effective_model(explicit, profile_name, "hermes-agent")
+        return resolve_effective_model(explicit, profile_name, "relayhelm")
 
     def _cors_headers_for_origin(self, origin: str) -> Optional[Dict[str, str]]:
         """Return CORS headers for an allowed browser origin."""
@@ -1736,7 +1736,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     def _stored_session_model(self, session: Any) -> Optional[str]:
         """The model persisted on a session row, minus the virtual alias (replaying
-        "hermes-agent" upstream as a provider model id 400s)."""
+        "relayhelm" upstream as a provider model id 400s)."""
         stored = session.get("model") if isinstance(session, dict) else None
         if not stored or stored == self._model_name:
             return None
@@ -2000,7 +2000,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     def _recover_or_record_model(self, model: str, runtime_kwargs: Dict[str, Any], gateway_session_key) -> str:
         """Fill an empty resolved model: provider's default catalog model, then the last-known-good
         model for this key / process-wide. Non-empty non-virtual models are recorded instead."""
-        # No model.default but a provider resolved (e.g. `hermes auth add` without `hermes model`).
+        # No model.default but a provider resolved (e.g. `relayhelm auth add` without `relayhelm model`).
         if not model and runtime_kwargs.get("provider"):
             with suppress(Exception):
                 from hermes_cli.models import get_default_model_for_provider
@@ -2174,7 +2174,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     async def _handle_health(self, request: "web.Request") -> "web.Response":
         """GET /health — simple health check."""
-        return web.json_response({"status": "ok", "platform": "hermes-agent", "version": _hermes_version()})
+        return web.json_response({"status": "ok", "platform": "relayhelm", "version": _hermes_version()})
 
     @_require_auth
     async def _handle_health_detailed(self, request: "web.Request") -> "web.Response":
@@ -2194,7 +2194,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             active_api_runs=active_api_runs, process_completion_queue_depth=process_depth,
             active_delegations=active_delegations)
         return web.json_response({
-            "status": readiness["status"], "readiness": readiness, "platform": "hermes-agent",
+            "status": readiness["status"], "readiness": readiness, "platform": "relayhelm",
             "version": _hermes_version(), "gateway_state": gw_state,
             "platforms": runtime.get("platforms", {}), "active_agents": gw_active,
             "gateway_busy": derive_gateway_busy(
@@ -2207,7 +2207,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     @_require_auth
     async def _handle_models(self, request: "web.Request") -> "web.Response":
-        """GET /v1/models — hermes-agent plus configured model_routes aliases (alias + resolved
+        """GET /v1/models — relayhelm plus configured model_routes aliases (alias + resolved
         model only, never credentials). Under /p/<profile>/ the primary id follows that profile."""
         now = int(time.time())
         # The middleware already entered the profile scope, so get_active_profile_name() resolves.
@@ -2244,13 +2244,13 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     async def _handle_capabilities(self, request: "web.Request") -> "web.Response":
         """GET /v1/capabilities — the stable, machine-readable API surface for external UIs."""
         return web.json_response({
-            "object": "hermes.api_server.capabilities", "platform": "hermes-agent",
+            "object": "hermes.api_server.capabilities", "platform": "relayhelm",
             "model": self._model_name,
             "auth": {"type": "bearer", "required": bool(self._api_key)},
             "runtime": {
                 "mode": "server_agent", "tool_execution": "server", "split_runtime": False,
                 "description": (
-                    "The API server creates a server-side Hermes AIAgent; "
+                    "The API server creates a server-side Relayhelm AIAgent; "
                     "tools execute on the API-server host unless a future "
                     "explicit split-runtime mode is enabled.")},
             "features": {
@@ -2502,7 +2502,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             from hermes_cli.profiles import get_profile_dir
             root = Path(get_profile_dir(profile or "default")) / "artifacts" / "browser-control"
         except Exception:
-            # Unscoped fallback (tests/manual wiring): controlled root under the Hermes home.
+            # Unscoped fallback (tests/manual wiring): controlled root under the Relayhelm home.
             try:
                 from hermes_state import get_hermes_home
                 root = Path(get_hermes_home()) / "artifacts" / "browser-control"
@@ -2735,7 +2735,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     @_require_auth
     async def _handle_list_sessions(self, request: "web.Request") -> "web.Response":
-        """GET /api/sessions — list persisted Hermes sessions."""
+        """GET /api/sessions — list persisted Relayhelm sessions."""
         db = await self._ensure_session_db_async()
         if db is None:
             return self._session_db_unavailable()
@@ -2784,7 +2784,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     @_require_auth
     async def _handle_create_session(self, request: "web.Request") -> "web.Response":
-        """POST /api/sessions -- create an empty Hermes session row. Existence check, insert and
+        """POST /api/sessions -- create an empty Relayhelm session row. Existence check, insert and
         title handling run as ONE off-loop write so concurrent same-id creates can't both 201."""
         body, err = await self._read_json_body(request)
         if err:
@@ -2809,7 +2809,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             return lock_error
         requested = runtime_request.get("requested") or {}
         # The normalized requested["model"] (prefix split, virtual alias nulled) — the raw body
-        # would persist "hermes-agent" and later send it to the provider literally.
+        # would persist "relayhelm" and later send it to the provider literally.
         model_name = self._clean_runtime_id(requested.get("model")) or None
         model_config = None
         if requested.get("model") or requested.get("provider"):
@@ -3420,7 +3420,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         job_id, err = self._cron_request_guard(request, need_job_id=True, check_draining=True)
         if err:
             return err
-        # Optional transient per-run context (standalone `hermes cron run` /
+        # Optional transient per-run context (standalone `relayhelm cron run` /
         # cronjob(action='run', prompt=...)) — same cap + scan as a stored prompt.
         extra_prompt = body = None
         with suppress(Exception):

@@ -426,7 +426,7 @@ function renderedSeedTexts(seeds: Record<string, unknown>[]): string[] {
 
 // The HUD floats over the app the user is really working in, so the gateway
 // turns this flag into a per-turn hint: read the window underneath and work in
-// it, rather than reaching for Hermes's own browser and panes.
+// it, rather than reaching for Relayhelm's own browser and panes.
 describe('usePromptActions HUD surface', () => {
   afterEach(() => {
     cleanup()
@@ -2885,8 +2885,8 @@ describe('usePromptActions file attachment sync', () => {
       if (method === 'file.attach') {
         return {
           attached: true,
-          path: '/remote/work/.hermes/desktop-attachments/report.txt',
-          ref_text: '@file:.hermes/desktop-attachments/report.txt',
+          path: '/remote/work/.relayhelm/desktop-attachments/report.txt',
+          ref_text: '@file:.relayhelm/desktop-attachments/report.txt',
           uploaded: true
         } as never
       }
@@ -2911,7 +2911,7 @@ describe('usePromptActions file attachment sync', () => {
     })
     expect(calls[1]?.params).toEqual({
       session_id: RUNTIME_SESSION_ID,
-      text: '@file:.hermes/desktop-attachments/report.txt\n\nconvert this to epub'
+      text: '@file:.relayhelm/desktop-attachments/report.txt\n\nconvert this to epub'
     })
   })
 
@@ -2938,8 +2938,8 @@ describe('usePromptActions file attachment sync', () => {
       if (method === 'file.attach') {
         return {
           attached: true,
-          path: '/root/.hermes/desktop-attachments/report.txt',
-          ref_text: '@file:.hermes/desktop-attachments/report.txt',
+          path: '/root/.relayhelm/desktop-attachments/report.txt',
+          ref_text: '@file:.relayhelm/desktop-attachments/report.txt',
           uploaded: true
         } as never
       }
@@ -2965,7 +2965,7 @@ describe('usePromptActions file attachment sync', () => {
     })
     expect(calls[1]).toEqual({
       method: 'prompt.submit',
-      params: { session_id: RUNTIME_SESSION_ID, text: '@file:.hermes/desktop-attachments/report.txt\n\nsummarize' }
+      params: { session_id: RUNTIME_SESSION_ID, text: '@file:.relayhelm/desktop-attachments/report.txt\n\nsummarize' }
     })
   })
 
@@ -3186,7 +3186,7 @@ describe('usePromptActions file attachment sync', () => {
       if (method === 'file.attach') {
         return {
           attached: true,
-          ref_text: '@file:.hermes/desktop-attachments/report.txt',
+          ref_text: '@file:.relayhelm/desktop-attachments/report.txt',
           uploaded: true
         } as never
       }
@@ -3225,8 +3225,8 @@ describe('usePromptActions file attachment sync', () => {
       if (method === 'file.attach') {
         return {
           attached: true,
-          path: '/root/.hermes/attachments/report.txt',
-          ref_text: '@file:/root/.hermes/attachments/report.txt',
+          path: '/root/.relayhelm/attachments/report.txt',
+          ref_text: '@file:/root/.relayhelm/attachments/report.txt',
           uploaded: true
         } as never
       }
@@ -3364,7 +3364,7 @@ describe('usePromptActions eager-upload races', () => {
   it('joins an in-flight eager upload at submit instead of staging the file twice', async () => {
     // Drop-then-immediately-Enter: the drop kicks off an eager file.attach; if
     // submit doesn't join it, both calls stage the file and leave a duplicate
-    // under .hermes/desktop-attachments/. Submit must await the in-flight upload
+    // under .relayhelm/desktop-attachments/. Submit must await the in-flight upload
     // and reuse its gateway-side ref.
     $connection.set({ mode: 'remote' } as never)
     Object.defineProperty(window, 'hermesDesktop', {
@@ -3384,7 +3384,7 @@ describe('usePromptActions eager-upload races', () => {
           releaseAttach = resolve
         })
 
-        return { attached: true, ref_text: '@file:.hermes/desktop-attachments/doc.pdf', uploaded: true } as never
+        return { attached: true, ref_text: '@file:.relayhelm/desktop-attachments/doc.pdf', uploaded: true } as never
       }
 
       return {} as never
@@ -4790,7 +4790,7 @@ describe('usePromptActions new-chat first-send delivery (#63078)', () => {
 
         return {
           attached: true,
-          ref_text: '@file:.hermes/desktop-attachments/test.pdf',
+          ref_text: '@file:.relayhelm/desktop-attachments/test.pdf',
           uploaded: true
         } as never
       }
@@ -5321,7 +5321,7 @@ describe('usePromptActions eager attachment upload (drop-time)', () => {
       if (method === 'file.attach') {
         return {
           attached: true,
-          ref_text: '@file:.hermes/desktop-attachments/DEVIS_signed.pdf',
+          ref_text: '@file:.relayhelm/desktop-attachments/DEVIS_signed.pdf',
           uploaded: true
         } as never
       }
@@ -5341,7 +5341,7 @@ describe('usePromptActions eager attachment upload (drop-time)', () => {
     await waitFor(() => expect($composerAttachments.get()[0]?.attachedSessionId).toBe(RUNTIME_SESSION_ID))
 
     const chip = $composerAttachments.get()[0]!
-    expect(chip.refText).toBe('@file:.hermes/desktop-attachments/DEVIS_signed.pdf')
+    expect(chip.refText).toBe('@file:.relayhelm/desktop-attachments/DEVIS_signed.pdf')
     expect(chip.uploadState).toBeUndefined()
     expect(readFileDataUrl).toHaveBeenCalledWith('/Users/mahmoud/Downloads/DEVIS_signed.pdf')
   })

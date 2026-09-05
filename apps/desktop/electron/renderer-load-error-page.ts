@@ -3,7 +3,7 @@
  *
  * The white-screen failure modes this exists for:
  *
- * 1. TORN BUNDLE after an update (#95575): `hermes update` replaces the app
+ * 1. TORN BUNDLE after an update (#95575): `relayhelm update` replaces the app
  *    while its files are locked (antivirus, a still-running instance, an
  *    interrupted Windows replace), leaving index.html and its hashed chunks
  *    from DIFFERENT generations. The window loads, then dies on the first
@@ -102,7 +102,7 @@ export function buildRendererLoadErrorPage(details: RendererLoadErrorDetails = {
   const code =
     details.errorCode === undefined || details.errorCode === null ? '' : ` (${escapeHtml(details.errorCode)})`
 
-  const title = 'Hermes couldn\u2019t start the desktop UI'
+  const title = 'Relayhelm couldn\u2019t start the desktop UI'
   const description = escapeHtml(details.errorDescription || 'The desktop renderer failed to load.')
   const url = details.url ? `<p><code>${escapeHtml(details.url)}</code></p>` : ''
   const repair = details.repairHint ? `<p>Repair with: <code>hermes desktop --force-build</code></p>` : ''

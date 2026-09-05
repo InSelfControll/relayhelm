@@ -64,6 +64,8 @@ privvy*
 images/
 __pycache__/
 hermes_agent.egg-info/
+relayhelm.egg-info/
+relayhelm-*.egg-info/
 wandb/
 testlogs
 playwright-report/
@@ -74,7 +76,7 @@ test-results/
 # CLI config (may contain sensitive SSH paths)
 cli-config.yaml
 
-# Skills Hub state (lives in ~/.hermes/skills/.hub/ at runtime, but just in case)
+# Skills Hub state (lives in ~/.relayhelm/skills/.hub/ at runtime, but just in case)
 skills/.hub/
 ignored/
 .worktrees/
@@ -151,14 +153,14 @@ config/mcporter.json
 hermes_cli/tui_dist/*
 hermes_cli/scripts/
 docs/superpowers/*
-# Working directory for the Hermes Agent's session state (~/.hermes/ at runtime;
+# Working directory for the Relayhelm's session state (~/.relayhelm/ at runtime;
 # also created in-repo when an agent operates in this checkout). Plans, audit
 # logs, and per-session caches are never artifacts of the codebase.
-.hermes/
+.relayhelm/
 
 # Desktop/bootstrap install marker written into the managed checkout root by the
 # bootstrap installer. It is Hermes-managed runtime state, never a code change —
-# ignore it so `hermes update`'s `git stash push --include-untracked` does not
+# ignore it so `relayhelm update`'s `git stash push --include-untracked` does not
 # treat it as a local edit and autostash it on every run (#38529).
 .hermes-bootstrap-complete
 
@@ -169,7 +171,7 @@ docs/superpowers/*
 .hermes-sandbox-e2e*/
 
 # Interrupted-update breadcrumb + recovery lock written next to the shared venv
-# by `hermes update` / launch-time self-heal. Runtime state, never a code change
+# by `relayhelm update` / launch-time self-heal. Runtime state, never a code change
 # — ignore so `git status` stays clean and update's autostash skips them.
 .update-incomplete
 .update-incomplete.lock
@@ -181,7 +183,7 @@ docs/superpowers/*
 
 # Installer-written method stamp in the managed checkout root (scripts/install.sh).
 # Runtime metadata only — never a code change. Ignore so `git status` stays clean
-# and `hermes update`'s untracked autostash does not treat it as a local edit (#66189 / #54855).
+# and `relayhelm update`'s untracked autostash does not treat it as a local edit (#66189 / #54855).
 /.install_method
 
 # Tool Search live-test harness output — non-deterministic model transcripts,
@@ -212,7 +214,7 @@ infographics/
 infograficos/
 infografico/
 native/fts5_cjk/*.so
-# Runtime marker written by hermes update when a lazy dependency refresh is
+# Runtime marker written by relayhelm update when a lazy dependency refresh is
 # interrupted; consumed by launch-time recovery. Never commit it (was tracked
 # by accident via 3a69e34702, removed in the #72002 salvage).
 .lazy-refresh-incomplete

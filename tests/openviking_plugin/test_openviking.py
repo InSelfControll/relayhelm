@@ -1096,7 +1096,7 @@ class TestEnsureClientReloadsEnv:
         assert out["message_status"] == "accepted"
         assert out["session_uri"].endswith(f"/sessions/{out['session_id']}")
         assert out["recovery_command"] == f"ov session commit {out['session_id']}"
-        assert "same OpenViking profile and credentials as Hermes" in out["recovery_note"]
+        assert "same OpenViking profile and credentials as Relayhelm" in out["recovery_note"]
         assert len(posts) == 2
         assert posts[0][0].endswith("/messages")
         assert posts[1][0].endswith("/commit")
@@ -1310,7 +1310,7 @@ class TestUnavailableWarningsPromiseRetry:
 
     @staticmethod
     def _assert_promises_retry(message: str) -> None:
-        assert "for this Hermes run" not in message, message
+        assert "for this Relayhelm run" not in message, message
         assert "will retry on a later access" in message, message
         assert "when the config changes" in message, message
 
@@ -1404,7 +1404,7 @@ class TestUnavailableWarningsPromiseRetry:
             def health(self):
                 return False
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".relayhelm"))
         monkeypatch.setenv("OPENVIKING_ENDPOINT", "https://sick.example")
         monkeypatch.setattr(openviking_plugin, "_VikingClient", _UnhealthyClient)
         provider = OpenVikingMemoryProvider()
@@ -1448,7 +1448,7 @@ class TestUnavailableWarningsPromiseRetry:
                 probes.append(self.endpoint)
                 return len(probes) > 1  # down at startup, up on the next access
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".relayhelm"))
         monkeypatch.setenv("OPENVIKING_ENDPOINT", "https://remote.example")
         monkeypatch.setattr(openviking_plugin, "_VikingClient", _FlakyClient)
         provider = OpenVikingMemoryProvider()

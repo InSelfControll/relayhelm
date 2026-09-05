@@ -265,7 +265,7 @@ class TestExecuteCodeModeIntegration(unittest.TestCase):
     def test_project_mode_interpreter_is_venv_python(self):
         """Project mode: sys.executable inside the child is the venv's python
         when VIRTUAL_ENV is set to a real venv."""
-        # The hermes-agent venv is always active during tests, so this also
+        # The relayhelm venv is always active during tests, so this also
         # happens to equal sys.executable of the parent. What we're asserting
         # is: resolver picked a venv-bin/python path, not that it differs
         # from sys.executable.
@@ -515,7 +515,7 @@ class TestUsesHermesPythonEnvironment(unittest.TestCase):
         """sys.executable short-circuits — no subprocess probe on the default path.
 
         Guards the strict-mode invariant: a flaky probe (timeout under load)
-        must never drop the hermes root for the interpreter Hermes itself runs.
+        must never drop the hermes root for the interpreter Relayhelm itself runs.
         """
         with patch("subprocess.run",
                    side_effect=subprocess.TimeoutExpired(cmd=[], timeout=5)) as mock_run:
@@ -600,7 +600,7 @@ class TestPythonPathComposition(unittest.TestCase):
         return os.path.dirname(tools_dir)
 
     def test_hermes_root_included_when_same_env(self):
-        """When interpreter is in the Hermes env, hermes root is in PYTHONPATH."""
+        """When interpreter is in the Relayhelm env, hermes root is in PYTHONPATH."""
         pythonpath, _ = self._capture_pythonpath(same_env=True)
         parts = pythonpath.split(os.pathsep)
         self.assertIn(self._hermes_root(), parts,

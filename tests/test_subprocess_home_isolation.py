@@ -1,13 +1,13 @@
 """Tests for subprocess HOME handling in profile mode.
 
-Hermes state stays profile-scoped through HERMES_HOME. Host subprocesses should
+Relayhelm state stays profile-scoped through HERMES_HOME. Host subprocesses should
 keep the user's real HOME by default so external CLIs find existing credentials.
 Containers still use the profile home for persistence, and users can explicitly
 opt into profile HOME isolation on the host.
 
-See: https://github.com/NousResearch/hermes-agent/issues/25114
-See: https://github.com/NousResearch/hermes-agent/issues/36144
-See: https://github.com/NousResearch/hermes-agent/issues/29015
+See: https://github.com/InSelfControll/relayhelm/issues/25114
+See: https://github.com/InSelfControll/relayhelm/issues/36144
+See: https://github.com/InSelfControll/relayhelm/issues/29015
 """
 
 import os
@@ -41,7 +41,7 @@ class TestGetSubprocessHome:
         """Host installs should not hide real ~/.ssh, ~/.gitconfig, ~/.azure, etc."""
         self._host_mode(monkeypatch)
         real_home = tmp_path / "real-home"
-        hermes_home = real_home / ".hermes" / "profiles" / "coder"
+        hermes_home = real_home / ".relayhelm" / "profiles" / "coder"
         profile_home = hermes_home / "home"
         profile_home.mkdir(parents=True)
         monkeypatch.setenv("HOME", str(real_home))
@@ -51,7 +51,7 @@ class TestGetSubprocessHome:
 
     def test_container_auto_uses_profile_home_when_home_dir_exists(self, tmp_path, monkeypatch):
         self._container_mode(monkeypatch)
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         profile_home = hermes_home / "home"
         profile_home.mkdir(parents=True)
         monkeypatch.setenv("HERMES_HOME", str(hermes_home))
@@ -61,7 +61,7 @@ class TestGetSubprocessHome:
     def test_returns_profile_specific_path(self, tmp_path, monkeypatch):
         """Explicit profile mode keeps the old per-profile HOME behavior."""
         self._host_mode(monkeypatch)
-        profile_dir = tmp_path / ".hermes" / "profiles" / "coder"
+        profile_dir = tmp_path / ".relayhelm" / "profiles" / "coder"
         profile_dir.mkdir(parents=True)
         profile_home = profile_dir / "home"
         profile_home.mkdir()
@@ -72,7 +72,7 @@ class TestGetSubprocessHome:
 
     def test_real_mode_repairs_parent_home_already_pointing_at_profile(self, tmp_path, monkeypatch):
         self._host_mode(monkeypatch)
-        profile_dir = tmp_path / ".hermes" / "profiles" / "coder"
+        profile_dir = tmp_path / ".relayhelm" / "profiles" / "coder"
         profile_home = profile_dir / "home"
         profile_home.mkdir(parents=True)
         real_home = tmp_path / "real-home"
@@ -90,7 +90,7 @@ class TestGetSubprocessHome:
 
     def test_two_profiles_get_different_homes(self, tmp_path, monkeypatch):
         self._container_mode(monkeypatch)
-        base = tmp_path / ".hermes" / "profiles"
+        base = tmp_path / ".relayhelm" / "profiles"
         for name in ("alpha", "beta"):
             p = base / name
             p.mkdir(parents=True)
@@ -245,7 +245,7 @@ class TestProfileBootstrap:
 
     def test_create_profile_bootstraps_home_dir(self, tmp_path, monkeypatch):
         """create_profile() should create home/ inside the profile dir."""
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".relayhelm"
         home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         monkeypatch.setenv("HERMES_HOME", str(home))

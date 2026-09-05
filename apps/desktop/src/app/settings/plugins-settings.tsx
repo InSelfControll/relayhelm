@@ -35,7 +35,7 @@ import { useDeepLinkHighlight } from './use-deep-link-highlight'
 
 const KIND_ORDER: Record<PluginRecord['kind'], number> = { disk: 0, runtime: 1, bundled: 2 }
 
-// User-installed plugins first — mirrors `hermes plugins list --user`.
+// User-installed plugins first — mirrors `relayhelm plugins list --user`.
 const SOURCE_ORDER: Record<string, number> = { user: 0, git: 0, project: 1, entrypoint: 2 }
 
 const agentPluginRowKey = (row: AgentPluginRow) =>
@@ -253,7 +253,7 @@ function AgentPluginsSection() {
             <SelectContent>
               {profiles.map(profile => (
                 <SelectItem key={profile.name} value={profile.name}>
-                  {profile.is_default ? 'Hermes (default)' : profile.name}
+                  {profile.is_default ? 'Relayhelm (default)' : profile.name}
                 </SelectItem>
               ))}
             </SelectContent>

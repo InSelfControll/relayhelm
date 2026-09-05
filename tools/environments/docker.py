@@ -80,7 +80,7 @@ def _normalize_env_dict(env: dict | None) -> dict[str, str]:
 
 
 def _load_hermes_env_vars() -> dict[str, str]:
-    """Load ~/.hermes/.env values without failing Docker command execution."""
+    """Load ~/.relayhelm/.env values without failing Docker command execution."""
     try:
         from hermes_cli.config import load_env
         return load_env() or {}
@@ -106,7 +106,7 @@ _sandbox_dir_name = sanitize_task_id_for_path
 
 
 def _get_active_profile_name() -> str:
-    """Active Hermes profile name, or ``"default"`` on any error. Resolved at container-create
+    """Active Relayhelm profile name, or ``"default"`` on any error. Resolved at container-create
     time so a container stays tagged with its creator even if the process switches profiles."""
     try:
         from hermes_cli.profiles import get_active_profile_name
@@ -136,7 +136,7 @@ def reap_orphan_containers(
     Best-effort and idempotent: failures log at debug and the count removed so far is returned.
     """
     docker = docker_exe or find_docker() or "docker"
-    filters = ["--filter", "label=hermes-agent=1", "--filter", "status=exited"]
+    filters = ["--filter", "label=relayhelm=1", "--filter", "status=exited"]
     if profile_filter:
         filters.extend(["--filter", f"label=hermes-profile={_sanitize_label_value(profile_filter)}"])
 
@@ -523,7 +523,7 @@ class DockerEnvironment(BaseEnvironment):
         # Resolved once so it works when /usr/local/bin is not in PATH (macOS services).
         self._docker_exe = find_docker() or "docker"
 
-        # s6-overlay images (e.g. hermes-agent:latest) already use /init as PID 1 and exec
+        # s6-overlay images (e.g. relayhelm:latest) already use /init as PID 1 and exec
         # /run/s6/basedir/bin/init during startup. For those images we must (a) skip Docker's --init (two
         # competing PID-1 inits) and (b) mount /run with exec instead of noexec, or s6 stage0 dies with exit
         # 126 "Permission denied". Detected once here; defaults are kept on any inspection failure. See
@@ -543,7 +543,7 @@ class DockerEnvironment(BaseEnvironment):
             + egress_host_args + volume_args + env_args + validated_extra)
         logger.info("Docker run_args: %s", all_run_args)
 
-        # Labels identify hermes containers to the orphan reaper (hermes-agent=1),
+        # Labels identify hermes containers to the orphan reaper (relayhelm=1),
         # cross-process reuse (task-id/profile) and operators. The reuse identity
         # is captured at start and never changes for the container's lifetime.
         # Egress posture gets its own label: env/CA mounts are immutable after
@@ -551,7 +551,7 @@ class DockerEnvironment(BaseEnvironment):
         profile_name = _container_identity(shared_container_key)
         task_label = _sanitize_label_value(task_id)
         self._labels = {
-            "hermes-agent": "1",
+            "relayhelm": "1",
             "hermes-task-id": task_label,
             "hermes-profile": profile_name,
             _EGRESS_LABEL_KEY: egress_label}
@@ -625,7 +625,7 @@ class DockerEnvironment(BaseEnvironment):
 
     def _mount_args(self, volumes, host_cwd, auto_mount_cwd, task_id) -> tuple[list[str], list[str]]:
         """``(volume_args, writable_args)`` for user volumes, host cwd and /workspace,/root.
-        Persistent mode bind-mounts from TERMINAL_SANDBOX_DIR (default ~/.hermes/sandboxes/)."""
+        Persistent mode bind-mounts from TERMINAL_SANDBOX_DIR (default ~/.relayhelm/sandboxes/)."""
         volume_args: list[str] = []
         for vol in (volumes or []):
             if not isinstance(vol, str):
@@ -785,7 +785,7 @@ class DockerEnvironment(BaseEnvironment):
 
     def _resolve_passthrough_env(self) -> tuple[dict[str, str], set[str]]:
         """Forwarded values plus scoped names that must be unset. Explicit docker_forward_env
-        entries are an opt-in that wins over the Hermes secret blocklist; only implicit
+        entries are an opt-in that wins over the Relayhelm secret blocklist; only implicit
         passthrough keys are filtered (incl. Hermes-internal dynamic secrets)."""
         exec_env: dict[str, str] = {}
         passthrough_keys: set[str] = set()
@@ -959,7 +959,7 @@ class DockerEnvironment(BaseEnvironment):
         disable`` with its baked-in proxy env and CA mounts."""
         egress_off = egress_label == "off"
         filters = [
-            "--filter", "label=hermes-agent=1",
+            "--filter", "label=relayhelm=1",
             "--filter", f"label=hermes-task-id={task_label}",
             "--filter", f"label=hermes-profile={profile_label}"]
         if egress_off:

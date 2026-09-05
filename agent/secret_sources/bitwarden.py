@@ -1,6 +1,6 @@
 """Bitwarden Secrets Manager (`bws` CLI) integration.
 
-Pulls API keys from BSM at startup so they need not live in ``~/.hermes/.env``.
+Pulls API keys from BSM at startup so they need not live in ``~/.relayhelm/.env``.
 ``bws`` is auto-installed into ``<hermes_home>/bin/bws`` (one pinned version,
 SHA-256-verified against the published checksum). The one bootstrap secret is
 the access token in ``.env``; every other key can live in BSM. One
@@ -91,7 +91,7 @@ def _classify_bws_error(message: str) -> ErrorKind:
 
 
 def _hermes_bin_dir() -> Path:
-    """Where Hermes stores its managed binaries. Profile-aware."""
+    """Where Relayhelm stores its managed binaries. Profile-aware."""
     from hermes_constants import get_hermes_home
 
     return get_hermes_home() / "bin"
@@ -182,7 +182,7 @@ def install_bws(*, force: bool = False) -> Path:
 
 
 def _http_download(url: str, dest: Path) -> None:
-    req = urllib.request.Request(url, headers={"User-Agent": "hermes-agent"})
+    req = urllib.request.Request(url, headers={"User-Agent": "relayhelm"})
     try:
         with urllib.request.urlopen(req, timeout=_BWS_DOWNLOAD_TIMEOUT) as resp, open(dest, "wb") as f:  # noqa: S310
             shutil.copyfileobj(resp, f)

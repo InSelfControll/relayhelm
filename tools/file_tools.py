@@ -540,7 +540,7 @@ def read_file_tool(path: str, offset: int = 1, limit: int = 2000, task_id: str =
     """Read a file with pagination and line numbers.
 
     Guard order: device-path blocklist (no I/O) → stat-based special-file
-    guard (host only) → document extraction → binary-extension guard → Hermes
+    guard (host only) → document extraction → binary-extension guard → Relayhelm
     internal denylist → negative-result cache → dedup stub → real read.
     """
     try:
@@ -577,7 +577,7 @@ def read_file_tool(path: str, offset: int = 1, limit: int = 2000, task_id: str =
                 f"Cannot read binary file '{path}' ({_resolved.suffix.lower()}). "
                 "Use vision_analyze for images, or terminal to inspect binary files.")
 
-        # Hermes internal denylist (prompt injection via catalog metadata,
+        # Relayhelm internal denylist (prompt injection via catalog metadata,
         # credential stores). Pass the RESOLVED path: the denylist's own
         # resolve() uses the process cwd and would miss a relative "auth.json".
         block_error = get_read_block_error(str(_resolved))

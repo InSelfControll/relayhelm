@@ -71,8 +71,8 @@ function ownedLock(over: any = {}) {
     pid: 333,
     port: 40000,
     profile: '',
-    hermesPath: '~/.local/bin/hermes',
-    hermesHome: '~/.hermes',
+    hermesPath: '~/.local/bin/relayhelm',
+    hermesHome: '~/.relayhelm',
     logPath: spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE),
     tokenFingerprint: fingerprintToken('stored-token'),
     startedAt: '2026-07-14T00:00:00.000Z',
@@ -131,7 +131,7 @@ function fakeSsh(rules: any[] = []) {
   }
 }
 
-test('POSIX relaunch gate refuses live and uncertain install markers without executing Hermes', async () => {
+test('POSIX relaunch gate refuses live and uncertain install markers without executing Relayhelm', async () => {
   for (const observation of ['LIVE:4242', 'UNCERTAIN']) {
     const calls: string[] = []
 
@@ -144,7 +144,7 @@ test('POSIX relaunch gate refuses live and uncertain install markers without exe
         }
 
         if (command.includes('HERMES_HOME')) {
-          return '/home/alice/.hermes\n'
+          return '/home/alice/.relayhelm\n'
         }
 
         if (command.includes('.hermes-update-in-progress')) {
@@ -177,7 +177,7 @@ test('POSIX relaunch gate permits absent/dead markers and normalizes named-profi
     }
   }
 
-  await assertRemoteInstallUpdateClear(ssh, '/home/alice/.hermes/profiles/research')
+  await assertRemoteInstallUpdateClear(ssh, '/home/alice/.relayhelm/profiles/research')
   assert.match(commands[0], /home\.parent\.name/)
   assert.match(commands[0], /profiles/)
   assert.match(commands[0], /\.hermes-update-in-progress/)
@@ -196,7 +196,7 @@ test('POSIX relaunch gate rechecks after token upload immediately before process
       }
 
       if (command.includes('HERMES_HOME')) {
-        return '/home/alice/.hermes\n'
+        return '/home/alice/.relayhelm\n'
       }
 
       if (command.includes('.hermes-update-in-progress')) {
@@ -238,7 +238,7 @@ test('POSIX relaunch gate rechecks after token upload immediately before process
 
 test('listRemoteHermesProfiles inventories Mini-style profile dirs without spawning a dashboard', async () => {
   const ssh = fakeSsh([
-    [/HERMES_HOME/, '/Users/zillajr/.hermes\n'],
+    [/HERMES_HOME/, '/Users/zillajr/.relayhelm\n'],
     [/ls -1/, 'bob\ndixie\ngoose\nrambo\nbob.rollback-old\n']
   ])
 
@@ -275,8 +275,8 @@ test('locateHermes throws (no silent fallback) when an EXPLICIT path is not exec
   // command -v WOULD find a different install, but an explicit path must not
   // silently fall back to it — that is the "connected to the wrong hermes" bug.
   const ssh = fakeSsh([
-    [/command -v hermes/, '/home/u/.local/bin/hermes\n'],
-    [/\[ -x .*\.local\/bin\/hermes/, 'OK']
+    [/command -v relayhelm/, '/home/u/.local/bin/relayhelm\n'],
+    [/\[ -x .*\.local\/bin\/relayhelm/, 'OK']
   ])
 
   await assert.rejects(
@@ -292,11 +292,11 @@ test('locateHermes throws (no silent fallback) when an EXPLICIT path is not exec
 
 test('locateHermes falls back to the login-shell command -v probe', async () => {
   const ssh = fakeSsh([
-    [/command -v hermes/, '/home/u/.local/bin/hermes\n'],
-    [/\[ -x .*\.local\/bin\/hermes/, 'OK']
+    [/command -v relayhelm/, '/home/u/.local/bin/relayhelm\n'],
+    [/\[ -x .*\.local\/bin\/relayhelm/, 'OK']
   ])
 
-  assert.equal(await locateHermes(ssh, ''), '/home/u/.local/bin/hermes')
+  assert.equal(await locateHermes(ssh, ''), '/home/u/.local/bin/relayhelm')
 })
 
 test('locateHermes preserves an installer wrapper instead of resolving its interpreter', async () => {
@@ -306,14 +306,14 @@ test('locateHermes preserves an installer wrapper instead of resolving its inter
   // `<python> serve --help` failed outright (#74411). The wrapper itself is
   // executable and forwards args correctly — return it untouched.
   const ssh = fakeSsh([
-    [/command -v hermes/, '/home/u/.local/bin/hermes\n'],
-    [/\[ -x .*\.local\/bin\/hermes/, 'OK'],
+    [/command -v relayhelm/, '/home/u/.local/bin/relayhelm\n'],
+    [/\[ -x .*\.local\/bin\/relayhelm/, 'OK'],
     // If the removed python3 wrapper-parser were ever reintroduced, this rule
     // would reward it with an interpreter path and the assertions below fail.
-    [/python3 -c/, '/home/u/.hermes/hermes-agent/venv/bin/python\n']
+    [/python3 -c/, '/home/u/.relayhelm/relayhelm/venv/bin/python\n']
   ])
 
-  assert.equal(await locateHermes(ssh, ''), '/home/u/.local/bin/hermes')
+  assert.equal(await locateHermes(ssh, ''), '/home/u/.local/bin/relayhelm')
   assert.ok(
     !ssh.calls.some(cmd => cmd.includes('python3 -c')),
     'locateHermes must not shell out to a python3 parser to rewrite the launcher'
@@ -323,29 +323,29 @@ test('locateHermes preserves an installer wrapper instead of resolving its inter
 test('locateHermes returns an explicit remoteHermesPath unchanged', async () => {
   // The override half of #74411: an explicit remoteHermesPath pointing at a
   // wrapper was also canonicalized to its interpreter, so overriding to
-  // ~/.local/bin/hermes changed nothing for affected users.
+  // ~/.local/bin/relayhelm changed nothing for affected users.
   const ssh = fakeSsh([
-    [/\[ -x .*\.local\/bin\/hermes/, 'OK'],
-    [/python3 -c/, '/home/u/.hermes/hermes-agent/venv/bin/python\n']
+    [/\[ -x .*\.local\/bin\/relayhelm/, 'OK'],
+    [/python3 -c/, '/home/u/.relayhelm/relayhelm/venv/bin/python\n']
   ])
 
-  assert.equal(await locateHermes(ssh, '~/.local/bin/hermes'), '~/.local/bin/hermes')
+  assert.equal(await locateHermes(ssh, '~/.local/bin/relayhelm'), '~/.local/bin/relayhelm')
   assert.ok(!ssh.calls.some(cmd => cmd.includes('python3 -c')), 'an explicit remoteHermesPath must never be rewritten')
 })
 
-test('locateHermes falls back to ~/.local/bin/hermes when the login-shell probe misses', async () => {
+test('locateHermes falls back to ~/.local/bin/relayhelm when the login-shell probe misses', async () => {
   // ~/.local/bin is the non-root installer's command location (scripts/install.sh).
   const ssh = fakeSsh([
-    [/command -v hermes/, ''],
-    [/\[ -x .*\.local\/bin\/hermes/, 'OK']
+    [/command -v relayhelm/, ''],
+    [/\[ -x .*\.local\/bin\/relayhelm/, 'OK']
   ])
 
-  assert.equal(await locateHermes(ssh, ''), '~/.local/bin/hermes')
+  assert.equal(await locateHermes(ssh, ''), '~/.local/bin/relayhelm')
 })
 
 test('locateHermes tries the conventional venv path last', async () => {
-  const ssh = fakeSsh([[/\[ -x .*venv\/bin\/hermes/, 'OK']])
-  assert.equal(await locateHermes(ssh, ''), '~/.hermes/hermes-agent/venv/bin/hermes')
+  const ssh = fakeSsh([[/\[ -x .*venv\/bin\/relayhelm/, 'OK']])
+  assert.equal(await locateHermes(ssh, ''), '~/.relayhelm/relayhelm/venv/bin/relayhelm')
 })
 
 test('locateHermes throws a hermes-not-found error with an install hint', async () => {
@@ -363,7 +363,7 @@ test('locateHermes throws a hermes-not-found error with an install hint', async 
 
 test('locateHermes uses a login shell for the command -v probe', async () => {
   const ssh = fakeSsh([
-    [/command -v hermes/, '/x/hermes'],
+    [/command -v relayhelm/, '/x/hermes'],
     [/\[ -x/, 'OK']
   ])
 
@@ -397,9 +397,9 @@ test('probeRemotePlatform rejects unsupported remote platforms', async () => {
 })
 
 test('ownership paths are isolated by ownership ID and spawn nonce', () => {
-  assert.equal(ownershipDirectory(OWNERSHIP_ID), `~/.hermes/desktop-ssh/${OWNERSHIP_ID}`)
-  assert.equal(lockfilePath(OWNERSHIP_ID), `~/.hermes/desktop-ssh/${OWNERSHIP_ID}/backend.lock.json`)
-  assert.equal(spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE), `~/.hermes/desktop-ssh/${OWNERSHIP_ID}/${SPAWN_NONCE}.log`)
+  assert.equal(ownershipDirectory(OWNERSHIP_ID), `~/.relayhelm/desktop-ssh/${OWNERSHIP_ID}`)
+  assert.equal(lockfilePath(OWNERSHIP_ID), `~/.relayhelm/desktop-ssh/${OWNERSHIP_ID}/backend.lock.json`)
+  assert.equal(spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE), `~/.relayhelm/desktop-ssh/${OWNERSHIP_ID}/${SPAWN_NONCE}.log`)
 })
 
 test('readLockfile returns null ONLY for a missing/empty lockfile', async () => {
@@ -563,10 +563,10 @@ test('pidIsOurDashboard accepts the venv entrypoint an installer wrapper execs i
   ])
 
   assert.equal(
-    await pidIsOurDashboard(ssh, 5, SPAWN_NONCE, '~/.local/bin/hermes', '/Users/cd9c/.hermes', OWNERSHIP_ID, 'ops'),
+    await pidIsOurDashboard(ssh, 5, SPAWN_NONCE, '~/.local/bin/relayhelm', '/Users/cd9c/.relayhelm', OWNERSHIP_ID, 'ops'),
     true
   )
-  assert.match(ownershipProbe, /hermes-agent.*venv.*bin.*hermes/)
+  assert.match(ownershipProbe, /relayhelm.*venv.*bin.*relayhelm/)
   assert.match(ownershipProbe, /desktop-ssh.*0123456789abcdef\.token/)
   assert.match(ownershipProbe, /expected_profile=.*ops/)
 })
@@ -578,7 +578,7 @@ test.skipIf(process.platform === 'win32')(
     const installDir = path.join(temp, 'install dir')
     const venvBin = path.join(installDir, 'venv', 'bin')
     const pythonLink = path.join(venvBin, 'python')
-    const entrypoint = path.join(installDir, 'hermes')
+    const entrypoint = path.join(installDir, 'relayhelm')
     const launcher = path.join(temp, 'hermes launcher')
     const python = (await exec('command -v python3')).stdout.trim()
     const tokenPath = path.join(os.homedir(), spawnTokenPath(OWNERSHIP_ID, SPAWN_NONCE).replace(/^~\//, ''))
@@ -790,7 +790,7 @@ test('buildSpawnCommand always uses serve (legacy dashboard path removed)', () =
 
 test('buildSpawnCommand atomically reserves the ownership slot through spawn and lock publication', () => {
   const cmd = buildSpawnCommand('/x/hermes', 'work', {
-    hermesHome: '~/.hermes',
+    hermesHome: '~/.relayhelm',
     logPath: spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE),
     ownershipId: OWNERSHIP_ID,
     reservationNonce: SPAWN_NONCE,
@@ -802,7 +802,7 @@ test('buildSpawnCommand atomically reserves the ownership slot through spawn and
       port: 0,
       profile: 'work',
       hermesPath: '/x/hermes',
-      hermesHome: '~/.hermes',
+      hermesHome: '~/.relayhelm',
       logPath: spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE),
       tokenFingerprint: fingerprintToken('stored-token'),
       protocolVersion: PROTOCOL_VERSION,
@@ -829,7 +829,7 @@ test('buildSpawnCommand atomically reserves the ownership slot through spawn and
 
 test.skipIf(process.platform === 'win32')('detached backend does not inherit the update mutex descriptor', async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'hermes-update-mutex-'))
-  const hermesPath = path.join(directory, 'hermes')
+  const hermesPath = path.join(directory, 'relayhelm')
   const reportPath = path.join(directory, 'descriptor-report')
   const logPath = path.join(directory, 'spawn.log')
 
@@ -1048,7 +1048,7 @@ test('managed SSH maps a local scope to a different non-default remote profile',
   assert.match(spawn, /--profile\b/)
   assert.ok(spawn.includes('writer_2'))
   assert.match(spawn, /serve\s+--isolated/)
-  assert.match(spawn, /\.hermes\/desktop-ssh\/[0-9a-f]{32}\/[0-9a-f]{16}\.token/)
+  assert.match(spawn, /\.relayhelm\/desktop-ssh\/[0-9a-f]{32}\/[0-9a-f]{16}\.token/)
   assert.ok(!spawn.includes(' work'), 'the local Desktop scope must not become the remote profile')
 })
 
@@ -1084,7 +1084,7 @@ test('connect() respawns when the requested remote profile differs from the lock
     [/print\("OWNED"/, 'OWNED\n'],
     [cmd => /pidfd_open/.test(cmd), 'TERMINATED\n'],
     [/kill 333/, ''],
-    [/--version/, 'Hermes Agent v0.18.2\n'],
+    [/--version/, 'Relayhelm v0.18.2\n'],
     [/grep -q ssh-session-token-file/, 'YES\n'],
     [/python3 -c/, ''],
     [/setsid/, '890\n'],
@@ -1113,7 +1113,7 @@ test('connect() respawns when the lockfile hermesPath differs from the resolved 
     [/cat .*lock\.json/, JSON.stringify(lock)],
     [/kill -0/, 'ALIVE'],
     [/print\("OWNED"/, 'FOREIGN\n'],
-    [/--version/, 'Hermes Agent v0.18.2\n'],
+    [/--version/, 'Relayhelm v0.18.2\n'],
     [/grep -q ssh-session-token-file/, 'YES\n'],
     [/python3 -c/, ''],
     [/setsid/, '890\n'],
@@ -1164,7 +1164,7 @@ test('connect() fresh spawn writes hermesHome + protocolVersion into the lockfil
     [/uname/, 'Linux\nx86_64'],
     [/\[ -x/, 'OK'],
     [/cat .*lock\.json/, ''], // no lockfile
-    [/HERMES_HOME/, '/home/alice/.hermes\n'],
+    [/HERMES_HOME/, '/home/alice/.relayhelm\n'],
     [/grep -q ssh-session-token-file/, 'YES\n'],
     [/python3 -c/, ''],
     [/printf '%s\\n'/, ''],
@@ -1184,7 +1184,7 @@ test('connect() fresh spawn writes hermesHome + protocolVersion into the lockfil
   await connect(connectDeps(ssh, { adoptServedToken: async () => 'fresh' }))
   const lockWrite = writes.find(c => c.includes('schemaVersion')) || ''
   assert.match(lockWrite, new RegExp(`"protocolVersion":${PROTOCOL_VERSION}`))
-  assert.match(lockWrite, /"hermesHome":"\/home\/alice\/\.hermes"/)
+  assert.match(lockWrite, /"hermesHome":"\/home\/alice\/\.relayhelm"/)
 })
 
 test('connect() respawns when the lockfile pid is dead (killed dashboard)', async () => {
@@ -1383,13 +1383,13 @@ test('connect() preserves an owned backend when a reuse transport throws', async
 })
 
 test('validateRemotePath accepts absolute POSIX paths', () => {
-  assert.doesNotThrow(() => validateRemotePath('/usr/bin/hermes'))
-  assert.doesNotThrow(() => validateRemotePath('/home/user/.hermes/hermes-agent/venv/bin/hermes'))
+  assert.doesNotThrow(() => validateRemotePath('/usr/bin/relayhelm'))
+  assert.doesNotThrow(() => validateRemotePath('/home/user/.relayhelm/relayhelm/venv/bin/relayhelm'))
 })
 
 test('validateRemotePath accepts ~/ prefix paths', () => {
-  assert.doesNotThrow(() => validateRemotePath('~/bin/hermes'))
-  assert.doesNotThrow(() => validateRemotePath('~/.hermes/logs/desktop-ssh.log'))
+  assert.doesNotThrow(() => validateRemotePath('~/bin/relayhelm'))
+  assert.doesNotThrow(() => validateRemotePath('~/.relayhelm/logs/desktop-ssh.log'))
   assert.doesNotThrow(() => validateRemotePath('~'))
 })
 
@@ -1400,15 +1400,15 @@ test('validateRemotePath accepts paths with spaces and quotes', () => {
 })
 
 test('validateRemotePath rejects relative paths', () => {
-  assert.throws(() => validateRemotePath('hermes'), /absolute|relative/i)
-  assert.throws(() => validateRemotePath('./bin/hermes'), /absolute|relative/i)
+  assert.throws(() => validateRemotePath('relayhelm'), /absolute|relative/i)
+  assert.throws(() => validateRemotePath('./bin/relayhelm'), /absolute|relative/i)
   assert.throws(() => validateRemotePath('../etc/passwd'), /absolute|relative/i)
 })
 
 test('validateRemotePath rejects NUL and newline', () => {
-  assert.throws(() => validateRemotePath('/usr/bin/hermes\x00'), /unsafe/i)
-  assert.throws(() => validateRemotePath('/usr/bin/hermes\n'), /unsafe/i)
-  assert.throws(() => validateRemotePath('/usr/bin/hermes\r'), /unsafe/i)
+  assert.throws(() => validateRemotePath('/usr/bin/relayhelm\x00'), /unsafe/i)
+  assert.throws(() => validateRemotePath('/usr/bin/relayhelm\n'), /unsafe/i)
+  assert.throws(() => validateRemotePath('/usr/bin/relayhelm\r'), /unsafe/i)
 })
 
 test('validateRemotePath preserves shell metacharacters as path data', () => {
@@ -1419,15 +1419,15 @@ test('validateRemotePath preserves shell metacharacters as path data', () => {
 })
 
 test('expandRemotePath expands ~/ to "$HOME"/', () => {
-  const result = expandRemotePath('~/.hermes/logs/desktop-ssh.log')
+  const result = expandRemotePath('~/.relayhelm/logs/desktop-ssh.log')
   assert.match(result, /\$HOME/)
   assert.ok(!result.includes('eval'), 'must not use eval')
   assert.ok(!result.includes('echo'), 'must not use echo for expansion')
 })
 
 test('expandRemotePath returns quoted absolute paths unchanged', () => {
-  const result = expandRemotePath('/usr/local/bin/hermes')
-  assert.ok(result.includes('/usr/local/bin/hermes'))
+  const result = expandRemotePath('/usr/local/bin/relayhelm')
+  assert.ok(result.includes('/usr/local/bin/relayhelm'))
   assert.ok(!result.includes('eval'))
 })
 
@@ -1444,13 +1444,13 @@ test('buildSpawnCommand does not embed the token in the command string', () => {
 
 test('buildSpawnCommand includes --ssh-session-token-file when tokenFilePath is provided', () => {
   const cmd = buildSpawnCommand('/x/hermes', 'work', {
-    tokenFilePath: `~/.hermes/desktop-ssh/${OWNERSHIP_ID}/${SPAWN_NONCE}.token`,
+    tokenFilePath: `~/.relayhelm/desktop-ssh/${OWNERSHIP_ID}/${SPAWN_NONCE}.token`,
     logPath: spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE),
     spawnNonce: SPAWN_NONCE
   })
 
   assert.match(cmd, /--ssh-session-token-file/)
-  assert.match(cmd, /\.hermes\/desktop-ssh\//)
+  assert.match(cmd, /\.relayhelm\/desktop-ssh\//)
 })
 
 test('buildSpawnCommand always uses serve, never dashboard', () => {
@@ -1461,7 +1461,7 @@ test('buildSpawnCommand always uses serve, never dashboard', () => {
   assert.doesNotMatch(cmd, /--no-open/)
 })
 
-test('buildSpawnCommand raises the SSH child file limit before execing Hermes', () => {
+test('buildSpawnCommand raises the SSH child file limit before execing Relayhelm', () => {
   const cmd = buildSpawnCommand('/x/hermes', '', { logPath: spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE) })
   assert.match(cmd, /ulimit -n 65536 2>\/dev\/null \|\| true; exec env HERMES_DESKTOP=1/)
   assert.ok(cmd.indexOf('ulimit -n 65536') < cmd.indexOf('serve --isolated'))
@@ -1469,7 +1469,7 @@ test('buildSpawnCommand raises the SSH child file limit before execing Hermes', 
 
 test('buildSpawnCommand payload variables keep $HOME expandable (no double quoting)', () => {
   const cmd = buildSpawnCommand('/x/hermes', 'work', {
-    hermesHome: '~/.hermes',
+    hermesHome: '~/.relayhelm',
     logPath: spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE),
     ownershipId: OWNERSHIP_ID,
     reservationNonce: SPAWN_NONCE,
@@ -1490,7 +1490,7 @@ test('buildSpawnCommand payload variables keep $HOME expandable (no double quoti
 
 test('buildSpawnCommand lockfile publication is POSIX sh (no bash substitution)', () => {
   const cmd = buildSpawnCommand('/x/hermes', 'work', {
-    hermesHome: '~/.hermes',
+    hermesHome: '~/.relayhelm',
     logPath: spawnLogPath(OWNERSHIP_ID, SPAWN_NONCE),
     ownershipId: OWNERSHIP_ID,
     reservationNonce: SPAWN_NONCE,
@@ -1673,7 +1673,7 @@ test('spawnRemoteDashboard fails with update-required when remote lacks --ssh-se
 })
 
 test('readLockfile treats a log path outside the exact ownership and spawn path as skew', async () => {
-  const lock = ownedLock({ logPath: '~/.hermes/desktop-ssh/other.log' })
+  const lock = ownedLock({ logPath: '~/.relayhelm/desktop-ssh/other.log' })
   const ssh = fakeSsh([[/cat .*lock\.json/, JSON.stringify(lock)]])
   assert.equal(isLockfileSkew(await readLockfile(ssh, OWNERSHIP_ID)), true)
 })
@@ -1684,7 +1684,7 @@ test('cleanupStale never deletes a lock-supplied unexpected log path', async () 
     [cmd => /pidfd_open/.test(cmd), 'TERMINATED\n']
   ])
 
-  await cleanupStale(ssh, OWNERSHIP_ID, ownedLock({ logPath: '~/.hermes/unrelated.log' }))
+  await cleanupStale(ssh, OWNERSHIP_ID, ownedLock({ logPath: '~/.relayhelm/unrelated.log' }))
   assert.ok(!ssh.calls.some(command => command.includes('unrelated.log')))
 })
 

@@ -53,7 +53,7 @@ class TestPidIsHermes:
             r"C:\Users\x\.hermes-runtime\python.exe -m hermes_cli.main"
         ) is True
         assert _subprocess_compat._text_names_hermes(
-            "/opt/hermes-agent/venv/bin/python"
+            "/opt/relayhelm/venv/bin/python"
         ) is True
 
     def test_invalid_pid_inputs_do_not_crash(self):

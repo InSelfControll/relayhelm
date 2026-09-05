@@ -2,7 +2,7 @@
 
 ``hermes_cli.main`` skips eager plugin discovery at argparse-setup time
 when the invocation is clearly targeting a known built-in subcommand.
-This saves 500-650ms on ``hermes --help``, ``hermes --version``,
+This saves 500-650ms on ``relayhelm --help``, ``relayhelm --version``,
 ``hermes logs``, etc., by not importing ``google.cloud.pubsub_v1``,
 ``aiohttp``, ``grpc``, and friends.
 
@@ -41,7 +41,7 @@ from hermes_cli.main import (
 
 
 def _live_subcommand_names() -> set[str]:
-    """Run ``hermes --help`` in-process and parse the subcommand block.
+    """Run ``relayhelm --help`` in-process and parse the subcommand block.
 
     We patch ``_plugin_cli_discovery_needed`` to always return False so
     plugin-registered commands aren't included — we're validating the
@@ -189,7 +189,7 @@ def test_deferred_platform_loader_registers_cli_command_before_parser_table():
     assert cmd_info["plugin"] == "fake-photon-platform"
 
     # Same parser-table assembly main() uses after reading _cli_commands.
-    parser = argparse.ArgumentParser(prog="hermes")
+    parser = argparse.ArgumentParser(prog="relayhelm")
     subparsers = parser.add_subparsers(dest="command")
     for info in mgr._cli_commands.values():
         plugin_parser = subparsers.add_parser(

@@ -6,7 +6,7 @@ user docs `website/docs/user-guide/features/cron.md`, `kanban.md`.
 ## Cron
 
 `cron/jobs.py` (job store) + `cron/scheduler.py` (tick loop; `scheduler_*.py` siblings). Agents
-schedule via the `cronjob` tool; users via `hermes cron list|add|edit|pause|resume|run|remove` or
+schedule via the `cronjob` tool; users via `relayhelm cron list|add|edit|pause|resume|run|remove` or
 `/cron`. Schedules: duration (`"30m"`, `"2h"`, `"1d"`), "every" phrase (`"every 2h"`, `"every monday
 9am"`), 5-field cron (`"0 9 * * *"`), ISO one-shot (`"2026-06-01T09:00:00Z"`). Per-job fields:
 `skills`, `model`/`provider` overrides, `script` (pre-run data-collection script whose stdout is
@@ -17,7 +17,7 @@ loaded), multi-platform delivery.
 Hardening invariants — each guards a real failure; don't weaken without answering for it:
 - **3-minute hard interrupt** on cron sessions: runaway loops cannot monopolise the scheduler.
 - Catch-up window = half the period, clamped to 120s–2h; 120s grace for missed one-shots.
-- File lock `~/.hermes/cron/.tick.lock` prevents duplicate ticks across processes.
+- File lock `~/.relayhelm/cron/.tick.lock` prevents duplicate ticks across processes.
 - Cron sessions pass `skip_memory=True`; memory providers intentionally do not run during cron.
 - Deliveries are **not mirrored** into the target gateway session — they land in their own cron
   session with a header/footer frame so the main conversation's role alternation stays intact.
@@ -28,7 +28,7 @@ Hardening invariants — each guards a real failure; don't weaken without answer
 
 ## Kanban (multi-agent work queue)
 
-Durable SQLite-backed board letting multiple profiles/workers collaborate. Users: `hermes kanban
+Durable SQLite-backed board letting multiple profiles/workers collaborate. Users: `relayhelm kanban
 <verb>`; dispatcher-spawned workers use a dedicated `kanban_*` toolset so their schema footprint is
 zero outside a kanban task (footprint ladder rung 3).
 

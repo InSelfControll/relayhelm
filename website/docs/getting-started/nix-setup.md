@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "Nix & NixOS Setup"
-description: "Install and deploy Hermes Agent with Nix — from quick `nix run` to fully declarative NixOS module with container mode"
+description: "Install and deploy Relayhelm with Nix — from quick `nix run` to fully declarative NixOS module with container mode"
 ---
 
 # Nix & NixOS Setup
@@ -12,7 +12,7 @@ Nix and NixOS are [Tier 2 platforms](./platform-support.md#tier-2). The flake an
 For a supported setup, use one of the standard [installation](./installation.md) paths - either Docker or an FHS environment.
 :::
 
-Hermes Agent ships a Nix flake, a NixOS module, and a Home Manager module.
+Relayhelm ships a Nix flake, a NixOS module, and a Home Manager module.
 
 | Level | Who it's for | What you get |
 |-------|-------------|--------------|
@@ -24,7 +24,7 @@ Hermes Agent ships a Nix flake, a NixOS module, and a Home Manager module.
 :::info What's different from the standard install
 The `curl | bash` installer manages Python, Node, and dependencies itself. The Nix flake replaces all of that — every Python dependency is a Nix derivation built by [uv2nix](https://github.com/pyproject-nix/uv2nix), and runtime tools (Node.js, git, ripgrep, ffmpeg) are wrapped into the binary's PATH. There is no runtime pip, no venv activation, no `npm install`.
 
-**For non-NixOS users**, this only changes the install step. Everything after (`hermes setup`, `hermes gateway install`, config editing) works identically to the standard install.
+**For non-NixOS users**, this only changes the install step. Everything after (`relayhelm setup`, `relayhelm gateway install`, config editing) works identically to the standard install.
 
 **For NixOS module users**, the entire lifecycle is different: configuration lives in `configuration.nix`, secrets go through sops-nix/agenix, the service is a systemd unit, and CLI config commands are blocked. You manage hermes the same way you manage any other NixOS service.
 :::
@@ -42,25 +42,25 @@ No clone needed. Nix fetches, builds, and runs everything:
 
 ```bash
 # Run the desktop app
-nix run github:NousResearch/hermes-agent#desktop
+nix run github:InSelfControll/relayhelm#desktop
 
 # Or install persistently
-nix profile install github:NousResearch/hermes-agent#desktop
+nix profile install github:InSelfControll/relayhelm#desktop
 
 # run the tui
-nix run github:NousResearch/hermes-agent -- setup
-nix run github:NousResearch/hermes-agent -- --tui
+nix run github:InSelfControll/relayhelm -- setup
+nix run github:InSelfControll/relayhelm -- --tui
 
 # or install it in your profile
-nix profile install github:NousResearch/hermes-agent
-hermes setup
-hermes --tui
+nix profile install github:InSelfControll/relayhelm
+relayhelm setup
+relayhelm --tui
 ```
 
-After `nix profile install`, `hermes`, `hermes-agent`, and `hermes-acp` are on your PATH. From here, the workflow is identical to the [standard installation](./installation.md) — `hermes setup` walks you through provider selection, `hermes gateway install` sets up a launchd (macOS) or systemd user service, and config lives in `~/.hermes/`.
+After `nix profile install`, `hermes`, `relayhelm`, and `hermes-acp` are on your PATH. From here, the workflow is identical to the [standard installation](./installation.md) — `relayhelm setup` walks you through provider selection, `relayhelm gateway install` sets up a launchd (macOS) or systemd user service, and config lives in `~/.relayhelm/`.
 
 :::warning Messaging platforms (Discord, Telegram, Slack)
-The default package includes ALL libraries hermes-agent might need. if you want a smaller variant, check the other flake outputs. 
+The default package includes ALL libraries relayhelm might need. if you want a smaller variant, check the other flake outputs.
 
 The `default` package adds ~700 MB to the closure. If you only need messaging platforms, `#messaging` adds just ~33 MB.
 
@@ -70,10 +70,10 @@ The `default` package adds ~700 MB to the closure. If you only need messaging pl
 <summary><strong>Running from a local clone</strong></summary>
 
 ```bash
-git clone https://github.com/NousResearch/hermes-agent.git
-cd hermes-agent
+git clone https://github.com/InSelfControll/relayhelm.git
+cd relayhelm
 nix develop
-hermes setup
+relayhelm setup
 ```
 
 </details>
@@ -85,7 +85,7 @@ hermes setup
 The flake exports `nixosModules.default` — a full NixOS service module that declaratively manages user creation, directories, config generation, secrets, documents, and service lifecycle.
 
 :::note
-This module needs NixOS. Hermes is an agent for one person. If you want an agent for one person and not a system service, use the [Home Manager module](#home-manager-module). That module runs on NixOS and on each other system that Home Manager supports.
+This module needs NixOS. Relayhelm is an agent for one person. If you want an agent for one person and not a system service, use the [Home Manager module](#home-manager-module). That module runs on NixOS and on each other system that Home Manager supports.
 :::
 
 ### Add the Flake Input
@@ -95,14 +95,14 @@ This module needs NixOS. Hermes is an agent for one person. If you want an agent
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    hermes-agent.url = "github:NousResearch/hermes-agent";
+    relayhelm.url = "github:InSelfControll/relayhelm";
   };
 
-  outputs = { nixpkgs, hermes-agent, ... }: {
+  outputs = { nixpkgs, relayhelm, ... }: {
     nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        hermes-agent.nixosModules.default
+        relayhelm.nixosModules.default
         ./configuration.nix
       ];
     };
@@ -115,7 +115,7 @@ This module needs NixOS. Hermes is an agent for one person. If you want an agent
 ```nix
 # configuration.nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.relayhelm = {
     enable = true;
     settings.model.default = "anthropic/claude-sonnet-4";
     environmentFiles = [ config.sops.secrets."hermes-env".path ];
@@ -134,12 +134,12 @@ echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o hermes /dev/s
 ```
 
 ```nix
-services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
+services.relayhelm.environmentFiles = [ "/var/lib/hermes/env" ];
 ```
 :::
 
 :::tip addToSystemPackages
-Setting `addToSystemPackages = true` does two things: puts the `hermes` CLI on your system PATH **and** sets `HERMES_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `hermes` in your shell creates a separate `~/.hermes/` directory.
+Setting `addToSystemPackages = true` does two things: puts the `hermes` CLI on your system PATH **and** sets `HERMES_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `hermes` in your shell creates a separate `~/.relayhelm/` directory.
 :::
 
 ### Container-aware CLI
@@ -147,15 +147,15 @@ Setting `addToSystemPackages = true` does two things: puts the `hermes` CLI on y
 :::info
 When `container.enable = true` and `addToSystemPackages = true`, **every** `hermes` command on the host automatically routes into the managed container. This means your interactive CLI session runs inside the same environment as the gateway service — with access to all container-installed packages and tools.
 
-- The routing is transparent: `hermes chat`, `hermes sessions list`, `hermes --version`, etc. all exec into the container under the hood
+- The routing is transparent: `relayhelm chat`, `hermes sessions list`, `relayhelm --version`, etc. all exec into the container under the hood
 - All CLI flags are forwarded as-is
 - If the container isn't running, the CLI retries briefly (5s with a spinner for interactive use, 10s silently for scripts) then fails with a clear error — no silent fallback
 - For developers working on the hermes codebase, set `HERMES_DEV=1` to bypass container routing and run the local checkout directly
 
-Set `container.hostUsers` to create a `~/.hermes` symlink to the service state directory, so the host CLI and the container share sessions, config, and memories:
+Set `container.hostUsers` to create a `~/.relayhelm` symlink to the service state directory, so the host CLI and the container share sessions, config, and memories:
 
 ```nix
-services.hermes-agent = {
+services.relayhelm = {
   container.enable = true;
   container.hostUsers = [ "your-username" ];
   addToSystemPackages = true;
@@ -176,7 +176,7 @@ security.sudo.extraRules = [{
 }];
 ```
 
-The CLI auto-detects when sudo is needed and uses it transparently. Without this, you'll need to run `sudo hermes chat` manually.
+The CLI auto-detects when sudo is needed and uses it transparently. Without this, you'll need to run `sudo relayhelm chat` manually.
 :::
 
 ### Verify It Works
@@ -185,14 +185,14 @@ After `nixos-rebuild switch`, check that the service is running:
 
 ```bash
 # Check service status
-systemctl status hermes-agent
+systemctl status relayhelm
 
 # Watch logs (Ctrl+C to stop)
-journalctl -u hermes-agent -f
+journalctl -u relayhelm -f
 
 # If addToSystemPackages is true, test the CLI
-hermes --version
-hermes config       # shows the generated config
+relayhelm --version
+relayhelm config       # shows the generated config
 ```
 
 ### Choosing a Deployment Mode
@@ -211,7 +211,7 @@ To enable container mode, add one line:
 
 ```nix
 {
-  services.hermes-agent = {
+  services.relayhelm = {
     enable = true;
     container.enable = true;
     # ... rest of config is identical
@@ -233,14 +233,14 @@ The `settings` option accepts an arbitrary attrset that is rendered as `config.y
 
 ```nix
 # base.nix
-services.hermes-agent.settings = {
+services.relayhelm.settings = {
   model.default = "anthropic/claude-sonnet-4";
   toolsets = [ "all" ];
   terminal = { backend = "local"; timeout = 180; };
 };
 
 # personality.nix
-services.hermes-agent.settings = {
+services.relayhelm.settings = {
   display = { compact = false; personality = "kawaii"; };
   memory = { memory_enabled = true; user_profile_enabled = true; };
 };
@@ -249,7 +249,7 @@ services.hermes-agent.settings = {
 Both are deep-merged at evaluation time. Nix-declared keys always win over keys in an existing `config.yaml` on disk, but **user-added keys that Nix doesn't touch are preserved**. This means if the agent or a manual edit adds keys like `skills.disabled` or `streaming.enabled`, they survive `nixos-rebuild switch`.
 
 :::note Model naming
-`settings.model.default` uses the model identifier your provider expects. With [OpenRouter](https://openrouter.ai) (the default), these look like `"anthropic/claude-sonnet-4"` or `"google/gemini-3-flash"`. If you're using a provider directly (Anthropic, OpenAI), set `settings.model.base_url` to point at their API and use their native model IDs (e.g., `"claude-sonnet-4-20250514"`). When no `base_url` is set, Hermes defaults to OpenRouter.
+`settings.model.default` uses the model identifier your provider expects. With [OpenRouter](https://openrouter.ai) (the default), these look like `"anthropic/claude-sonnet-4"` or `"google/gemini-3-flash"`. If you're using a provider directly (Anthropic, OpenAI), set `settings.model.base_url` to point at their API and use their native model IDs (e.g., `"claude-sonnet-4-20250514"`). When no `base_url` is set, Relayhelm defaults to OpenRouter.
 :::
 
 :::tip Discovering available config keys
@@ -261,7 +261,7 @@ Run `nix build .#configKeys && cat result` to see every leaf config key extracte
 
 ```nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.relayhelm = {
     enable = true;
     container.enable = true;
 
@@ -325,7 +325,7 @@ Run `nix build .#configKeys && cat result` to see every leaf config key extracte
 If you'd rather manage `config.yaml` entirely outside Nix, use `configFile`:
 
 ```nix
-services.hermes-agent.configFile = /etc/hermes/config.yaml;
+services.relayhelm.configFile = /etc/hermes/config.yaml;
 ```
 
 This bypasses `settings` entirely — no merge, no generation. The file is copied as-is to `$HERMES_HOME/config.yaml` on each activation.
@@ -350,7 +350,7 @@ Quick reference for the most common things Nix users want to customize:
 | Share state between host CLI and container | `container.hostUsers` | `[ "sidbin" ]` |
 | Make extra tools available to the agent | `extraPackages` | `[ pkgs.pandoc pkgs.imagemagick ]` |
 | Use a custom base image | `container.image` | `"ubuntu:24.04"` |
-| Override the hermes package | `package` | `inputs.hermes-agent.packages.${system}.default.override { ... }` |
+| Override the hermes package | `package` | `inputs.relayhelm.packages.${system}.default.override { ... }` |
 | Change state directory | `stateDir` | `"/opt/hermes"` |
 | Set the agent's working directory | `workingDirectory` | `"/home/user/projects"` |
 
@@ -362,7 +362,7 @@ Quick reference for the most common things Nix users want to customize:
 Values in Nix expressions end up in `/nix/store`, which is world-readable. Always use `environmentFiles` with a secrets manager.
 :::
 
-Both `environment` (non-secret vars) and `environmentFiles` (secret files) are merged into `$HERMES_HOME/.env` at activation time (`nixos-rebuild switch`). Hermes reads this file on every startup, so changes take effect with a `systemctl restart hermes-agent` — no container recreation needed.
+Both `environment` (non-secret vars) and `environmentFiles` (secret files) are merged into `$HERMES_HOME/.env` at activation time (`nixos-rebuild switch`). Relayhelm reads this file on every startup, so changes take effect with a `systemctl restart relayhelm` — no container recreation needed.
 
 ### sops-nix
 
@@ -374,7 +374,7 @@ Both `environment` (non-secret vars) and `environmentFiles` (secret files) are m
     secrets."hermes-env" = { format = "yaml"; };
   };
 
-  services.hermes-agent.environmentFiles = [
+  services.relayhelm.environmentFiles = [
     config.sops.secrets."hermes-env".path
   ];
 }
@@ -396,7 +396,7 @@ hermes-env: |
 {
   age.secrets.hermes-env.file = ./secrets/hermes-env.age;
 
-  services.hermes-agent.environmentFiles = [
+  services.relayhelm.environmentFiles = [
     config.age.secrets.hermes-env.path
   ];
 }
@@ -408,7 +408,7 @@ For platforms requiring OAuth (e.g., Discord), use `authFile` to seed credential
 
 ```nix
 {
-  services.hermes-agent = {
+  services.relayhelm = {
     authFile = config.sops.secrets."hermes/auth.json".path;
     # authFileForceOverwrite = true;  # overwrite on every activation
   };
@@ -421,13 +421,13 @@ The file is only copied if `auth.json` doesn't already exist (unless `authFileFo
 
 ## Documents
 
-Hermes reads files from two directories. Thus there are two options. Use the option for the directory that the file must go into.
+Relayhelm reads files from two directories. Thus there are two options. Use the option for the directory that the file must go into.
 
 `documents` installs into the **working directory** of the agent, which is `workingDirectory`. The agent reads its project context from that workspace:
 
 ```nix
 {
-  services.hermes-agent = {
+  services.relayhelm = {
     # documents needs this option. Read the note below.
     workingDirectory = "/var/lib/hermes/workspace";
     documents = {
@@ -446,11 +446,11 @@ files in a directory that you did not select. A directory with the same path as
 the default is a correct selection, and it satisfies the rule.
 :::
 
-`hermesHomeFiles` installs into **`HERMES_HOME`**. Hermes reads the identity file and the memory files of the agent from that directory. `SOUL.md` and `memories/` work only from there. A `SOUL.md` in `documents` makes a workspace file. Hermes does not load that file as the identity:
+`hermesHomeFiles` installs into **`HERMES_HOME`**. Relayhelm reads the identity file and the memory files of the agent from that directory. `SOUL.md` and `memories/` work only from there. A `SOUL.md` in `documents` makes a workspace file. Relayhelm does not load that file as the identity:
 
 ```nix
 {
-  services.hermes-agent.hermesHomeFiles = {
+  services.relayhelm.hermesHomeFiles = {
     "SOUL.md" = "You are a helpful AI assistant.";
     "memories/USER.md" = ./documents/USER.md;
   };
@@ -471,7 +471,7 @@ The `mcpServers` option declaratively configures [MCP (Model Context Protocol)](
 
 ```nix
 {
-  services.hermes-agent.mcpServers = {
+  services.relayhelm.mcpServers = {
     filesystem = {
       command = "npx";
       args = [ "-y" "@modelcontextprotocol/server-filesystem" "/data/workspace" ];
@@ -493,7 +493,7 @@ Environment variables in `env` values are resolved from `$HERMES_HOME/.env` at r
 
 ```nix
 {
-  services.hermes-agent.mcpServers.remote-api = {
+  services.relayhelm.mcpServers.remote-api = {
     url = "https://mcp.example.com/v1/mcp";
     headers.Authorization = "Bearer \${MCP_REMOTE_API_KEY}";
     timeout = 180;
@@ -503,11 +503,11 @@ Environment variables in `env` values are resolved from `$HERMES_HOME/.env` at r
 
 ### HTTP Transport with OAuth
 
-Set `auth = "oauth"` for servers using OAuth 2.1. Hermes implements the full PKCE flow — metadata discovery, dynamic client registration, token exchange, and automatic refresh.
+Set `auth = "oauth"` for servers using OAuth 2.1. Relayhelm implements the full PKCE flow — metadata discovery, dynamic client registration, token exchange, and automatic refresh.
 
 ```nix
 {
-  services.hermes-agent.mcpServers.my-oauth-server = {
+  services.relayhelm.mcpServers.my-oauth-server = {
     url = "https://mcp.example.com/mcp";
     auth = "oauth";
   };
@@ -519,17 +519,17 @@ Tokens are stored in `$HERMES_HOME/mcp-tokens/<server-name>.json` and persist ac
 <details>
 <summary><strong>Initial OAuth authorization on headless servers</strong></summary>
 
-The first OAuth authorization requires a browser-based consent flow. In a headless deployment, Hermes prints the authorization URL to stdout/logs instead of opening a browser.
+The first OAuth authorization requires a browser-based consent flow. In a headless deployment, Relayhelm prints the authorization URL to stdout/logs instead of opening a browser.
 
 **Option A: Interactive bootstrap** — run the flow once via `docker exec` (container) or `sudo -u hermes` (native):
 
 ```bash
 # Container mode
-docker exec -it hermes-agent \
+docker exec -it relayhelm \
   hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 
 # Native mode
-sudo -u hermes HERMES_HOME=/var/lib/hermes/.hermes \
+sudo -u hermes HERMES_HOME=/var/lib/hermes/.relayhelm \
   hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 ```
 
@@ -539,8 +539,8 @@ The container uses `--network=host`, so the OAuth callback listener on `127.0.0.
 
 ```bash
 hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
-scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
-    server:/var/lib/hermes/.hermes/mcp-tokens/
+scp ~/.relayhelm/mcp-tokens/my-oauth-server{,.client}.json \
+    server:/var/lib/hermes/.relayhelm/mcp-tokens/
 # Ensure: chown hermes:hermes, chmod 0600
 ```
 
@@ -552,7 +552,7 @@ Some MCP servers can request LLM completions from the agent:
 
 ```nix
 {
-  services.hermes-agent.mcpServers.analysis = {
+  services.relayhelm.mcpServers.analysis = {
     command = "npx";
     args = [ "-y" "analysis-server" ];
     sampling = {
@@ -574,16 +574,16 @@ When hermes runs via the NixOS module, the following CLI commands are **blocked*
 
 | Blocked command | Why |
 |---|---|
-| `hermes setup` | Config is declarative — edit `settings` in your Nix config |
-| `hermes config edit` | Config is generated from `settings` |
-| `hermes config set <key> <value>` | Config is generated from `settings` |
-| `hermes gateway install` | The systemd service is managed by NixOS |
-| `hermes gateway uninstall` | The systemd service is managed by NixOS |
+| `relayhelm setup` | Config is declarative — edit `settings` in your Nix config |
+| `relayhelm config edit` | Config is generated from `settings` |
+| `relayhelm config set <key> <value>` | Config is generated from `settings` |
+| `relayhelm gateway install` | The systemd service is managed by NixOS |
+| `relayhelm gateway uninstall` | The systemd service is managed by NixOS |
 
 This prevents drift between what Nix declares and what's on disk. Detection uses two signals:
 
 1. **The `HERMES_MANAGED` environment variable.** The service sets it, and the gateway process reads it.
-2. **The `.managed` marker file** in `HERMES_HOME`. The activation script writes it, and an interactive shell reads it. Thus the CLI also blocks a command such as `docker exec -it hermes-agent hermes config set ...`.
+2. **The `.managed` marker file** in `HERMES_HOME`. The activation script writes it, and an interactive shell reads it. Thus the CLI also blocks a command such as `docker exec -it relayhelm relayhelm config set ...`.
 
 Both signals hold the name of the system that manages the install. Thus the refusal names the correct rebuild command. The NixOS module gives `sudo nixos-rebuild switch`. The Home Manager module gives `home-manager switch`.
 
@@ -591,17 +591,17 @@ Both signals hold the name of the system that manages the install. Thus the refu
 
 ## Home Manager Module
 
-The flake also exports `homeManagerModules.default`. Hermes is an agent for one person. The credentials, the memory, the sessions and the cron jobs all belong to that person. Thus a user service is the correct shape on a personal machine. It runs on each distribution that Home Manager supports, and not only on NixOS.
+The flake also exports `homeManagerModules.default`. Relayhelm is an agent for one person. The credentials, the memory, the sessions and the cron jobs all belong to that person. Thus a user service is the correct shape on a personal machine. It runs on each distribution that Home Manager supports, and not only on NixOS.
 
-The option set is the same set that the NixOS module uses. It is `services.hermes-agent`, with the same `settings`, `environmentFiles`, `documents`, `mcpServers`, `extraPlugins` and `backend` options. Each example above works here without a change. Only the necessary parts are different:
+The option set is the same set that the NixOS module uses. It is `services.relayhelm`, with the same `settings`, `environmentFiles`, `documents`, `mcpServers`, `extraPlugins` and `backend` options. Each example above works here without a change. Only the necessary parts are different:
 
 | | NixOS module | Home Manager module |
 |---|---|---|
 | Runs as | a system user that you declare, with `user`, `group` and `createUser` | you |
-| State directory | `stateDir` and `/.hermes` | `hermesHome`, set directly. The default is `~/.hermes`. |
+| State directory | `stateDir` and `/.relayhelm` | `hermesHome`, set directly. The default is `~/.relayhelm`. |
 | Service | `systemd.services` | `systemd.user.services` on Linux, `launchd.agents` on macOS |
-| CLI on the PATH | `addToSystemPackages`, which exports `HERMES_HOME` for the full system | `programs.hermes-agent.enable`, which exports it for your session only |
-| Desktop application | not supported, because a system service cannot own a user session | `programs.hermes-agent.desktop.enable` |
+| CLI on the PATH | `addToSystemPackages`, which exports `HERMES_HOME` for the full system | `programs.relayhelm.enable`, which exports it for your session only |
+| Desktop application | not supported, because a system service cannot own a user session | `programs.relayhelm.desktop.enable` |
 | Container mode | supported | not supported, because it needs root and the Docker socket |
 
 ### Add the Flake Input
@@ -612,7 +612,7 @@ The option set is the same set that the NixOS module uses. It is `services.herme
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    hermes-agent.url = "github:NousResearch/hermes-agent";
+    relayhelm.url = "github:InSelfControll/relayhelm";
   };
 }
 ```
@@ -621,9 +621,9 @@ Then import the module into your Home Manager configuration. The configuration c
 
 ```nix
 {
-  imports = [ hermes-agent.homeManagerModules.default ];
+  imports = [ relayhelm.homeManagerModules.default ];
 
-  services.hermes-agent = {
+  services.relayhelm = {
     enable = true;
     gateway.enable = true;
     settings.model.default = "anthropic/claude-sonnet-4";
@@ -632,7 +632,7 @@ Then import the module into your Home Manager configuration. The configuration c
 }
 ```
 
-`home-manager switch` makes `~/.hermes`, writes `config.yaml`, builds `.env` and starts the gateway as a user service.
+`home-manager switch` makes `~/.relayhelm`, writes `config.yaml`, builds `.env` and starts the gateway as a user service.
 
 :::warning Enable linger, or the service stops at logout
 CAUTION: Enable linger for your account. Without linger, systemd stops the user manager when your last session ends, and the gateway stops with it. Home Manager cannot set linger, because linger is a property of the account:
@@ -652,11 +652,11 @@ macOS has no equivalent option. A `launchd` agent with `RunAtLoad` starts at log
 
 ### Running the Desktop / Dashboard Backend
 
-`gateway.enable` runs the messaging gateway for Telegram, Discord, Slack and the other platforms. Hermes Desktop and the web dashboard connect to a *different* process, which is `hermes serve` or `hermes dashboard`. `backend.mode` runs that process with the gateway:
+`gateway.enable` runs the messaging gateway for Telegram, Discord, Slack and the other platforms. Relayhelm Desktop and the web dashboard connect to a *different* process, which is `relayhelm serve` or `relayhelm dashboard`. `backend.mode` runs that process with the gateway:
 
 ```nix
 {
-  services.hermes-agent = {
+  services.relayhelm = {
     enable = true;
     gateway.enable = true;      # messaging platforms
     backend.mode = "dashboard"; # + the browser dashboard on 127.0.0.1:9119
@@ -665,7 +665,7 @@ macOS has no equivalent option. A `launchd` agent with `RunAtLoad` starts at log
 }
 ```
 
-`serve` runs without a user interface. It gives the `/api/ws` and `/api/pty` sockets that Hermes Desktop connects to, and it does not build the web application. `dashboard` gives all of that, and also serves the browser admin panel. Both processes use one `HERMES_HOME` with the gateway. Thus the sessions, the skills, the memory and the cron jobs are the same for all of them. `backend.mode` works in the same way on the NixOS module, but not in container mode.
+`serve` runs without a user interface. It gives the `/api/ws` and `/api/pty` sockets that Relayhelm Desktop connects to, and it does not build the web application. `dashboard` gives all of that, and also serves the browser admin panel. Both processes use one `HERMES_HOME` with the gateway. Thus the sessions, the skills, the memory and the cron jobs are the same for all of them. `backend.mode` works in the same way on the NixOS module, but not in container mode.
 
 :::warning Binding to an address other than loopback
 The default address is `127.0.0.1`. Each other address starts the authentication gate of the dashboard. The server also refuses each request with a `Host` header that is different from the address that the server bound to. This is a defence against DNS rebinding. Bind to the name or the address that your client uses.
@@ -675,15 +675,15 @@ The default address is `127.0.0.1`. Each other address starts the authentication
 
 ```bash
 # Linux
-systemctl --user status hermes-agent
-journalctl --user -u hermes-agent -f
+systemctl --user status relayhelm
+journalctl --user -u relayhelm -f
 
 # macOS
 launchctl list | grep hermes
-tail -f ~/Library/Logs/hermes-agent.log
+tail -f ~/Library/Logs/relayhelm.log
 
-hermes --version
-hermes config     # shows the configuration that Nix wrote
+relayhelm --version
+relayhelm config     # shows the configuration that Nix wrote
 ```
 
 ---
@@ -700,12 +700,12 @@ When container mode is enabled, hermes runs inside a persistent Ubuntu container
 Host                                    Container
 ────                                    ─────────
 /nix/store/...-hermes-agent-0.1.0  ──►  /nix/store/... (ro)
-~/.hermes -> /var/lib/hermes/.hermes       (symlink bridge, per hostUsers)
+~/.relayhelm -> /var/lib/hermes/.relayhelm       (symlink bridge, per hostUsers)
 /var/lib/hermes/                    ──►  /data/          (rw)
   ├── current-package -> /nix/store/...    (symlink, updated each rebuild)
   ├── .gc-root -> /nix/store/...           (prevents nix-collect-garbage)
   ├── .container-identity                  (sha256 hash, triggers recreation)
-  ├── .hermes/                             (HERMES_HOME)
+  ├── .relayhelm/                             (HERMES_HOME)
   │   ├── .env                             (merged from environment + environmentFiles)
   │   ├── config.yaml                      (Nix-generated, deep-merged by activation)
   │   ├── .managed                         (marker file)
@@ -720,13 +720,13 @@ Host                                    Container
 Container writable layer (apt/pip/npm):   /usr, /usr/local, /tmp
 ```
 
-The Nix-built binary works inside the Ubuntu container because `/nix/store` is bind-mounted — it brings its own interpreter and all dependencies, so there's no reliance on the container's system libraries. The container entrypoint resolves through a `current-package` symlink: `/data/current-package/bin/hermes gateway run --replace`. On `nixos-rebuild switch`, only the symlink is updated — the container keeps running.
+The Nix-built binary works inside the Ubuntu container because `/nix/store` is bind-mounted — it brings its own interpreter and all dependencies, so there's no reliance on the container's system libraries. The container entrypoint resolves through a `current-package` symlink: `/data/current-package/bin/relayhelm gateway run --replace`. On `nixos-rebuild switch`, only the symlink is updated — the container keeps running.
 
 ### What Persists Across What
 
 | Event | Container recreated? | `/data` (state) | `/home/hermes` | Writable layer (`apt`/`pip`/`npm`) |
 |---|---|---|---|---|
-| `systemctl restart hermes-agent` | No | Persists | Persists | Persists |
+| `systemctl restart relayhelm` | No | Persists | Persists | Persists |
 | `nixos-rebuild switch` (code change) | No (symlink updated) | Persists | Persists | Persists |
 | Host reboot | No | Persists | Persists | Persists |
 | `nix-collect-garbage` | No (GC root) | Persists | Persists | Persists |
@@ -750,14 +750,14 @@ The `preStart` script creates a GC root at `${stateDir}/.gc-root` pointing to th
 
 ## Plugins
 
-The NixOS module supports declarative plugin installation — no imperative `hermes plugins install` needed.
+The NixOS module supports declarative plugin installation — no imperative `relayhelm plugins install` needed.
 
 ### Directory Plugins (`extraPlugins`)
 
 For plugins that are just a source tree with `plugin.yaml` + `__init__.py` (e.g., [hermes-lcm](https://github.com/stephenschoettler/hermes-lcm)):
 
 ```nix
-services.hermes-agent.extraPlugins = [
+services.relayhelm.extraPlugins = [
   (pkgs.fetchFromGitHub {
     owner = "stephenschoettler";
     repo = "hermes-lcm";
@@ -767,14 +767,14 @@ services.hermes-agent.extraPlugins = [
 ];
 ```
 
-Plugins are symlinked into `$HERMES_HOME/plugins/` at activation time. Hermes discovers them via its normal directory scan. Removing a plugin from the list and running `nixos-rebuild switch` removes the symlink.
+Plugins are symlinked into `$HERMES_HOME/plugins/` at activation time. Relayhelm discovers them via its normal directory scan. Removing a plugin from the list and running `nixos-rebuild switch` removes the symlink.
 
 ### Entry-Point Plugins (`extraPythonPackages`)
 
 For pip-packaged plugins that register via `[project.entry-points."hermes_agent.plugins"]` (e.g., [rtk-hermes](https://github.com/ogallotti/rtk-hermes)):
 
 ```nix
-services.hermes-agent.extraPythonPackages = [
+services.relayhelm.extraPythonPackages = [
   (pkgs.python312Packages.buildPythonPackage {
     pname = "rtk-hermes";
     version = "1.0.0";
@@ -794,16 +794,16 @@ The package's `site-packages` is added to PYTHONPATH in the hermes wrapper. `imp
 
 ### Optional Dependency Groups (`extraDependencyGroups`)
 
-For optional extras declared in hermes-agent's `pyproject.toml`, use `extraDependencyGroups` to include them in the sealed venv at build time. This is required for any extra not in the default `[all]` set — on Nix, runtime installation into the read-only store is not possible.
+For optional extras declared in relayhelm's `pyproject.toml`, use `extraDependencyGroups` to include them in the sealed venv at build time. This is required for any extra not in the default `[all]` set — on Nix, runtime installation into the read-only store is not possible.
 
 ```nix
 # Enable Discord, Telegram, Slack
-services.hermes-agent.extraDependencyGroups = [ "messaging" ];
+services.relayhelm.extraDependencyGroups = [ "messaging" ];
 ```
 
 ```nix
 # Enable a memory provider
-services.hermes-agent = {
+services.relayhelm = {
   extraDependencyGroups = [ "hindsight" ];
   settings.memory.provider = "hindsight";
 };
@@ -847,7 +847,7 @@ Or use the pre-built `#messaging` or `#full` flake packages instead of per-extra
 A directory plugin with third-party Python dependencies needs both options:
 
 ```nix
-services.hermes-agent = {
+services.relayhelm = {
   extraPlugins = [ my-plugin-src ];          # plugin source
   extraPythonPackages = [ pkgs.python312Packages.redis ];  # its Python dep
   extraPackages = [ pkgs.redis ];            # system binary it needs
@@ -860,12 +860,12 @@ External flakes can override the package directly:
 
 ```nix
 {
-  inputs.hermes-agent.url = "github:NousResearch/hermes-agent";
-  outputs = { hermes-agent, nixpkgs, ... }: {
-    nixpkgs.overlays = [ hermes-agent.overlays.default ];
+  inputs.relayhelm.url = "github:InSelfControll/relayhelm";
+  outputs = { relayhelm, nixpkgs, ... }: {
+    nixpkgs.overlays = [ relayhelm.overlays.default ];
     # Then:
-    #   pkgs.hermes-agent.override { extraPythonPackages = [...]; }
-    #   pkgs.hermes-agent.override { extraDependencyGroups = [ "hindsight" ]; }
+    #   pkgs.relayhelm.override { extraPythonPackages = [...]; }
+    #   pkgs.relayhelm.override { extraDependencyGroups = [ "hindsight" ]; }
   };
 }
 ```
@@ -875,7 +875,7 @@ External flakes can override the package directly:
 Plugins still need to be enabled in `config.yaml`. Add them via the declarative settings:
 
 ```nix
-services.hermes-agent.settings.plugins.enabled = [
+services.relayhelm.settings.plugins.enabled = [
   "hermes-lcm"
   "rtk-rewrite"
 ];
@@ -894,7 +894,7 @@ A build-time collision check prevents plugin packages from shadowing core hermes
 The flake provides a development shell with Python 3.12, uv, Node.js, and all runtime tools:
 
 ```bash
-cd hermes-agent
+cd relayhelm
 nix develop
 
 # Shell provides:
@@ -902,8 +902,8 @@ nix develop
 #   - Node.js 26, ripgrep, git, openssh, ffmpeg on PATH
 #   - Stamp-file optimization: re-entry is near-instant if deps haven't changed
 
-hermes setup
-hermes chat
+relayhelm setup
+relayhelm chat
 ```
 
 ### direnv (Recommended)
@@ -911,7 +911,7 @@ hermes chat
 The included `.envrc` activates the dev shell automatically:
 
 ```bash
-cd hermes-agent
+cd relayhelm
 direnv allow    # one-time
 # Subsequent entries are near-instant (stamp file skips dep install)
 ```
@@ -938,10 +938,10 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Check | What it tests |
 |---|---|
-| `package-contents` | `hermes` and `hermes-agent` binaries exist and `hermes --version` runs |
+| `package-contents` | `hermes` and `relayhelm` binaries exist and `relayhelm --version` runs |
 | `entry-points-sync` | Every `[project.scripts]` entry in `pyproject.toml` has a wrapped binary in the Nix package |
-| `cli-commands` | `hermes --help` exposes `gateway` and `config` subcommands |
-| `managed-guard` | `HERMES_MANAGED=true hermes config set ...` prints the NixOS error |
+| `cli-commands` | `relayhelm --help` exposes `gateway` and `config` subcommands |
+| `managed-guard` | `HERMES_MANAGED=true relayhelm config set ...` prints the NixOS error |
 | `bundled-skills` | Skills directory exists, contains SKILL.md files, `HERMES_BUNDLED_SKILLS` is set in wrapper |
 | `config-roundtrip` | 7 merge scenarios: fresh install, Nix override, user key preservation, mixed merge, MCP additive merge, nested deep merge, idempotency |
 
@@ -955,8 +955,8 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `enable` | `bool` | `false` | Enable the hermes-agent service |
-| `package` | `package` | `hermes-agent` | The hermes-agent package to use |
+| `enable` | `bool` | `false` | Enable the relayhelm service |
+| `package` | `package` | `relayhelm` | The relayhelm package to use |
 | `user` | `str` | `"hermes"` | System user |
 | `group` | `str` | `"hermes"` | System group |
 | `createUser` | `bool` | `true` | Auto-create user/group |
@@ -985,7 +985,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `documents` | `attrsOf (either str path)` | `{}` | Workspace files. Each key is a path relative to `workingDirectory`. You must set that option to use this one. |
-| `hermesHomeFiles` | `attrsOf (either str path)` | `{}` | Files that go into `HERMES_HOME`. `SOUL.md` and `memories/` must be here, or Hermes does not load them. |
+| `hermesHomeFiles` | `attrsOf (either str path)` | `{}` | Files that go into `HERMES_HOME`. `SOUL.md` and `memories/` must be here, or Relayhelm does not load them. |
 
 ### MCP Servers
 
@@ -1008,7 +1008,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `extraArgs` | `listOf str` | `[]` | Extra args for `hermes gateway` |
+| `extraArgs` | `listOf str` | `[]` | Extra args for `relayhelm gateway` |
 | `extraPackages` | `listOf package` | `[]` | Extra packages available to the agent. Added to the hermes user's per-user profile so terminal commands, skills, and cron jobs all see them |
 | `extraPlugins` | `listOf package` | `[]` | Directory plugin packages to symlink into `$HERMES_HOME/plugins/`. Each must contain `plugin.yaml` |
 | `extraPythonPackages` | `listOf package` | `[]` | Python packages added to PYTHONPATH for entry-point plugin discovery. Build with `python312Packages` |
@@ -1016,9 +1016,9 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 | `restart` | `str` | `"always"` | The systemd `Restart=` policy. macOS does not use it. |
 | `restartSec` | `int` | `5` | The systemd `RestartSec=` value. macOS does not use it. |
 
-### Backend (`hermes serve` / `hermes dashboard`)
+### Backend (`relayhelm serve` / `relayhelm dashboard`)
 
-This option runs the process that Hermes Desktop and the web dashboard connect to, with the gateway. You cannot use it with `container.enable`.
+This option runs the process that Relayhelm Desktop and the web dashboard connect to, with the gateway. You cannot use it with `container.enable`.
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -1031,30 +1031,30 @@ This option runs the process that Hermes Desktop and the web dashboard connect t
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `hermesHome` | `str` | `"${config.home.homeDirectory}/.hermes"` | `HERMES_HOME` directly. The NixOS module builds it from `stateDir`. |
+| `hermesHome` | `str` | `"${config.home.homeDirectory}/.relayhelm"` | `HERMES_HOME` directly. The NixOS module builds it from `stateDir`. |
 | `gateway.enable` | `bool` | `false` | Run the messaging gateway. On the NixOS module the gateway is the service, so that module has no such option. |
 
-### `programs.hermes-agent` (Home Manager only)
+### `programs.relayhelm` (Home Manager only)
 
 Home Manager separates "install this application for me" from "run this
-daemon". `services.hermes-agent` keeps the state, the configuration and the
-daemons. `programs.hermes-agent` installs what you use, and reads
+daemon". `services.relayhelm` keeps the state, the configuration and the
+daemons. `programs.relayhelm` installs what you use, and reads
 `hermesHome` and the backend address from the services.
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `enable` | `bool` | `false` | Add the `hermes` CLI to `home.packages`, and export `HERMES_HOME` for your shells |
-| `package` | `package` | `services.hermes-agent.package` | The package to install. The default applies `extraPythonPackages` and `extraDependencyGroups` from the services, so both are one build. |
-| `desktop.enable` | `bool` | `false` | Add the Hermes Desktop application, with a launcher entry on Linux |
-| `desktop.package` | `package` | `package.hermesDesktop` | The desktop package. The default follows `package`, so the application and the services run one Hermes runtime. |
+| `package` | `package` | `services.relayhelm.package` | The package to install. The default applies `extraPythonPackages` and `extraDependencyGroups` from the services, so both are one build. |
+| `desktop.enable` | `bool` | `false` | Add the Relayhelm Desktop application, with a launcher entry on Linux |
+| `desktop.package` | `package` | `package.hermesDesktop` | The desktop package. The default follows `package`, so the application and the services run one Relayhelm runtime. |
 
 ```nix
-programs.hermes-agent = {
+programs.relayhelm = {
   enable = true;
   desktop.enable = true;
 };
 
-services.hermes-agent = {
+services.relayhelm = {
   enable = true;
   backend.mode = "serve";
   backend.sessionTokenFile = config.sops.secrets."hermes/desktop-token".path;
@@ -1062,9 +1062,9 @@ services.hermes-agent = {
 ```
 
 The launcher carries `HERMES_HOME` itself. A desktop menu reads no shell
-profile, so the value that `programs.hermes-agent.enable` exports with
+profile, so the value that `programs.relayhelm.enable` exports with
 `home.sessionVariables` reaches an interactive shell only. Without the
-value in the launcher, the application opens `~/.hermes` while the
+value in the launcher, the application opens `~/.relayhelm` while the
 services use `hermesHome`, and you see no sessions and no keys.
 
 With `backend.sessionTokenFile`, the application connects to the backend
@@ -1072,7 +1072,7 @@ of the service instead of starting one of its own. Both sides read the
 file at start time, so the token enters no Nix store path. Without the
 option, each side runs its own backend.
 
-`services.hermes-agent.installPackage` was removed by this split. A
+`services.relayhelm.installPackage` was removed by this split. A
 configuration that still sets it gets an error that names the
 replacement.
 
@@ -1085,7 +1085,7 @@ replacement.
 | `container.image` | `str` | `"ubuntu:24.04"` | Base image (pulled at runtime) |
 | `container.extraVolumes` | `listOf str` | `[]` | Extra volume mounts (`host:container:mode`) |
 | `container.extraOptions` | `listOf str` | `[]` | Extra args passed to `docker create` |
-| `container.hostUsers` | `listOf str` | `[]` | Interactive users who get a `~/.hermes` symlink to the service stateDir and are auto-added to the `hermes` group |
+| `container.hostUsers` | `listOf str` | `[]` | Interactive users who get a `~/.relayhelm` symlink to the service stateDir and are auto-added to the `hermes` group |
 
 ---
 
@@ -1095,7 +1095,7 @@ replacement.
 
 ```
 /var/lib/hermes/                     # stateDir (owned by hermes:hermes, 0750)
-├── .hermes/                         # HERMES_HOME
+├── .relayhelm/                         # HERMES_HOME
 │   ├── SOUL.md                      # from hermesHomeFiles: the agent identity
 │   ├── config.yaml                  # Nix-generated (deep-merged each rebuild)
 │   ├── .managed                     # Marker: CLI config mutation blocked
@@ -1118,12 +1118,12 @@ replacement.
 ### Home Manager
 
 ```
-~/.hermes/                           # hermesHome (HERMES_HOME), 0700
+~/.relayhelm/                           # hermesHome (HERMES_HOME), 0700
 ├── SOUL.md                          # from hermesHomeFiles
 ├── config.yaml                      # written by Nix, merged at each activation
 ├── .managed                         # marker: names the system that manages this
 ├── .env                             # written again from environment + environmentFiles
-├── auth.json                        # OAuth credentials: seeded, then Hermes owns it
+├── auth.json                        # OAuth credentials: seeded, then Relayhelm owns it
 ├── memories/  sessions/  skills/  cron/  logs/  plugins/
 └── (runtime state)
 
@@ -1137,7 +1137,7 @@ Same layout, mounted into the container:
 
 | Container path | Host path | Mode | Notes |
 |---|---|---|---|
-| `/nix/store` | `/nix/store` | `ro` | Hermes binary + all Nix deps |
+| `/nix/store` | `/nix/store` | `ro` | Relayhelm binary + all Nix deps |
 | `/data` | `/var/lib/hermes` | `rw` | All state, config, workspace |
 | `/home/hermes` | `${stateDir}/home` | `rw` | Persistent agent home — `pip install --user`, tool caches |
 | `/usr`, `/usr/local`, `/tmp` | (writable layer) | `rw` | `apt`/`pip`/`npm` installs — persists across restarts, lost on recreation |
@@ -1148,7 +1148,7 @@ Same layout, mounted into the container:
 
 ```bash
 # Update the flake input (run from the directory containing flake.nix)
-cd /etc/nixos && nix flake update hermes-agent
+cd /etc/nixos && nix flake update relayhelm
 
 # Rebuild
 sudo nixos-rebuild switch          # for the NixOS module
@@ -1169,21 +1169,21 @@ All `docker` commands below work the same with `podman`. Substitute accordingly 
 
 ```bash
 # Both modes use the same systemd unit
-journalctl -u hermes-agent -f
+journalctl -u relayhelm -f
 
 # Container mode: also available directly
-docker logs -f hermes-agent
+docker logs -f relayhelm
 ```
 
 ### Container Inspection
 
 ```bash
-systemctl status hermes-agent
-docker ps -a --filter name=hermes-agent
-docker inspect hermes-agent --format='{{.State.Status}}'
-docker exec -it hermes-agent bash
-docker exec hermes-agent readlink /data/current-package
-docker exec hermes-agent cat /data/.container-identity
+systemctl status relayhelm
+docker ps -a --filter name=relayhelm
+docker inspect relayhelm --format='{{.State.Status}}'
+docker exec -it relayhelm bash
+docker exec relayhelm readlink /data/current-package
+docker exec relayhelm cat /data/.container-identity
 ```
 
 ### Force Container Recreation
@@ -1191,10 +1191,10 @@ docker exec hermes-agent cat /data/.container-identity
 If you need to reset the writable layer (fresh Ubuntu):
 
 ```bash
-sudo systemctl stop hermes-agent
-docker rm -f hermes-agent
+sudo systemctl stop relayhelm
+docker rm -f relayhelm
 sudo rm /var/lib/hermes/.container-identity
-sudo systemctl start hermes-agent
+sudo systemctl start relayhelm
 ```
 
 ### Verify Secrets Are Loaded
@@ -1203,16 +1203,16 @@ If the agent starts but can't authenticate with the LLM provider, check that the
 
 ```bash
 # Native mode
-sudo -u hermes cat /var/lib/hermes/.hermes/.env
+sudo -u hermes cat /var/lib/hermes/.relayhelm/.env
 
 # Container mode
-docker exec hermes-agent cat /data/.hermes/.env
+docker exec relayhelm cat /data/.relayhelm/.env
 ```
 
 ### GC Root Verification
 
 ```bash
-nix-store --query --roots $(docker exec hermes-agent readlink /data/current-package)
+nix-store --query --roots $(docker exec relayhelm readlink /data/current-package)
 ```
 
 ### Common Issues
@@ -1220,11 +1220,11 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Cannot save configuration: managed by NixOS` | CLI guards active | Edit `configuration.nix` and `nixos-rebuild switch` |
-| `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Check `journalctl -u hermes-agent` for `FeatureUnavailable` or `requirements not met` for the underlying error. |
+| `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Check `journalctl -u relayhelm` for `FeatureUnavailable` or `requirements not met` for the underlying error. |
 | Container recreated unexpectedly | `extraVolumes`, `extraOptions`, or `image` changed | Expected — writable layer resets. Reinstall packages or use a custom image |
-| `hermes --version` shows old version | Container not restarted | `systemctl restart hermes-agent` |
+| `relayhelm --version` shows old version | Container not restarted | `systemctl restart relayhelm` |
 | Permission denied on `/var/lib/hermes` | State dir is `0750 hermes:hermes` | Use `docker exec` or `sudo -u hermes` |
 | `nix-collect-garbage` removed hermes | GC root missing | Restart the service (preStart recreates the GC root) |
-| `no container with name or ID "hermes-agent"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |
+| `no container with name or ID "relayhelm"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |
 | `unable to find user hermes` | Container still starting (entrypoint hasn't created user yet) | Wait a few seconds and retry — the CLI retries automatically |
-| Tool added via `extraPackages` not found in terminal | Requires `nixos-rebuild switch` to update the per-user profile | Rebuild and restart: `nixos-rebuild switch && systemctl restart hermes-agent` |
+| Tool added via `extraPackages` not found in terminal | Requires `nixos-rebuild switch` to update the per-user profile | Rebuild and restart: `nixos-rebuild switch && systemctl restart relayhelm` |

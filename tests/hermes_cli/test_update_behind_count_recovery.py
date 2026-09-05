@@ -144,7 +144,7 @@ def _shallow_git(head_sha, fetch_head_sha):
         if cmd[:4] == ["git", "remote", "get-url", "origin"]:
             return MagicMock(
                 returncode=0,
-                stdout="https://github.com/NousResearch/hermes-agent.git\n",
+                stdout="https://github.com/InSelfControll/relayhelm.git\n",
             )
         if cmd[:3] == ["git", "rev-parse", "--is-shallow-repository"]:
             return MagicMock(returncode=0, stdout="true\n")
@@ -165,7 +165,7 @@ def test_shallow_checkout_recovers_exact_count(tmp_path):
     FAIL-BEFORE (class): reported UPDATE_AVAILABLE_NO_COUNT (or, further back,
     a fabricated 1) even though the compare API could count exactly.
     """
-    repo_dir = tmp_path / "hermes-agent"
+    repo_dir = tmp_path / "relayhelm"
     repo_dir.mkdir()
 
     with patch(
@@ -175,7 +175,7 @@ def test_shallow_checkout_recovers_exact_count(tmp_path):
 
 
 def test_shallow_checkout_offline_keeps_honest_sentinel(tmp_path):
-    repo_dir = tmp_path / "hermes-agent"
+    repo_dir = tmp_path / "relayhelm"
     repo_dir.mkdir()
 
     with patch(
@@ -188,7 +188,7 @@ def test_shallow_checkout_offline_keeps_honest_sentinel(tmp_path):
 
 
 def test_shallow_checkout_equal_tips_up_to_date_without_compare(tmp_path):
-    repo_dir = tmp_path / "hermes-agent"
+    repo_dir = tmp_path / "relayhelm"
     repo_dir.mkdir()
 
     with patch(

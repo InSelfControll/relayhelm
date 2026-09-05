@@ -1,4 +1,4 @@
-"""``hermes debug`` debug tools for Hermes Agent."""
+"""``hermes debug`` debug tools for Relayhelm."""
 
 import contextlib
 import datetime
@@ -30,7 +30,7 @@ _EMAIL_ADDRESS_RE = re.compile(
     r"(?![A-Za-z0-9._%+-])")
 _PASTE_RS_URL = "https://paste.rs/"  # primary; dpaste.com is the fallback
 _DPASTE_COM_URL = "https://dpaste.com/api/"
-_USER_AGENT = "hermes-agent/debug-share"
+_USER_AGENT = "relayhelm/debug-share"
 _MAX_LOG_BYTES = 512_000  # per log file for upload (paste.rs caps at ~1 MB)
 _AUTO_DELETE_SECONDS = 21600  # 6 hours
 
@@ -216,7 +216,7 @@ def _primary_log_path(log_name: str) -> Optional[Path]:
 # share`; a bare "(file not found)" would read as "the app logged nothing" and misdirect triage.
 _CLIENT_SIDE_LOGS = {
     "desktop": (
-        "written by Hermes Desktop on the machine running the app, not by this "
+        "written by Relayhelm Desktop on the machine running the app, not by this "
         "backend. If the desktop connects to a remote/docker/SSH backend, collect "
         "it on that client machine")}
 
@@ -494,13 +494,13 @@ def run_debug_share(args):
         print(f"\n  (failed to upload: {', '.join(result.failures)})")
     print(f"\n⏱  Pastes will auto-delete in {result.auto_delete_seconds // 3600} hours.\n"
           "To delete now:  hermes debug delete <url>\n"
-          "\nShare these links with the Hermes team for support.")
+          "\nShare these links with the Relayhelm team for support.")
 
 
 _NOUS_PRIVACY_NOTICE = """\
 ⚠️  --nous: This uploads your debug bundle to Nous-INTERNAL storage (AWS S3),
     NOT a public paste service. The following is included:
-  • System info (OS, Python/Hermes version, provider, which API keys are
+  • System info (OS, Python/Relayhelm version, provider, which API keys are
     configured — NOT the actual keys)
   • Full agent.log, gateway.log, and desktop.log (up to 512 KB each — likely
     contains conversation content, tool outputs, and file paths)
@@ -544,7 +544,7 @@ def _run_debug_share_nous(args, *, log_lines: int, redact: bool) -> None:
     print("\nShare this private link with the Nous team — only Nous staff "
           "(via Google login) can open it.\n"
           "\nPick up the discussion in:\n"
-          "  GitHub Issues        https://github.com/NousResearch/hermes-agent/issues\n"
+          "  GitHub Issues        https://github.com/InSelfControll/relayhelm/issues\n"
           "  Nous Portal Support  https://portal.nousresearch.com/help\n"
           "  Discord              https://discord.gg/NousResearch")
 

@@ -56,7 +56,7 @@ def _serialized_replacement(method):
 
 @contextmanager
 def _plugin_home_scope(home: Path):
-    """Bind discovery and loading to the manager's immutable Hermes home."""
+    """Bind discovery and loading to the manager's immutable Relayhelm home."""
     token = set_hermes_home_override(home)
     try:
         yield
@@ -220,7 +220,7 @@ class PluginLoaderMixin:
         """Warn about missing declared pip dependencies with an install hint — NEVER auto-install.
 
         See #64165.
-        python_dependencies is a declaration seam ONLY: Hermes validates and prints the requirements with an
+        python_dependencies is a declaration seam ONLY: Relayhelm validates and prints the requirements with an
         install hint but NEVER auto-installs them. The isolation design (constraints installs vs. vendored
         dirs vs. conflict-detection-and-refusal) is an explicitly deferred follow-up — see the round-2
         review on #64165 and #15220.
@@ -233,7 +233,7 @@ class PluginLoaderMixin:
         if missing:
             logger.warning(
                 "Plugin %s declares Python dependencies that are not "
-                "installed: %s. Hermes does not install plugin dependencies "
+                "installed: %s. Relayhelm does not install plugin dependencies "
                 "automatically; install them yourself, e.g.: pip install %s",
                 key, ", ".join(missing), " ".join(f"'{m}'" for m in missing),
             )
@@ -376,8 +376,13 @@ class PluginLoaderMixin:
         lookup_key = manifest_key(manifest)
         try:
             from hermes_cli.agent_plugins import load_agent_plugin
-            package = load_agent_plugin(
-                Path(manifest.path), get_hermes_home() / "plugin-data" / manifest.skill_namespace)
+            from hermes_cli.host_plugin_compat import manifest_path, load_package, make_hook
+            root = Path(manifest.path)
+            data_root = get_hermes_home() / "plugin-data" / manifest.skill_namespace
+            if manifest_path(root) is not None:
+                package, hooks = load_package(root, data_root)
+            else:
+                package, hooks = load_agent_plugin(root, data_root), []
             ctx = PluginContext(manifest, self)
             for diagnostic in package.diagnostics:
                 logger.warning("Agent Plugin '%s' [%s]: %s", lookup_key, diagnostic.scope, diagnostic.message)
@@ -392,8 +397,17 @@ class PluginLoaderMixin:
                     logger.warning("Agent Plugin '%s' MCP server collision: %s", lookup_key, internal_name)
                     continue
                 self._portable_mcp_servers[internal_name] = dict(config)
+                from hermes_cli.host_plugin_compat import release_mcp_server
+                ctx._track("mcp_server", internal_name,
+                           lambda name=internal_name: release_mcp_server(self, name))
+            from hermes_cli.host_plugin_compat import EVENTS
+            for event, hook, matcher in hooks:
+                ctx.register_hook(EVENTS[event], make_hook(package.root, package.data_root, event, hook, matcher))
             loaded.enabled = True
         except Exception as exc:
+            owned = [r for r in self._registration_order if r.plugin_key == lookup_key]
+            self._dispose_registrations(owned)
+            self._forget_registrations(owned)
             loaded.error = str(exc)
             logger.warning("Failed to load Agent Plugin '%s': %s", lookup_key, exc)
         self._plugins[lookup_key] = loaded
@@ -432,7 +446,7 @@ class PluginLoaderMixin:
             ns_pkg.__package__ = _NS_PARENT
             sys.modules[_NS_PARENT] = ns_pkg
         module_name = module_name or self._directory_module_name(manifest)
-        # Evict stale entries for this slug (same slug cached from another Hermes home, or an earlier force
+        # Evict stale entries for this slug (same slug cached from another Relayhelm home, or an earlier force
         # reload). Replacing only sys.modules[module_name] is not enough: the plugin's relative imports are
         # cached as "module_name.sub" and resolve from sys.modules first, so a stale submodule would keep
         # serving the previous load's code/state.

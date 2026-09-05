@@ -2,7 +2,7 @@
 
 ``resolve_anthropic_token()`` order: ``ANTHROPIC_TOKEN`` / ``CLAUDE_CODE_OAUTH_TOKEN``,
 ``ANTHROPIC_API_KEY``, ``~/.claude/.credentials.json`` / macOS Keychain, then the
-``auth.json`` credential pool. ``~/.hermes/.anthropic_oauth.json`` (Hermes PKCE) and
+``auth.json`` credential pool. ``~/.relayhelm/.anthropic_oauth.json`` (Relayhelm PKCE) and
 the Claude Code file are *singletons*: ``credential_pool._seed_from_singletons()``
 re-reads them on every ``load_pool()``, so a failed write here is a failed refresh
 (``CredentialPersistError``), not a cache miss.
@@ -116,7 +116,7 @@ _SPENT_ROTATION_FINGERPRINTS: "OrderedDict[str, None]" = OrderedDict()
 _SPENT_ROTATION_MAX_TRACKED = 64
 _SPENT_ROTATION_SIDECAR_COMMENT = (
     "Non-secret one-way fingerprints of Anthropic OAuth credentials whose rotation was "
-    "consumed server-side but never durably committed. Written by Hermes so sibling "
+    "consumed server-side but never durably committed. Written by Relayhelm so sibling "
     "processes sharing this credential source fail closed instead of replaying a spent "
     "single-use refresh token."
 )
@@ -413,7 +413,7 @@ def _resolve_claude_code_token_from_credentials(creds: Optional[Dict[str, Any]] 
 
 
 def _prefer_refreshable_claude_code_token(env_token: str, creds: Optional[Dict[str, Any]]) -> Optional[str]:
-    """Prefer refreshable Claude Code creds over a static env OAuth token: Hermes historically persisted setup tokens
+    """Prefer refreshable Claude Code creds over a static env OAuth token: Relayhelm historically persisted setup tokens
     into ANTHROPIC_TOKEN, and that static token would otherwise win before the refreshable file is inspected."""
     if not (env_token and _is_oauth_token(env_token) and isinstance(creds, dict) and creds.get("refreshToken")):
         return None
@@ -481,7 +481,7 @@ def run_oauth_setup_token() -> Optional[str]:
     return _first_env("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_TOKEN") or None
 
 
-# ── Hermes-native PKCE OAuth flow (~/.hermes/.anthropic_oauth.json); mirrors Claude Code / pi-ai / OpenCode ──
+# ── Hermes-native PKCE OAuth flow (~/.relayhelm/.anthropic_oauth.json); mirrors Claude Code / pi-ai / OpenCode ──
 
 
 def _get_hermes_oauth_file() -> Path:
@@ -518,7 +518,7 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
     }
     auth_url = f"https://claude.ai/oauth/authorize?{urlencode(params)}"
     print("\n".join([
-        "", "Authorize Hermes with your Claude Pro/Max subscription.", "",
+        "", "Authorize Relayhelm with your Claude Pro/Max subscription.", "",
         "╭─ Claude Pro/Max Authorization ────────────────────╮",
         "│                                                   │",
         "│  Open this link in your browser:                  │",
@@ -562,20 +562,20 @@ def run_hermes_oauth_login_pure() -> Optional[Dict[str, Any]]:
 
 
 def read_hermes_oauth_credentials() -> Optional[Dict[str, Any]]:
-    """Read Hermes-managed OAuth credentials from ~/.hermes/.anthropic_oauth.json."""
-    data = _load_json_if_exists(_get_hermes_oauth_file(), "Hermes OAuth credentials")
+    """Read Hermes-managed OAuth credentials from ~/.relayhelm/.anthropic_oauth.json."""
+    data = _load_json_if_exists(_get_hermes_oauth_file(), "Relayhelm OAuth credentials")
     return data if data is not None and data.get("accessToken") else None
 
 
 def _write_hermes_oauth_credentials(
     access_token: str, refresh_token: Optional[str], expires_at_ms: Optional[int], *, target: Optional[Path] = None
 ) -> None:
-    """Commit refreshed hermes_pkce tokens to ~/.hermes/.anthropic_oauth.json (``CredentialPersistError`` on failure).
+    """Commit refreshed hermes_pkce tokens to ~/.relayhelm/.anthropic_oauth.json (``CredentialPersistError`` on failure).
     ``target`` lets a named profile commit a grant it BORROWED from the global root back to the ROOT singleton
     instead of forking a copy under its own HERMES_HOME; without this write-through the next ``load_pool()``
     re-seeds the stale (consumed) pair from the file over the rotated pool entry."""
     _commit_private_json(
         target if target is not None else _get_hermes_oauth_file(),
         {"accessToken": access_token, "refreshToken": refresh_token, "expiresAt": expires_at_ms},
-        "Hermes OAuth credentials",
+        "Relayhelm OAuth credentials",
     )

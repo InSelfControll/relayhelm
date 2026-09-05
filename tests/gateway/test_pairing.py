@@ -67,7 +67,7 @@ class TestProfileScopedDiscovery:
         ):
             store = PairingStore(profile="alice")
             # Scoped under the mocked root's profile dir, using the same
-            # consolidated layout a standalone `hermes -p alice` resolves —
+            # consolidated layout a standalone `relayhelm -p alice` resolves —
             # and provably distinct from the module-global PAIRING_DIR.
             assert store._dir == home / "profiles" / "alice" / "platforms" / "pairing"
             assert store._dir != global_dir
@@ -556,7 +556,7 @@ class TestUnreadablePairingFile:
 
 class TestProfileScopedStorage:
     """PairingStore(profile="<name>") should isolate per-profile whitelists
-    under each profile's own Hermes home so a multiplexing gateway can keep
+    under each profile's own Relayhelm home so a multiplexing gateway can keep
     every profile's allowlist separate.
     """
 
@@ -600,7 +600,7 @@ class TestProfileScopedStorage:
         assert second_store._dir == second_home / "platforms" / "pairing"
 
     def test_profile_store_uses_profiles_subdir(self, tmp_path, monkeypatch):
-        """Explicit profile stores use that profile's normal Hermes layout."""
+        """Explicit profile stores use that profile's normal Relayhelm layout."""
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
         store = PairingStore(profile="yangyang")
         assert store.profile == "yangyang"
@@ -611,7 +611,7 @@ class TestProfileScopedStorage:
         assert expected.is_dir()
 
     def test_profile_store_matches_profile_cli_home(self, tmp_path, monkeypatch):
-        """Gateway and ``hermes -p`` must resolve the same pairing store."""
+        """Gateway and ``relayhelm -p`` must resolve the same pairing store."""
         from hermes_constants import get_hermes_dir
 
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))

@@ -1695,7 +1695,7 @@ def create_openai_client(agent, client_kwargs: dict, *, reason: str, shared: boo
     _validate_base_url(client_kwargs.get("base_url"))
     # Provider-supplied client (registration seam): a provider whose wire protocol is not
     # OpenAI-over-HTTP supplies its own client from ProviderProfile.create_client(). Consulted
-    # before the built-in ladder so a profile registered from ~/.hermes/plugins/ or a pip entry
+    # before the built-in ladder so a profile registered from ~/.relayhelm/plugins/ or a pip entry
     # point can ship a transport without editing this function (what makes an out-of-tree ACP
     # provider possible). None (the default) falls through, so existing providers are unaffected.
     provider_client = _provider_supplied_client(agent, client_kwargs)
@@ -1744,7 +1744,7 @@ def create_openai_client(agent, client_kwargs: dict, *, reason: str, shared: boo
     if agent.provider == "opencode-free":
         from hermes_cli.models import opencode_zen_free_headers
         client_kwargs["default_headers"] = {**(client_kwargs.get("default_headers") or {}), **opencode_zen_free_headers()}
-    # All primary construction and recovery paths must identify Hermes to the official Codex
+    # All primary construction and recovery paths must identify Relayhelm to the official Codex
     # endpoint, including snapshots with custom header overrides.
     from agent.codex_headers import apply_required_codex_headers
     apply_required_codex_headers(
@@ -2770,7 +2770,7 @@ def _realign_tool_result_names(messages: List[Dict[str, Any]]) -> List[Dict[str,
     #   ``tool_name_by_call_id`` over the result name; requests that reach Gemini through the
     #   OpenAI-compatible path (OpenRouter, Vertex/LiteLLM proxies, any OpenAI-shaped gateway) skip that
     #   translation entirely and still send the internal name on the wire. Normalizing here rather than in
-    #   the OpenAI-compat serializer keeps it provider-agnostic: Gemini reaches Hermes under many model
+    #   the OpenAI-compat serializer keeps it provider-agnostic: Gemini reaches Relayhelm under many model
     #   strings and base URLs, so sniffing for "is this really Google?" is unreliable, and every other
     #   provider either ignores the field or agrees with the call name. Runs on the per-call copy, so the
     #   stored trajectory keeps the real tool name for the session DB and the UI — only the wire payload

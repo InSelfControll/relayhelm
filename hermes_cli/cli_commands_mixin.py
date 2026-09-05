@@ -165,14 +165,14 @@ _CRON_SUBCOMMANDS = {
 _ON_WORDS = {"on", "enable", "true", "1"}
 _OFF_WORDS = {"off", "disable", "false", "0"}
 
-# /busy mode -> what Enter does while Hermes is working (status line / post-set explanation).
+# /busy mode -> what Enter does while Relayhelm is working (status line / post-set explanation).
 _BUSY_MODE_SHORT = {
     "queue": "queues for next turn", "steer": "steers into current run (after next tool call)",
     "interrupt": "redirects current run immediately"}
 _BUSY_MODE_LONG = {
-    "queue": "Enter will queue follow-up input while Hermes is busy.",
+    "queue": "Enter will queue follow-up input while Relayhelm is busy.",
     "steer": "Enter will steer your message into the current run (after the next tool call).",
-    "interrupt": "Enter will redirect the current run while Hermes is busy; /stop still cancels it.",
+    "interrupt": "Enter will redirect the current run while Relayhelm is busy; /stop still cancels it.",
 }
 
 # /fast argument -> (service_tier value, persisted config value)
@@ -373,11 +373,11 @@ def _print_side_result_panel(cli, *, header_lines, body, title_suffix, empty_not
     try:
         from hermes_cli.skin_engine import get_active_skin
         _skin = get_active_skin()
-        label = _skin.get_branding("response_label", "⚕ Hermes")
+        label = _skin.get_branding("response_label", "⚕ Relayhelm")
         _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#CD7F32"))
         _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#FFF8DC"))
     except Exception:
-        label, _resp_color, _resp_text = "⚕ Hermes", "#CD7F32", "#FFF8DC"
+        label, _resp_color, _resp_text = "⚕ Relayhelm", "#CD7F32", "#FFF8DC"
     ChatConsole().print(Panel(
         _render_final_assistant_content(body, mode=cli.final_response_markdown),
         title=f"[{_resp_color} bold]{label} {title_suffix}[/]", title_align="left",
@@ -617,7 +617,7 @@ class CLICommandsMixin:
         A restore also undoes the last chat turn; ``--all`` overwrites user hand-edits too."""
         from tools.checkpoint_manager import format_checkpoint_list
         mgr = self._checkpoint_manager((
-            "  Checkpoints are not enabled.", "  Enable with: hermes --checkpoints",
+            "  Checkpoints are not enabled.", "  Enable with: relayhelm --checkpoints",
             "  Or in config.yaml: checkpoints: { enabled: true }"))
         if mgr is None:
             return
@@ -700,7 +700,7 @@ class CLICommandsMixin:
     # ---- /diff ----------------------------------------------------------------------------
     def _handle_diff_command(self, command: str):
         """Handle /diff [working|staged|all|session] [--stat] [<path>...] — git changes in the
-        cwd; ``session`` is everything Hermes changed since the checkpoint baseline."""
+        cwd; ``session`` is everything Relayhelm changed since the checkpoint baseline."""
         stat_only = False
         mode = "working"
         paths: list[str] = []
@@ -747,7 +747,7 @@ class CLICommandsMixin:
         """Print the cumulative checkpoint-baseline diff (/diff session)."""
         mgr = self._checkpoint_manager((
             "  Checkpoints are not enabled, so there's no session baseline.",
-            "  Enable with: hermes --checkpoints",
+            "  Enable with: relayhelm --checkpoints",
             "  Or in config.yaml: checkpoints: { enabled: true }",
             "  (Plain /diff still works — it uses git directly.)"))
         if mgr is None:
@@ -757,7 +757,7 @@ class CLICommandsMixin:
             return print(f"  {result.get('error', 'Could not generate diff')}")
         stat, diff = result.get("stat", ""), result.get("diff", "")
         if result.get("empty") or (not stat and not diff):
-            return print("  No changes — Hermes hasn't edited any files here yet.")
+            return print("  No changes — Relayhelm hasn't edited any files here yet.")
         if stat:
             self._print_diff_text(f"\n{stat}")
         if diff and not stat_only:
@@ -862,7 +862,7 @@ class CLICommandsMixin:
         try:
             result = export_profile(name, output or str(get_profile_export_path(name)))
             _pr(f"  ✓ Exported '{name}' to {result}",
-                "  Share it: the other user runs /import or `hermes profile import <archive>`.")
+                "  Share it: the other user runs /import or `relayhelm profile import <archive>`.")
         except (ValueError, FileNotFoundError, OSError) as e:
             print(f"  Error: {e}")
 
@@ -884,7 +884,7 @@ class CLICommandsMixin:
                 wrapper_path = create_wrapper_script(imported)
                 if wrapper_path:
                     print(f"  Wrapper created: {wrapper_path}")
-        print(f"  Use it: hermes -p {imported}")
+        print(f"  Use it: relayhelm -p {imported}")
 
     # ---- /stop, /agents -------------------------------------------------------------------
     def _handle_stop_command(self):
@@ -1045,7 +1045,7 @@ class CLICommandsMixin:
             _cp(_dim_line(f'Now type your prompt (or use --image in single-query mode): {_remainder}'))
         elif _is_termux_environment():
             example = _termux_example_image_path(image_path.name)
-            tip = f'Tip: type your next message, or run hermes chat -q --image {example} "What do you see?"'
+            tip = f'Tip: type your next message, or run relayhelm chat -q --image {example} "What do you see?"'
             _cp(_dim_line(tip))
 
     # ---- /tools, /profile -----------------------------------------------------------------
@@ -1249,7 +1249,7 @@ class CLICommandsMixin:
         except Exception:
             pass
         return self._handoff_keep(
-            "  Timed out waiting for the gateway. Is `hermes gateway` running?",
+            "  Timed out waiting for the gateway. Is `relayhelm gateway` running?",
             "  Your CLI session is intact.")
 
     # ---- /resume, /sessions, /branch ------------------------------------------------------
@@ -1408,7 +1408,7 @@ class CLICommandsMixin:
     # ---- /worktree ------------------------------------------------------------------------
     def _handle_worktree_command(self, cmd_original: str) -> None:
         """Handle /worktree [new [name]|list|prune [--dry-run]] — isolated git worktrees.
-        ``new`` moves this session into the tree (as ``hermes -w``: kept on exit only with
+        ``new`` moves this session into the tree (as ``relayhelm -w``: kept on exit only with
         unpushed commits); ``prune`` never deletes tracked changes, unique commits, or in-use trees."""
         import cli as _cli
         parts = cmd_original.split(None, 2)
@@ -1481,13 +1481,13 @@ class CLICommandsMixin:
         wt_info = _cli._setup_worktree(repo_root=repo_root, sync_base=sync_base, name=rest or None)
         if not wt_info:
             return  # _setup_worktree already printed the failure
-        # Retarget the session's terminal/file tools at the new tree (as `hermes -w` does).
+        # Retarget the session's terminal/file tools at the new tree (as `relayhelm -w` does).
         try:
             os.chdir(wt_info["path"])
         except OSError as e:
             print(f"  ⚠ Created worktree but could not enter it: {e}")
         os.environ["TERMINAL_CWD"] = wt_info["path"]
-        # Same keep-if-unpushed cleanup as `hermes -w`. Only one tree is "active" per process;
+        # Same keep-if-unpushed cleanup as `relayhelm -w`. Only one tree is "active" per process;
         # an earlier one keeps its own atexit registration (explicit info arg).
         _cli._active_worktree = wt_info
         atexit.register(_cli._cleanup_worktree, wt_info)
@@ -1880,7 +1880,7 @@ class CLICommandsMixin:
 
     def _handle_plan_command(self, cmd: str):
         """Handle /plan — write a markdown implementation plan, no execution. The live agent
-        inspects the workspace read-only and saves the plan under ``.hermes/plans/``."""
+        inspects the workspace read-only and saves the plan under ``.relayhelm/plans/``."""
         from agent.plan_prompt import build_plan_prompt
         task = _command_arg(cmd)  # optional — empty infers the task from conversation context
         print(f"\n📋 Planning: {_ellipsize(task, 80)}" if task
@@ -2087,7 +2087,7 @@ class CLICommandsMixin:
     def _handle_heartbeat_command(self, cmd: str) -> None:
         """Dispatch /heartbeat: set / status / pause / resume / clear. ``/heartbeat every 10m <prompt>``
         sets the session's one recurring instruction, injected as a normal user turn when due.
-        Session-scoped and in-process — use `hermes cron` for durable schedules."""
+        Session-scoped and in-process — use `relayhelm cron` for durable schedules."""
         from hermes_cli.heartbeat import format_interval
         arg = _command_arg(cmd)
         lower = arg.lower()
@@ -2139,7 +2139,7 @@ class CLICommandsMixin:
         _cp(f"  ♥ Heartbeat set (every {format_interval(state.interval_seconds)}): {state.prompt}",
             _dim_line("Fires as a normal turn whenever the session is idle and the interval has "
                       "elapsed. /heartbeat pause | resume | clear to manage; lives only while this "
-                      "Hermes process runs — use `hermes cron` for durable schedules."))
+                      "Relayhelm process runs — use `relayhelm cron` for durable schedules."))
 
     def _handle_refine_command(self, cmd: str) -> None:
         """Dispatch /refine — run the memory/skill review fork on demand (same machinery as the
@@ -2308,7 +2308,7 @@ class CLICommandsMixin:
         self._print_goal_set(state, "Completion contract:")
         against = " against the contract above" if state.has_contract() else ""
         _cp(_dim_line(f"After each turn, a judge model checks if the goal is done{against}. "
-                      "Hermes keeps working until it is, you pause/clear it, or the budget is "
+                      "Relayhelm keeps working until it is, you pause/clear it, or the budget is "
                       "exhausted. Use /goal status, /goal show, /goal pause, /goal resume, /goal clear."))
         self._kick_goal(state.goal)
 
@@ -2648,7 +2648,7 @@ class CLICommandsMixin:
         _cp(_accent_line(f"✓ Reasoning effort set to '{arg}' {_scope_outcome(explicit_global, saved)}"))
 
     def _handle_busy_command(self, cmd: str):
-        """Handle /busy [status|queue|steer|interrupt] — what Enter does while Hermes is working."""
+        """Handle /busy [status|queue|steer|interrupt] — what Enter does while Relayhelm is working."""
         arg = _command_arg(cmd, lower=True)
         usage = _dim_line('Usage: /busy [queue|steer|interrupt|status]')
         if not arg or arg == "status":
@@ -2715,19 +2715,19 @@ class CLICommandsMixin:
             lines=200, expire=7, local=local, nous="nous" in words and not local, yes=True))
 
     def _handle_update_command(self) -> bool:
-        """Handle /update — exit the session and relaunch as ``hermes update``. Returns True when
+        """Handle /update — exit the session and relaunch as ``relayhelm update``. Returns True when
         confirmed (the caller exits the app; the relaunch runs on the main thread after
         prompt_toolkit restores terminal modes), False when cancelled."""
         from hermes_cli.config import is_managed, format_managed_message
         if is_managed():
-            print(f"  ✗ {format_managed_message('update Hermes Agent')}")
+            print(f"  ✗ {format_managed_message('update Relayhelm')}")
             return False
         # prompt_toolkit-native modal: renders above the composer, no raw input() races.
-        choices = [("once", "Update Now", "exit the current session and update Hermes Agent"),
+        choices = [("once", "Update Now", "exit the current session and update Relayhelm"),
                    ("cancel", "Cancel", "keep the current session")]
         raw = self._prompt_text_input_modal(
-            title="⚕  Update Hermes Agent",
-            detail="This will exit the current session and run `hermes update`.", choices=choices)
+            title="⚕  Update Relayhelm",
+            detail="This will exit the current session and run `relayhelm update`.", choices=choices)
         if raw is None or self._normalize_slash_confirm_choice(raw, choices) != "once":
             print("  🟡 /update cancelled.")
             return False
@@ -2748,7 +2748,7 @@ class CLICommandsMixin:
             _cp(f"Unknown voice subcommand: {subcommand}", "Usage: /voice [on|off|tts|status]")
 
     def _handle_wake_command(self, command: str):
-        """Handle /wake [on|off|status] — the 'Hey Hermes' hotword listener. The toggle IS the
+        """Handle /wake [on|off|status] — the 'Hey Relayhelm' hotword listener. The toggle IS the
         config: on/off also writes ``wake_word.enabled`` so the choice persists; startup
         auto-arm only reads it."""
         subcommand = _command_arg(command, lower=True) or (

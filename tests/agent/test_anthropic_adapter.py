@@ -68,7 +68,7 @@ class TestBuildAnthropicClient:
             kwargs = mock_sdk.Anthropic.call_args[1]
             headers = kwargs["default_headers"]
             assert headers["HTTP-Referer"] == "https://hermes-agent.nousresearch.com"
-            assert headers["X-Title"] == "Hermes Agent"
+            assert headers["X-Title"] == "Relayhelm"
             assert headers["User-Agent"].startswith("HermesAgent/")
             # Auth branch is unchanged: x-api-key via api_key, betas kept.
             assert kwargs["api_key"] == "sk-opencode-secret"
@@ -1441,7 +1441,7 @@ class TestConvertToolsToAnthropicDedup:
 
     Anthropic rejects requests with duplicate tool names.  This guard converts
     a hard failure into a warning log.  See:
-    https://github.com/NousResearch/hermes-agent/issues/18478
+    https://github.com/InSelfControll/relayhelm/issues/18478
     """
 
     def _make_openai_tool(self, name: str) -> dict:

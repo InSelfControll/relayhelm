@@ -36,7 +36,7 @@ _KNOWN_MANIFEST_FIELDS: Set[str] = {
     "license", "homepage", "tags", "capabilities", "emits", "listens", "hermes", "depends",
 }
 
-# Highest manifest schema version this Hermes understands.
+# Highest manifest schema version this Relayhelm understands.
 SUPPORTED_MANIFEST_VERSION = 2
 
 _CONFIG_SCHEMA_TYPES: Dict[str, tuple] = {
@@ -116,7 +116,7 @@ def _parse_manifest_v2_fields(data: Mapping, key: str) -> Dict[str, Any]:
                        "Plugin %s: manifest_version %r is not an integer; treating as 1", 1)
     if mv > SUPPORTED_MANIFEST_VERSION:
         logger.warning(
-            "Plugin %s: manifest_version %d is newer than this Hermes "
+            "Plugin %s: manifest_version %d is newer than this Relayhelm "
             "supports (%d); loading anyway and ignoring unknown fields", key, mv, SUPPORTED_MANIFEST_VERSION,
         )
     raw_api = data.get("api_version")
@@ -350,7 +350,7 @@ class PluginManifest:
     # Advisory deps [{"id", "version_range"}]: missing ones warn but load; they order the load.
     requires_plugins: List[Dict[str, Any]] = field(default_factory=list)
     # Declared pip deps — VALIDATED AND SURFACED ONLY, never auto-installed.
-    # VALIDATED AND SURFACED ONLY — Hermes never auto-installs these (isolation design for the install seam
+    # VALIDATED AND SURFACED ONLY — Relayhelm never auto-installs these (isolation design for the install seam
     # is a deferred follow-up; see #64165 round-2 review and #15220).
     python_dependencies: List[str] = field(default_factory=list)
     # Schema for plugins.entries.<id>.settings; mismatches warn, never fail.
@@ -367,7 +367,11 @@ class PluginManifest:
 def portable_plugin_manifest(child: Path, source: str, prefix: str) -> PluginManifest:
     """Build the manifest for a portable Agent Plugin directory (``plugin.json``); diagnostics warn."""
     from hermes_cli.agent_plugins import read_agent_plugin_manifest
-    data, diagnostics = read_agent_plugin_manifest(child)
+    from hermes_cli.host_plugin_compat import manifest_path, read_manifest
+    if manifest_path(child) is not None:
+        data, diagnostics = read_manifest(child), ()
+    else:
+        data, diagnostics = read_agent_plugin_manifest(child)
     for diagnostic in diagnostics:
         logger.warning("Agent Plugin '%s': %s", child, diagnostic.message)
     key = f"{prefix}/{child.name}" if prefix else data["name"]

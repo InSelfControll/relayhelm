@@ -1,4 +1,4 @@
-"""Regression tests for Desktop-owned ``hermes serve`` lifecycle tracking."""
+"""Regression tests for Desktop-owned ``relayhelm serve`` lifecycle tracking."""
 
 from hermes_cli.web_server_lifecycle import (
     _is_serve_orphaned,

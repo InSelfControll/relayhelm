@@ -2,7 +2,7 @@
 """Skill Manager Tool — agent-managed skill creation & editing.
 
 Skills are the agent's procedural memory (narrow "how to do X"; MEMORY.md/USER.md are
-broad, declarative). New skills land in ~/.hermes/skills/ (or ``skills.create_dir``);
+broad, declarative). New skills land in ~/.relayhelm/skills/ (or ``skills.create_dir``);
 existing skills (bundled, hub, user) are modified in place. Layout:
 ``<skills>/[category/]<skill>/SKILL.md`` + optional ``references/ templates/ scripts/ assets/``.
 """
@@ -63,7 +63,7 @@ def _security_scan_skill(skill_dir: Path) -> Optional[str]:
     return None
 
 
-# All skills live in ~/.hermes/skills/ (single source of truth)
+# All skills live in ~/.relayhelm/skills/ (single source of truth)
 HERMES_HOME = get_hermes_home()
 SKILLS_DIR = HERMES_HOME / "skills"
 _SKILLS_DIR_AT_IMPORT = SKILLS_DIR
@@ -276,12 +276,12 @@ def _skill_not_found_error(name: str, suffix: str = "") -> str:
         other_profile, other_path = others[0]
         base += (
             f" A skill by that name exists in profile '{other_profile}' ({other_path}). To edit "
-            f"it, switch profiles (`hermes -p {other_profile}`) or edit the file directly "
+            f"it, switch profiles (`relayhelm -p {other_profile}`) or edit the file directly "
             f"(file tools / terminal).")
     elif others:
         names = ", ".join(f"'{p}'" for p, _ in others)
         base += (
-            f" Skills by that name exist in other profiles: {names}. Switch profiles (`hermes -p "
+            f" Skills by that name exist in other profiles: {names}. Switch profiles (`relayhelm -p "
             f"<name>`) to edit there, or edit the files directly (file tools / terminal).")
     else:
         base += " Use skills_list() to see available skills."
@@ -380,7 +380,7 @@ def _attach_lint_findings(result: Dict[str, Any], skill_md: Path) -> None:
         {"severity": f.severity, "rule": f.rule, "message": f.message} for f in findings]
     result["lint_hint"] = (
         "The skill was created. These are advisory authoring-convention findings (not blockers) "
-        "— fix them with skill_manage(action='patch') to match Hermes skill standards.")
+        "— fix them with skill_manage(action='patch') to match Relayhelm skill standards.")
 
 
 def _clip(text: str, n: int, ellipsis: str) -> str:
@@ -715,7 +715,7 @@ def _record_success(action, name, result, *, file_path, absorbed_into, task_id,
     with suppress(Exception):
         from tools.skill_usage import bump_patch, forget, record_created
         # During the curator consolidation pass, a verified consolidation must be RECOVERABLE: archival into
-        # ~/.hermes/skills/.archive/ is documented as the maximum destructive action the curator may take,
+        # ~/.relayhelm/skills/.archive/ is documented as the maximum destructive action the curator may take,
         # and `hermes curator restore` promises the skill can be brought back. Route through the recoverable
         # archive primitive instead of permanent rmtree so a misjudged consolidation can be undone (#29912).
         # Foreground, user-directed deletes keep their existing hard-delete semantics.

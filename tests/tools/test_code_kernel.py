@@ -212,7 +212,7 @@ class TestKernelOwnershipAndLifecycle(unittest.TestCase):
     with anything. The owner is the approval session key; disposal rides
     the same session boundary that clears approval/yolo state, idle
     kernels are reaped, and the process-wide live count is capped (the
-    lifecycle shape carried forward from hermes-agent#88637).
+    lifecycle shape carried forward from relayhelm#88637).
     """
 
     def _run_as(self, session_key, code, task_id, **kwargs):

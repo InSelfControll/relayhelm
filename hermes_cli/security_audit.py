@@ -1,4 +1,4 @@
-"""On-demand supply-chain audit for Hermes Agent installs.
+"""On-demand supply-chain audit for Relayhelm installs.
 
 Vulnerabilities are looked up against OSV.dev (``api.osv.dev/v1/querybatch`` + ``/v1/vulns/{id}``).
 Single-shot, on-demand, never daily — see ``references/security-disclosure-triage.md``.
@@ -103,7 +103,7 @@ _PLUGIN_PIN_FILES = (("requirements.txt", _parse_requirements), ("requirements-d
 
 
 def _discover_plugins(hermes_home: Path) -> list[Component]:
-    """Python deps declared by plugins under ``~/.hermes/plugins``. Plugins typically don't install
+    """Python deps declared by plugins under ``~/.relayhelm/plugins``. Plugins typically don't install
     into the venv, so their stated requirements are audit surface the venv scan misses.
     """
     plugins_dir = hermes_home / "plugins"

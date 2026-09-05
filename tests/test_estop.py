@@ -271,7 +271,7 @@ def test_builtin_subcommands_include_pause_resume():
     assert "resume" in _BUILTIN_SUBCOMMANDS
 
 
-# ── hermes status surfacing ─────────────────────────────────────────────────
+# ── relayhelm status surfacing ─────────────────────────────────────────────────
 
 
 def test_status_line_when_paused(hermes_home):
@@ -381,8 +381,8 @@ def test_pause_command_registered_for_gateway():
 def test_profile_gateway_honors_canonical_root_estop(tmp_path, monkeypatch):
     """fleet-analyst-class: HERMES_HOME is a profile dir; pause lives at root.
 
-    A process launched with HERMES_HOME=~/.hermes/profiles/fleet-analyst must
-    still treat ~/.hermes/ESTOP as engaged. Otherwise `hermes pause` is not
+    A process launched with HERMES_HOME=~/.relayhelm/profiles/fleet-analyst must
+    still treat ~/.relayhelm/ESTOP as engaged. Otherwise `hermes pause` is not
     a global emergency stop (t_7b65ff88).
     """
     root = tmp_path / "hermes-root"

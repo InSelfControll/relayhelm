@@ -46,7 +46,7 @@ describe('requestModelOptions', () => {
     const restPayload = {
       model: 'profile-default',
       provider: 'openai-codex',
-      providers: [{ models: ['hermes-local'], name: 'Hermes Local vLLM', slug: 'hermes-local' }]
+      providers: [{ models: ['hermes-local'], name: 'Relayhelm Local vLLM', slug: 'hermes-local' }]
     }
 
     const gateway = {
@@ -68,7 +68,7 @@ describe('requestModelOptions', () => {
     const restPayload = {
       model: 'hermes-local',
       provider: 'hermes-local',
-      providers: [{ models: ['hermes-local'], name: 'Hermes Local vLLM', slug: 'hermes-local' }]
+      providers: [{ models: ['hermes-local'], name: 'Relayhelm Local vLLM', slug: 'hermes-local' }]
     }
 
     const gateway = {

@@ -33,7 +33,9 @@ def _str_or_none(value: Any) -> Optional[str]:
 def _fabricated_entry(idx: int, status: str, error: str, child: Any, duration: float = 0) -> Dict[str, Any]:
     """Result entry for a child that raised, never finished, or was abandoned."""
     return {
-        "task_index": idx, "status": status, "summary": None, "error": error, "api_calls": 0,
+        "task_index": idx, "status": "failed" if status == "error" else status, "completed": False,
+        "exit_reason": status,
+        "summary": None, "error": error, "failure_reason": error, "api_calls": 0,
         "duration_seconds": duration, "_child_role": getattr(child, "_delegate_role", None),
     }
 
@@ -150,7 +152,7 @@ def _dump_subagent_timeout_diagnostic(
     worker_thread: Optional[threading.Thread], goal: str,
 ) -> Optional[str]:
     """Structured diagnostic for a subagent that timed out before any API call (otherwise "timed out with no
-    response", 0 API calls, nothing to inspect): ``~/.hermes/logs/subagent-timeout-<sid>-<ts>.log`` with the
+    response", 0 API calls, nothing to inspect): ``~/.relayhelm/logs/subagent-timeout-<sid>-<ts>.log`` with the
     child's config, prompt/schema sizes, activity snapshot and worker stack. Path, or None on failure."""
     try:
         from hermes_constants import get_hermes_home
@@ -401,7 +403,8 @@ def _validate_child_output_schema(
     from tools.delegation_output_schema import build_retry_message, validate_output
     _first_text = result.get("final_response") or ""
     _schema_valid, _schema_errors = validate_output(_first_text, _output_schema)
-    if _schema_valid or not _first_text.strip() or result.get("interrupted", False):
+    if (_schema_valid or not _first_text.strip() or result.get("interrupted", False)
+            or result.get("failed") or result.get("error") or result.get("failure_reason")):
         return _SchemaOutcome(_output_schema, _schema_valid, _schema_errors, 0)
 
     # Exactly one retry turn, carrying the validation errors verbatim (no
@@ -413,7 +416,13 @@ def _validate_child_output_schema(
         )
     except Exception as _retry_exc:
         logger.warning("Subagent %d schema-retry turn failed: %s", task_index, _retry_exc)
+        result.update(completed=False, failed=True, error=str(_retry_exc), failure_reason=str(_retry_exc))
     if isinstance(_retry_result, dict):
+        # The retry is the final turn: a valid-looking payload must not conceal
+        # its provider failure or an exhausted iteration budget.
+        for key in ("completed", "failed", "error", "failure_reason", "interrupted", "status"):
+            if key in _retry_result:
+                result[key] = _retry_result[key]
         _retry_text = _retry_result.get("final_response") or ""
         if _retry_text.strip():
             result["final_response"] = _retry_text
@@ -471,7 +480,7 @@ def _build_result_entry(
     usable_summary = bool(summary) and summary.strip() != "(empty)"
     if result.get("interrupted", False):
         status, exit_reason = "interrupted", "interrupted"
-    elif result.get("failed") or result.get("error"):
+    elif result.get("failed") or result.get("error") or result.get("failure_reason") or result.get("status") == "failed":
         # The loop returns the error text as final_response, which would otherwise read as "completed". Never report a
         # provider rejection as "max_iterations" — that is only truthful for real budget exhaustion.
         status, exit_reason = "failed", "error"
@@ -481,7 +490,7 @@ def _build_result_entry(
         # unusable under the contract, so status must not say completed (orchestrators reading only status/icon would
         # accept an empty verdict).
         exit_reason = "completed" if result.get("completed", False) else "max_iterations"
-        status = "completed" if schema.valid is not False and usable_summary else "failed"
+        status = "completed" if result.get("completed") is True and schema.valid is not False and usable_summary else "failed"
 
     _cost = getattr(child, "session_estimated_cost_usd", 0.0)
     _cost_status = getattr(child, "session_cost_status", None)
@@ -489,13 +498,13 @@ def _build_result_entry(
     entry: Dict[str, Any] = {
         "task_index": task_index,
         "status": status,
+        "completed": status == "completed",
         "summary": summary,
         "api_calls": result.get("api_calls", 0),
         "duration_seconds": duration,
         "model": _str_or_none(getattr(child, "model", None)),
         "exit_reason": exit_reason,
-        # A budget-exhausted child still returns a summary (status stays
-        # "completed"), so the parent needs this explicit flag.
+        # Partial output remains available, but exhaustion is never completion.
         "truncated": exit_reason == "max_iterations",
         "tokens": {
             "input": _num(getattr(child, "session_prompt_tokens", 0)),
@@ -512,18 +521,24 @@ def _build_result_entry(
     entry["cost_usd"] = round(entry["_child_cost_usd"], 6)
     entry["cost_status"] = _cost_status if isinstance(_cost_status, str) and _cost_status else "unknown"
     if status == "failed":
-        if schema.valid is False and usable_summary:
+        if result.get("error"):
+            entry["error"] = result["error"]
+        elif exit_reason == "max_iterations":
+            entry["error"] = "Subagent exhausted its iteration budget before completing the task."
+        elif schema.valid is False and usable_summary:
             # The child DID respond; name the contract violation instead of the generic "no response" error.
             entry["error"] = (
                 "Final answer does not satisfy the declared output_schema" + (" (after 1 retry)." if schema.retries else ".")
             )
         else:
-            entry["error"] = result.get("error", "Subagent did not produce a response.")
+            entry["error"] = result.get("failure_reason") or "Subagent did not produce a response."
         # Classified reason from the child loop (e.g. "rate_limit", "billing")
         # lets the parent tell a quota wall from a task error without parsing prose.
         _failure_reason = result.get("failure_reason")
         if isinstance(_failure_reason, str) and _failure_reason:
             entry["failure_reason"] = _failure_reason
+        else:
+            entry["failure_reason"] = entry["error"]
 
     # Schema-validation outcome — emitted ONLY when a schema was requested, so
     # legacy (schema-less) payloads keep their exact shape.
@@ -706,7 +721,8 @@ class _ChildRun:
             _err += f" Diagnostic: {diagnostic_path}"
         status = "timeout" if is_timeout else "error"
         _error_entry = {
-            "task_index": task_index, "status": status, "summary": None, "error": _err, "exit_reason": status,
+            "task_index": task_index, "status": "failed", "completed": False,
+            "summary": None, "error": _err, "failure_reason": _err, "exit_reason": status,
             "api_calls": child_api_calls, "duration_seconds": duration,
             "timeout_seconds": child_timeout if is_timeout else None,
             "timed_out_after_seconds": duration if is_timeout else None,

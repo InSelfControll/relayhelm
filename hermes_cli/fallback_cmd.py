@@ -1,6 +1,6 @@
 """hermes fallback — manage the fallback provider chain (tried in order when the primary fails).
 
-Subcommands: ``list`` (default), ``add`` (same picker as `hermes model`), ``remove``, ``clear``.
+Subcommands: ``list`` (default), ``add`` (same picker as `relayhelm model`), ``remove``, ``clear``.
 """
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def _snapshot_auth_active_provider() -> Any:
 
 
 def _restore_auth_active_provider(value: Any) -> None:
-    """Write back a snapshotted ``active_provider``; best-effort (user re-runs `hermes model`), never fails the add."""
+    """Write back a snapshotted ``active_provider``; best-effort (user re-runs `relayhelm model`), never fails the add."""
     try:
         from hermes_cli.auth import _auth_store_lock, _load_auth_store, _save_auth_store
         with _auth_store_lock():
@@ -117,7 +117,7 @@ def cmd_fallback_list(args) -> None:  # noqa: ARG001
 
 
 def cmd_fallback_add(args) -> None:
-    """Launch the same picker as `hermes model`, then append the selection to the chain."""
+    """Launch the same picker as `relayhelm model`, then append the selection to the chain."""
     from hermes_cli.main import _require_tty, select_provider_and_model
     from hermes_cli.config import load_config, save_config
     _require_tty("fallback add")
@@ -127,7 +127,7 @@ def cmd_fallback_add(args) -> None:
     model_before = copy.deepcopy(load_config().get("model"))
     active_provider_before = _snapshot_auth_active_provider()
     print("\n  Adding a fallback provider.  The picker below is the same one used by\n"
-          "  `hermes model` — select the provider + model you want as a fallback.\n")
+          "  `relayhelm model` — select the provider + model you want as a fallback.\n")
 
     def _restore() -> None:
         _restore_model_cfg(model_before)

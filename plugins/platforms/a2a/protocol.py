@@ -60,7 +60,7 @@ def _hermes_home() -> Path:
         from hermes_constants import get_hermes_home
         return Path(get_hermes_home())
     except Exception:
-        return Path(os.path.expanduser("~/.hermes"))
+        return Path(os.path.expanduser("~/.relayhelm"))
 
 
 def build_agent_card(*, name: str, url: str, description: str, skills: Optional[list[dict]] = None,
@@ -74,7 +74,7 @@ def build_agent_card(*, name: str, url: str, description: str, skills: Optional[
         "description": description,
         "url": url,  # convenience for pre-1.0 clients; canonical is supportedInterfaces
         "version": "1.0.0",
-        "provider": {"organization": os.getenv("A2A_PROVIDER_ORG", "Hermes Agent"), "url": os.getenv("A2A_PROVIDER_URL", "") or url},
+        "provider": {"organization": os.getenv("A2A_PROVIDER_ORG", "Relayhelm"), "url": os.getenv("A2A_PROVIDER_URL", "") or url},
         "supportedInterfaces": [iface],
         "capabilities": {"streaming": streaming, "pushNotifications": push_notifications,
                          "stateTransitionHistory": False, "extendedAgentCard": False},
@@ -91,7 +91,7 @@ def skills_from_toolsets(toolsets: "list[str] | dict[str, list[str]] | None") ->
     become tags, max 10)."""
     if not isinstance(toolsets, dict):
         toolsets = {ts: [] for ts in set(toolsets or [])}
-    skills = [{"id": f"toolset.{name}", "name": name, "description": f"Hermes '{name}' capabilities",
+    skills = [{"id": f"toolset.{name}", "name": name, "description": f"Relayhelm '{name}' capabilities",
                "tags": [name] + [str(t) for t in (toolsets[name] or [])][:10]} for name in sorted(toolsets)]
     return skills or [{"id": "general", "name": "general", "description": "General-purpose conversational agent", "tags": ["general"]}]
 

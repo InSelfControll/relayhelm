@@ -43,7 +43,7 @@ export const PROFILE_SESSION_LIST_LIMIT = 200
 
 /** The one canonical title. (profile, CANONICAL_CHAT_TITLE) IS the bot's
  *  forever-chat identity — see the header above. Exported for the roster
- *  click path's tile-staleness probe (hermes-agent#90102), which must
+ *  click path's tile-staleness probe (relayhelm#90102), which must
  *  recognize canonical-titled tabs without restating the literal. */
 export const CANONICAL_CHAT_TITLE = 'Bot Chat'
 
@@ -84,7 +84,7 @@ async function openStoredBotChat(
   summary: CanonicalChatRow
 ): Promise<string> {
   if (!storedId || typeof host.openSession !== 'function') {
-    throw new Error('This Hermes Desktop version cannot open stored sessions')
+    throw new Error('This Relayhelm Desktop version cannot open stored sessions')
   }
 
   const { bot, name, route } = botOwner(owner)
@@ -100,7 +100,7 @@ async function openStoredBotChat(
       : 60_000
 
   // A profile backend that just woke up can lose the hydration-timeout race
-  // even though the session is fine (hermes-agent#89617) — clicking Retry
+  // even though the session is fine (relayhelm#89617) — clicking Retry
   // succeeds because the backend is warm by then. retryHydrationTimeoutOnce
   // asks the SDK layer to retry that same wait internally, BEFORE it arms the
   // core stranded-session overlay: a plugin-side retry can't do this because
@@ -110,7 +110,7 @@ async function openStoredBotChat(
   // The SDK's surface-health check passes whenever ANY non-empty transcript is
   // painted, including a stale snapshot the session-states cache kept from the
   // previous time this bot was open — which left the pane showing old messages
-  // until an app restart (hermes-agent#93604). A resume is cheap and
+  // until an app restart (relayhelm#93604). A resume is cheap and
   // idempotent, so on this explicit user navigation we always request one.
   await host.openSession(storedId, {
     ...(route
@@ -532,7 +532,7 @@ export async function prepareBotSource(bot: RosterRow) {
   if (route && typeof host.requestProfile !== 'function') {
     throw new Error(
       getPluginCtx()?.i18n?.t('bot.remoteConnectionsUnsupported') ??
-        'Update Hermes Desktop to chat with bots on other connections.'
+        'Update Relayhelm Desktop to chat with bots on other connections.'
     )
   }
 

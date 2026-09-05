@@ -1,4 +1,4 @@
-"""Argparse tree for ``hermes kanban …`` (``build_parser``).
+"""Argparse tree for ``relayhelm kanban …`` (``build_parser``).
 
 The subcommand tree is declared as data — one ``_cmd(...)`` record per
 subcommand holding its ``add_parser`` kwargs and an ordered tuple of
@@ -128,13 +128,13 @@ _BOARD_SPECS = [
         _arg("--switch", action="store_true", help="Switch to the imported board afterwards"),
         _json_flag(),
     ], help="Import a board archive as a new board", description=(
-        "Import a .tar.gz produced by `hermes kanban boards export`. The board always lands as a "
+        "Import a .tar.gz produced by `relayhelm kanban boards export`. The board always lands as a "
         "NEW board — the slug gains a numeric suffix if it is already taken — so an import can "
         "never overwrite or merge into a board you already have."
     )),
 ]
 
-# Top-level ``hermes kanban <action>`` records, in ``--help`` order.
+# Top-level ``relayhelm kanban <action>`` records, in ``--help`` order.
 _SPECS = [
     _cmd("init", help="Create kanban.db if missing (idempotent)"),
     _cmd("boards", children=("boards_action", _BOARD_SPECS),
@@ -353,7 +353,7 @@ _SPECS = [
         # Escape hatch for hosts that truly cannot run the gateway; hidden from
         # --help so nobody casually keeps the double-dispatcher pattern alive.
         _arg("--force", action="store_true", help=argparse.SUPPRESS),
-    ], help="DEPRECATED — dispatcher now runs in the gateway. Use `hermes gateway start`."),
+    ], help="DEPRECATED — dispatcher now runs in the gateway. Use `relayhelm gateway start`."),
     _cmd("watch", [
         _arg("--assignee", help="Only show events for tasks assigned to this profile"),
         _arg("--tenant", help="Only show events from tasks in this tenant"),
@@ -394,7 +394,7 @@ _SPECS = [
         _arg("--note", help="Optional short note attached to the heartbeat event"),
     ], help="Emit a heartbeat event for a running task (worker liveness signal)"),
     _cmd("assignees", [_json_flag()],
-         help="List known profiles + per-profile task counts (union of ~/.hermes/profiles/ and current assignees on the board)"),
+         help="List known profiles + per-profile task counts (union of ~/.relayhelm/profiles/ and current assignees on the board)"),
     _cmd("context", [_TASK_ID],
          help="Print the full context a worker sees for a task (title + body + parent results + comments)."),
     _cmd("specify", _triage_sweep_args("specify", "Specify", "specifier"),
@@ -430,7 +430,7 @@ def build_parser(parent_subparsers: argparse._SubParsersAction) -> argparse.Argu
     kanban_parser = parent_subparsers.add_parser(
         "kanban",
         help="Multi-profile collaboration board (tasks, links, comments)",
-        description="Durable SQLite-backed task board shared across Hermes profiles. "
+        description="Durable SQLite-backed task board shared across Relayhelm profiles. "
                     "Tasks are claimed atomically, can depend on other tasks, and "
                     "are executed by a named profile in an isolated workspace. "
                     "See https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban "
@@ -441,8 +441,8 @@ def build_parser(parent_subparsers: argparse._SubParsersAction) -> argparse.Argu
     # file, then "default" (kanban_db.get_current_board()).
     kanban_parser.add_argument("--board", default=None, metavar="<slug>",
                                help="Board slug to operate on. Defaults to the current board (set "
-                                    "via `hermes kanban boards switch <slug>` or the "
-                                    "HERMES_KANBAN_BOARD env var). Use `hermes kanban boards "
+                                    "via `relayhelm kanban boards switch <slug>` or the "
+                                    "HERMES_KANBAN_BOARD env var). Use `relayhelm kanban boards "
                                     "list` to see all boards.")
     _add_commands(kanban_parser.add_subparsers(dest="kanban_action"), _SPECS)
     kanban_parser.set_defaults(_kanban_parser=kanban_parser)

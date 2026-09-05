@@ -55,7 +55,7 @@ def _workspace(tmp_path, *, scripts=None, manifest_recipe=None):
         json.dumps({"scripts": scripts} if scripts else {}), encoding="utf-8"
     )
     if manifest_recipe is not None:
-        hermes_dir = project / ".hermes"
+        hermes_dir = project / ".relayhelm"
         hermes_dir.mkdir()
         (hermes_dir / "environment.json").write_text(
             json.dumps({"version": 1, "recipe": manifest_recipe}), encoding="utf-8"
@@ -153,7 +153,7 @@ def test_nudge_mentions_hermes_verify_when_recipe_has_start(hermes_home):
 
 
 def test_nudge_mentions_hermes_verify_when_manifest_exists(hermes_home):
-    # No start script, but a saved .hermes/environment.json qualifies.
+    # No start script, but a saved .relayhelm/environment.json qualifies.
     project = _workspace(
         hermes_home,
         scripts={"test": "vitest"},

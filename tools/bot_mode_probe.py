@@ -29,8 +29,8 @@ _cached: dict[str, str] = {}
 
 
 def _default_home() -> str:
-    """Ambient HERMES_HOME (env, else ~/.hermes) as a string."""
-    return os.getenv("HERMES_HOME") or os.path.expanduser("~/.hermes")
+    """Ambient HERMES_HOME (env, else ~/.relayhelm) as a string."""
+    return os.getenv("HERMES_HOME") or os.path.expanduser("~/.relayhelm")
 
 
 def _resolve_home(home: str | os.PathLike | None) -> Path:
@@ -46,7 +46,7 @@ def _swallow(fn, default):
 
 
 def _hermes_root(home: Path) -> Path:
-    """Root ~/.hermes for both the default profile and named profiles."""
+    """Root ~/.relayhelm for both the default profile and named profiles."""
     return home.parent.parent if home.parent.name == "profiles" else home
 
 
@@ -200,7 +200,7 @@ def _build_section(home: Path) -> str:
 
     return (
         f"{_PROTOCOL_HEADING}\n"
-        "This install runs Bot Mode: each Hermes profile is an agent teammate with "
+        "This install runs Bot Mode: each Relayhelm profile is an agent teammate with "
         'one canonical "Bot Chat" conversation, and you have the `message_agent` '
         "tool to DM any of them. It is FIRE-AND-FORGET: it delivers your message "
         "with your attribution prefixed automatically and returns an acknowledgement "

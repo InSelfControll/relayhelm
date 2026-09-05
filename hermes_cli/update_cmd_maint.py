@@ -1,4 +1,4 @@
-"""Post-update maintenance for ``hermes update``: pre-update backup snapshot, state-db verify/restore, curator/FTS notices, FHS path guard, completion summary, stale-module purge.
+"""Post-update maintenance for ``relayhelm update``: pre-update backup snapshot, state-db verify/restore, curator/FTS notices, FHS path guard, completion summary, stale-module purge.
 
 Split out of ``update_cmd.py``, which re-imports every name so ``hermes_cli.update_cmd.<name>``
 still resolves/monkeypatches. Origin helpers are imported lazily per function (no cycle;
@@ -75,7 +75,7 @@ def _reload_modules(names, *, modules, log) -> None:
 
 
 def _purge_stale_hermes_modules() -> None:
-    """Evict every cached Hermes module after the checkout changed in-place. Never raises.
+    """Evict every cached Relayhelm module after the checkout changed in-place. Never raises.
 
     The update runs in the pre-pull process; later phases lazily import NEW source into an OLD
     ``sys.modules`` world and die when new code references a symbol missing from a cached
@@ -83,7 +83,7 @@ def _purge_stale_hermes_modules() -> None:
     their module objects — so later imports rebuild a self-consistent graph from the new tree.
     """
     from hermes_cli.update_cmd import _m
-    with _best_effort('Could not purge stale Hermes modules: %s'):
+    with _best_effort('Could not purge stale Relayhelm modules: %s'):
         importlib.invalidate_caches()
         modules = _m().sys.modules
         purged = [
@@ -94,7 +94,7 @@ def _purge_stale_hermes_modules() -> None:
             and modules.pop(name, None) is not None
         ]
         if purged:
-            logger.debug("Purged %d stale Hermes module(s) after checkout update", len(purged))
+            logger.debug("Purged %d stale Relayhelm module(s) after checkout update", len(purged))
 
 
 def _reload_updated_runtime_modules() -> None:
@@ -337,7 +337,7 @@ def _finish_dashboard_update_cleanup(
     print()
     print("⚠ A web dashboard/serve process was stopped during update and could not be auto-restarted.")
     print("  Re-launch it when you want the web UI back:")
-    print("    hermes dashboard --port <port>")
+    print("    relayhelm dashboard --port <port>")
 
 
 def _print_update_completion(message: str) -> None:
@@ -394,7 +394,7 @@ def _post_update_sqlite_runtime_status():
 
 
 def _print_verified_update_completion(message: str) -> bool:
-    """Print a success completion only after probing the next Hermes runtime."""
+    """Print a success completion only after probing the next Relayhelm runtime."""
     from hermes_cli.update_cmd import _post_update_sqlite_runtime_status
     if not message.startswith("✓"):
         _print_update_completion(message)
@@ -409,7 +409,7 @@ def _print_verified_update_completion(message: str) -> bool:
         return True
     print()
     print(f"⚠ Update partially complete — {_SQLITE_WAL_BUG_DETAIL.format(sqlite_info.sqlite_version_string)}.")
-    print("  Rebuild the Hermes venv with a uv-managed Python, restart Hermes, then verify with `hermes doctor`.")
+    print("  Rebuild the Relayhelm venv with a uv-managed Python, restart Relayhelm, then verify with `relayhelm doctor`.")
     return False
 
 
@@ -454,9 +454,9 @@ def _print_update_summary(*, node_failures: list, desktop_build_ok: bool, pre_up
         if not sqlite_runtime_ok:
             print(
                 "  The Python runtime remediation did not complete. Run `hermes "
-                "update` again; if SQLite is unchanged, rebuild the Hermes venv "
-                "with a uv-managed Python, restart Hermes, then verify with "
-                "`hermes doctor`."
+                "update` again; if SQLite is unchanged, rebuild the Relayhelm venv "
+                "with a uv-managed Python, restart Relayhelm, then verify with "
+                "`relayhelm doctor`."
             )
     else:
         _print_update_completion(_update_complete_message(pre_update_version))
@@ -478,7 +478,7 @@ def _restore_state_db_from_snapshot(state_path: Path, snap_state: Path) -> bool:
     if holders:
         print(
             f"  ✗ Auto-restore refused: process(es) {holders} still hold "
-            "state.db or its WAL open. Stop them (hermes gateway stop), "
+            "state.db or its WAL open. Stop them (relayhelm gateway stop), "
             "then restore manually with /snapshot restore."
         )
         return False
@@ -492,7 +492,7 @@ def _restore_state_db_from_snapshot(state_path: Path, snap_state: Path) -> bool:
     except LiveConnectionError as exc:
         print(
             f"  ✗ Auto-restore refused: {exc} Close the in-process database "
-            "handles (or restart Hermes) and retry."
+            "handles (or restart Relayhelm) and retry."
         )
         return False
     restored = verify_sqlite_integrity(state_path, check_header=True, run_pragma=True)
@@ -561,7 +561,7 @@ def _print_bundled_skills_sync_report() -> None:
         print(f"  ↑ {len(result['updated'])} updated: {', '.join(result['updated'])}")
     if result.get("user_modified"):
         print(f"  ~ {len(result['user_modified'])} user-modified (kept)")
-        print("    → see them: hermes skills list-modified  (diff/reset to resume updates)")
+        print("    → see them: relayhelm skills list-modified  (diff/reset to resume updates)")
     if result.get("cleaned"):
         print(f"  − {len(result['cleaned'])} removed from manifest")
     if result.get("relocated"):
@@ -582,8 +582,8 @@ def _ensure_fhs_path_guard() -> None:
             return
     except AttributeError:
         return
-    # Only for FHS-layout installs (link at /usr/local/bin/hermes).
-    fhs_link = Path("/usr/local/bin/hermes")
+    # Only for FHS-layout installs (link at /usr/local/bin/relayhelm).
+    fhs_link = Path("/usr/local/bin/relayhelm")
     if not fhs_link.is_symlink() and not fhs_link.exists():
         return
 
@@ -608,7 +608,7 @@ def _ensure_fhs_path_guard() -> None:
             # already parked the unit in a failed state (transient CHDIR / OOM / filesystem race after our
             # drain + exit-75), a plain `systemctl restart` can wedge against the RestartSec backoff and
             # leave the unit dead. Clearing the failed state first makes the restart idempotent. Mirrors the
-            # recovery path in `hermes gateway restart` (`systemd_restart()`) as of PR #20949.
+            # recovery path in `relayhelm gateway restart` (`systemd_restart()`) as of PR #20949.
             capture_output=True,
             text=True, encoding="utf-8", errors="replace",
             timeout=10,
@@ -619,7 +619,7 @@ def _ensure_fhs_path_guard() -> None:
         return  # already on PATH, nothing to do
 
     path_line = 'export PATH="/usr/local/bin:$PATH"'
-    path_comment = "# Hermes Agent — ensure /usr/local/bin is on PATH (RHEL non-login shells)"
+    path_comment = "# Relayhelm — ensure /usr/local/bin is on PATH (RHEL non-login shells)"
     wrote_any = False
     for candidate in (".bashrc", ".bash_profile"):
         cfg = Path(home) / candidate
@@ -648,9 +648,9 @@ def _ensure_fhs_path_guard() -> None:
 
 
 def _ensure_acp_launcher() -> None:
-    r"""Self-heal a ``hermes-acp`` launcher next to ``hermes`` (mirrors install.sh): ACP hosts
+    r"""Self-heal a ``relayhelm-acp`` launcher next to ``hermes`` (mirrors install.sh): ACP hosts
     resolve it on the login-shell PATH but the console script lives in the venv. The shim
-    delegates to the sibling ``hermes acp``, correct for every layout.
+    delegates to the sibling ``relayhelm acp``, correct for every layout.
 
     No-op on Windows (install.ps1 stages launchers into ``$HermesHome\bin``, never
     ``venv\Scripts`` which would shadow the user's python; launcher repair lives in
@@ -662,8 +662,8 @@ def _ensure_acp_launcher() -> None:
     if _m().sys.platform == "win32":
         return
     for bin_dir in (Path.home() / ".local" / "bin", Path("/usr/local/bin")):
-        hermes_cmd = bin_dir / "hermes"
-        acp_cmd = bin_dir / "hermes-acp"
+        hermes_cmd = bin_dir / "relayhelm"
+        acp_cmd = bin_dir / "relayhelm-acp"
         try:
             if not (hermes_cmd.is_file() or hermes_cmd.is_symlink()):
                 continue
@@ -675,7 +675,7 @@ def _ensure_acp_launcher() -> None:
                 continue
             shim = (
                 "#!/usr/bin/env bash\n"
-                "# Hermes Agent — ACP launcher (written by `hermes update`).\n"
+                "# Relayhelm — ACP launcher (written by `relayhelm update`).\n"
                 "# ACP hosts (Zed, JetBrains, Buzz) resolve the agent by this\n"
                 "# command name on the login-shell PATH.\n"
                 f'exec "{hermes_cmd}" acp "$@"\n'
@@ -684,7 +684,7 @@ def _ensure_acp_launcher() -> None:
             acp_cmd.chmod(acp_cmd.stat().st_mode | 0o755)
         except OSError:
             continue
-        print(f"  ✓ Installed hermes-acp launcher → {acp_cmd}")
+        print(f"  ✓ Installed relayhelm-acp launcher → {acp_cmd}")
 
 
 _BACKUP_MODE_ALIASES = {
@@ -777,7 +777,7 @@ def _run_quick_snapshots() -> Optional[str]:
 
 
 def _run_full_backup() -> None:
-    """Zip HERMES_HOME under ``backups/`` (restorable via ``hermes import``). Never raises."""
+    """Zip HERMES_HOME under ``backups/`` (restorable via ``relayhelm import``). Never raises."""
     try:
         from hermes_cli.backup import create_pre_update_backup
     except Exception as exc:
@@ -812,7 +812,7 @@ def _run_full_backup() -> None:
         size_bytes = 0
 
     from hermes_cli.sizefmt import format_bytes
-    # display_hermes_home so the user sees ~/.hermes/...
+    # display_hermes_home so the user sees ~/.relayhelm/...
     try:
         from hermes_constants import get_hermes_home, display_hermes_home
         display_path = f"{display_hermes_home()}/{out_path.relative_to(get_hermes_home())}"
@@ -820,7 +820,7 @@ def _run_full_backup() -> None:
         display_path = str(out_path)
 
     print(f"  Saved:    {display_path} ({format_bytes(size_bytes)}, {elapsed:.1f}s)")
-    print(f"  Restore:  hermes import {out_path}")
+    print(f"  Restore:  relayhelm import {out_path}")
     print("  Disable:  set updates.pre_update_backup: quick (or off) in config.yaml")
     print()
 
@@ -830,7 +830,7 @@ def _run_pre_update_backup(args) -> Optional[str]:
 
     ``off`` — nothing. ``quick`` (default) — snapshot of critical small files under
     ``state-snapshots/``, files over 1 GiB skipped so a bloated state.db can't stall the update.
-    ``full`` — quick snapshot PLUS a zip of HERMES_HOME under ``backups/`` (``hermes import``).
+    ``full`` — quick snapshot PLUS a zip of HERMES_HOME under ``backups/`` (``relayhelm import``).
 
     Explicit user opt-out is honored fully. See #34600.
     """
@@ -963,7 +963,7 @@ def _print_post_update_notices_and_self_heals() -> None:
         ('Curator first-run notice failed: %s', _print_curator_first_run_notice),
         ('Curator recent-run notice failed: %s', _print_curator_recent_run_notice),
         ('FHS PATH guard check failed: %s', _ensure_fhs_path_guard),
-        ('hermes-acp launcher self-heal failed: %s', _ensure_acp_launcher),
+        ('relayhelm-acp launcher self-heal failed: %s', _ensure_acp_launcher),
         ('Windows bin launcher migration failed: %s', _migrate_windows_bin_path),
         ('cua-driver refresh failed: %s', _refresh_cua_driver_after_update),
         ('Plugin compat notice failed: %s', _print_plugin_compat_notice),
@@ -989,9 +989,9 @@ def _run_post_update_maintenance(
     if sys.platform == "darwin" and had_desktop_app_before_update:
         print()
         print(
-            "  ℹ macOS: if Hermes re-prompts for permissions you already "
+            "  ℹ macOS: if Relayhelm re-prompts for permissions you already "
             "granted (toggle shows ON), the stored grant is stale — run "
-            "`tccutil reset ScreenCapture com.nousresearch.hermes` (repeat "
+            "`tccutil reset ScreenCapture io.github.inselfcontroll.relayhelm` (repeat "
             "per affected service), toggle it ON in System Settings, then "
             "fully quit & relaunch once."
         )

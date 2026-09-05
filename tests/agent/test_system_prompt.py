@@ -259,7 +259,7 @@ class TestNamedProfileHintIntegration:
     def test_real_hermes_home_under_profiles_renders_correct_paths(
         self, tmp_path, monkeypatch
     ):
-        root = tmp_path / ".hermes"
+        root = tmp_path / ".relayhelm"
         profile_home = root / "profiles" / "coder"
         profile_home.mkdir(parents=True)
 
@@ -279,7 +279,7 @@ class TestNamedProfileHintIntegration:
         with patch("agent.coding_context._coding_mode", return_value="off"):
             prompt = "\n\n".join(_prompt_parts(agent).values())
 
-        assert "Active Hermes profile: coder." in prompt
+        assert "Active Relayhelm profile: coder." in prompt
         assert f"reads and writes {profile_home}/." in prompt
         # The doubled form must not appear anywhere.
         assert f"{profile_home}/profiles/coder" not in prompt
@@ -289,7 +289,7 @@ class TestNamedProfileHintIntegration:
 
     def test_real_default_home_renders_default_branch(self, tmp_path, monkeypatch):
         """HERMES_HOME at the root resolves to the default profile, unchanged."""
-        root = tmp_path / ".hermes"
+        root = tmp_path / ".relayhelm"
         root.mkdir(parents=True)
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -304,7 +304,7 @@ class TestNamedProfileHintIntegration:
         with patch("agent.coding_context._coding_mode", return_value="off"):
             prompt = "\n\n".join(_prompt_parts(agent).values())
 
-        assert "Active Hermes profile: default." in prompt
+        assert "Active Relayhelm profile: default." in prompt
         assert f"under {root}/profiles/<name>/." in prompt
 
 
@@ -340,7 +340,7 @@ def test_coding_prompt_preserves_legacy_workspace_order(monkeypatch):
     # build the expectation the same way instead of hardcoding "/hermes".
     _home_str = str(Path("/hermes"))
     expected_profile = (
-        "Active Hermes profile: default. Other profiles (if any) live "
+        "Active Relayhelm profile: default. Other profiles (if any) live "
         f"under {_home_str}/profiles/<name>/. Each profile has its own skills/, "
         "plugins/, cron/, and memories/ that affect a different session than "
         "this one. Do not modify another profile's skills/plugins/cron/memories "

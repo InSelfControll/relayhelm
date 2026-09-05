@@ -28,7 +28,7 @@ import hermes_cli._install_repair as ir
 import hermes_cli.update_cmd as update_cmd
 
 
-def _make_shims(scripts_dir: Path, names=("hermes", "hermes-gateway")) -> list[Path]:
+def _make_shims(scripts_dir: Path, names=("hermes", "relayhelm-gateway")) -> list[Path]:
     scripts_dir.mkdir(parents=True, exist_ok=True)
     shims = []
     for name in names:
@@ -51,7 +51,7 @@ def windows(monkeypatch):
 def test_strict_quarantine_refuses_before_install(windows, tmp_path, monkeypatch):
     scripts = tmp_path / "venv" / "Scripts"
     shims = _make_shims(scripts)
-    # hermes.exe cannot be renamed; hermes-gateway.exe can
+    # hermes.exe cannot be renamed; relayhelm-gateway.exe can
     real_rename = Path.rename
 
     def deny_hermes(self, target):
@@ -78,9 +78,9 @@ def test_strict_quarantine_refuses_before_install(windows, tmp_path, monkeypatch
     # The installer NEVER ran — that is the whole fix.
     assert install_ran == []
     assert "hermes.exe" in exc_info.value.failed_shims
-    # The successful rename (hermes-gateway.exe) was rolled back.
-    assert (scripts / "hermes-gateway.exe").exists()
-    assert not list(scripts.glob("hermes-gateway.exe.old.*"))
+    # The successful rename (relayhelm-gateway.exe) was rolled back.
+    assert (scripts / "relayhelm-gateway.exe").exists()
+    assert not list(scripts.glob("relayhelm-gateway.exe.old.*"))
 
 
 def test_non_strict_keeps_warn_and_try(windows, tmp_path, monkeypatch):

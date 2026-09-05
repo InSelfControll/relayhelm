@@ -1,4 +1,4 @@
-# nix/nixosModules.nix — the NixOS module for hermes-agent
+# nix/nixosModules.nix — the NixOS module for relayhelm
 #
 # This module shares its options, its renderers for config.yaml, .env and
 # documents, and its state setup with the Home Manager module
@@ -23,7 +23,7 @@
 # writable tool prefixes for npm i -g, pip install, uv tool install, etc.
 #
 # Usage:
-#   services.hermes-agent = {
+#   services.relayhelm = {
 #     enable = true;
 #     settings.model.default = "anthropic/claude-sonnet-4";
 #     environmentFiles = [ config.sops.secrets."hermes/env".path ];
@@ -41,13 +41,13 @@
     }:
 
     let
-      cfg = config.services.hermes-agent;
+      cfg = config.services.relayhelm;
       common = import ./moduleCommon.nix { inherit lib; };
 
       effectivePackage = common.effectivePackage cfg;
-      hermes-agent = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      relayhelm = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
-      hermesHome = "${cfg.stateDir}/.hermes";
+      hermesHome = "${cfg.stateDir}/.relayhelm";
 
       # In container mode, the agent uses the mount path in the container.
       effectiveWorkDir = if cfg.container.enable then containerWorkDir else cfg.workingDirectory;
@@ -58,7 +58,7 @@
       # (.env) stay 0640 regardless.
       configYamlMode = if cfg.addToSystemPackages then "0660" else "0640";
 
-      containerName = "hermes-agent";
+      containerName = "relayhelm";
       containerDataDir = "/data"; # stateDir mount point inside container
       containerHomeDir = "/home/hermes";
 
@@ -85,7 +85,7 @@
         if [ -n "$EXISTING_GROUP" ]; then
           GROUP_NAME="$EXISTING_GROUP"
         else
-          GROUP_NAME="hermes"
+          GROUP_NAME="relayhelm"
           if command -v groupadd >/dev/null 2>&1; then
             groupadd -g "$HERMES_GID" "$GROUP_NAME"
           elif command -v addgroup >/dev/null 2>&1; then
@@ -99,7 +99,7 @@
           TARGET_USER=$(echo "$PASSWD_ENTRY" | cut -d: -f1)
           TARGET_HOME=$(echo "$PASSWD_ENTRY" | cut -d: -f6)
         else
-          TARGET_USER="hermes"
+          TARGET_USER="relayhelm"
           TARGET_HOME="/home/hermes"
           if command -v useradd >/dev/null 2>&1; then
             useradd -u "$HERMES_UID" -g "$HERMES_GID" -m -d "$TARGET_HOME" -s /bin/bash "$TARGET_USER"
@@ -197,7 +197,7 @@
         backend=${cfg.container.backend}
         container_name=${containerName}
         exec_user=${cfg.user}
-        hermes_bin=${containerDataDir}/current-package/bin/hermes
+        hermes_bin=${containerDataDir}/current-package/bin/relayhelm
       '';
 
       # Default: /var/lib/hermes/workspace → /data/workspace.
@@ -242,10 +242,10 @@
 
     in
     {
-      options.services.hermes-agent =
+      options.services.relayhelm =
         common.sharedOptions {
-          defaultPackage = hermes-agent;
-          defaultPackageText = lib.literalExpression "hermes-agent.packages.\${system}.default";
+          defaultPackage = relayhelm;
+          defaultPackageText = lib.literalExpression "relayhelm.packages.\${system}.default";
           defaultWorkingDirectory = "${cfg.stateDir}/workspace";
           defaultWorkingDirectoryText = lib.literalExpression ''"''${cfg.stateDir}/workspace"'';
         }
@@ -255,13 +255,13 @@
             # ── Service identity ───────────────────────────────────────────
             user = mkOption {
               type = types.str;
-              default = "hermes";
+              default = "relayhelm";
               description = "System user running the gateway.";
             };
 
             group = mkOption {
               type = types.str;
-              default = "hermes";
+              default = "relayhelm";
               description = "System group running the gateway.";
             };
 
@@ -275,7 +275,7 @@
             stateDir = mkOption {
               type = types.str;
               default = "/var/lib/hermes";
-              description = "State directory. Contains .hermes/ subdir (HERMES_HOME).";
+              description = "State directory. Contains .relayhelm/ subdir (HERMES_HOME).";
             };
 
             addToSystemPackages = mkOption {
@@ -324,7 +324,7 @@
                 type = types.listOf types.str;
                 default = [ ];
                 description = ''
-                  Interactive users who get a ~/.hermes symlink to the service
+                  Interactive users who get a ~/.relayhelm symlink to the service
                   stateDir. These users are automatically added to the hermes group.
                 '';
                 example = [ "sidbin" ];
@@ -338,7 +338,7 @@
 
           # ── Merge MCP servers into settings ────────────────────────────────
           (lib.mkIf (cfg.mcpServers != { }) {
-            services.hermes-agent.settings.mcp_servers = common.mcpServersToConfig cfg.mcpServers;
+            services.relayhelm.settings.mcp_servers = common.mcpServersToConfig cfg.mcpServers;
           })
 
           # ── User / group ──────────────────────────────────────────────────
@@ -356,7 +356,7 @@
           # ── Host CLI ──────────────────────────────────────────────────────
           # Add the hermes CLI to system PATH and export HERMES_HOME system-wide
           # so interactive shells share state (sessions, skills, cron) with the
-          # gateway service instead of creating a separate ~/.hermes/.
+          # gateway service instead of creating a separate ~/.relayhelm/.
           (lib.mkIf cfg.addToSystemPackages {
             environment.systemPackages = [ effectivePackage ];
             environment.variables.HERMES_HOME = hermesHome;
@@ -374,16 +374,16 @@
             assertions =
               common.pluginNameAssertions {
                 inherit cfg;
-                optionPath = "services.hermes-agent";
+                optionPath = "services.relayhelm";
               }
               ++ common.workspaceFilesAssertions {
                 inherit cfg;
-                opt = options.services.hermes-agent.workingDirectory;
-                optionPath = "services.hermes-agent";
+                opt = options.services.relayhelm.workingDirectory;
+                optionPath = "services.relayhelm";
               }
               ++ common.backendBindAssertions {
                 inherit cfg;
-                optionPath = "services.hermes-agent";
+                optionPath = "services.relayhelm";
               }
               ++ [
                 {
@@ -391,7 +391,7 @@
                   # process needs its own container and its own ports. This
                   # module does not do that.
                   assertion = !(cfg.container.enable && cfg.backend.mode != "none");
-                  message = "services.hermes-agent: backend.mode is not supported together with container.enable — the container runs the gateway only.";
+                  message = "services.relayhelm: backend.mode is not supported together with container.enable — the container runs the gateway only.";
                 }
               ];
           }
@@ -413,7 +413,7 @@
             {
               warnings = [
                 ''
-                  services.hermes-agent: container.enable is true and container.hostUsers
+                  services.relayhelm: container.enable is true and container.hostUsers
                   is set, but addToSystemPackages is false. Without a host-installed hermes
                   binary, container routing will not work for interactive users.
                   Set addToSystemPackages = true or ensure hermes is on PATH.
@@ -498,12 +498,12 @@
                             user:
                             let
                               userHome = config.users.users.${user}.home;
-                              symlinkPath = "${userHome}/.hermes";
+                              symlinkPath = "${userHome}/.relayhelm";
                             in
                             ''
                               if [ -L "${symlinkPath}" ] && [ "$(readlink "${symlinkPath}")" = "${hermesHome}" ]; then
                                 rm -f "${symlinkPath}"
-                                echo "hermes-agent: removed symlink ${symlinkPath}"
+                                echo "relayhelm: removed symlink ${symlinkPath}"
                               fi
                             ''
                           ) cfg.container.hostUsers
@@ -512,7 +512,7 @@
                   }
 
                   # ── Symlink bridge for interactive users ───────────────────────
-                  # Create ~/.hermes -> stateDir/.hermes for each hostUser so the
+                  # Create ~/.relayhelm -> stateDir/.relayhelm for each hostUser so the
                   # host CLI shares state with the container service.
                   # Only runs when container mode is enabled.
                   ${lib.optionalString cfg.container.enable (
@@ -521,14 +521,14 @@
                         user:
                         let
                           userHome = config.users.users.${user}.home;
-                          symlinkPath = "${userHome}/.hermes";
+                          symlinkPath = "${userHome}/.relayhelm";
                         in
                         ''
                           if [ -d "${symlinkPath}" ] && [ ! -L "${symlinkPath}" ]; then
                             # Real directory — back it up, then create symlink.
                             # (ln -sfn cannot atomically replace a directory.)
                             _backup="${symlinkPath}.bak.$(date +%s)"
-                            echo "hermes-agent: backing up existing ${symlinkPath} to $_backup"
+                            echo "relayhelm: backing up existing ${symlinkPath} to $_backup"
                             mv "${symlinkPath}" "$_backup"
                           fi
                           # For everything else (existing symlink, doesn't exist, etc.)
@@ -546,8 +546,8 @@
           # MODE A: Native systemd service (default)
           # ══════════════════════════════════════════════════════════════════
           (lib.mkIf (!cfg.container.enable) {
-            systemd.services.hermes-agent = {
-              description = "Hermes Agent Gateway";
+            systemd.services.relayhelm = {
+              description = "Relayhelm Gateway";
               wantedBy = [ "multi-user.target" ];
               after = [ "network-online.target" ];
               wants = [ "network-online.target" ];
@@ -565,7 +565,7 @@
             };
           })
 
-          # ── The backend: hermes serve or hermes dashboard ─────────────────
+          # ── The backend: relayhelm serve or relayhelm dashboard ─────────────────
           # This is a different process from the gateway. Both use one
           # HERMES_HOME.
           (lib.mkIf (!cfg.container.enable && cfg.backend.mode != "none") {
@@ -592,8 +592,8 @@
             # Ensure the container runtime is available
             virtualisation.docker.enable = lib.mkDefault (cfg.container.backend == "docker");
 
-            systemd.services.hermes-agent = {
-              description = "Hermes Agent Gateway (container)";
+            systemd.services.relayhelm = {
+              description = "Relayhelm Gateway (container)";
               wantedBy = [ "multi-user.target" ];
               after = [
                 "network-online.target"
@@ -637,12 +637,12 @@
                     ${lib.concatStringsSep " " (map (v: "--volume ${v}") cfg.container.extraVolumes)} \
                     --env HERMES_UID="$HERMES_UID" \
                     --env HERMES_GID="$HERMES_GID" \
-                    --env HERMES_HOME=${containerDataDir}/.hermes \
+                    --env HERMES_HOME=${containerDataDir}/.relayhelm \
                     --env HERMES_MANAGED=true \
                     --env HOME=${containerHomeDir} \
                     ${lib.concatStringsSep " " cfg.container.extraOptions} \
                     ${cfg.container.image} \
-                    ${containerDataDir}/current-package/bin/hermes gateway run --replace ${lib.concatStringsSep " " cfg.extraArgs}
+                    ${containerDataDir}/current-package/bin/relayhelm gateway run --replace ${lib.concatStringsSep " " cfg.extraArgs}
 
                   echo "${containerIdentity}" > ${identityFile}
                 fi

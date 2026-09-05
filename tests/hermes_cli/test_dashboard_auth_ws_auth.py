@@ -244,7 +244,7 @@ class TestWsAuthOkGated:
         missing_public = _fake_ws(
             query={},
             path="/api/ws",
-            protocols=(f"hermes-gateway-ticket.{first}",),
+            protocols=(f"relayhelm-gateway-ticket.{first}",),
         )
         assert _web_server_chat._ws_auth_ok(missing_public) is False
 
@@ -253,9 +253,9 @@ class TestWsAuthOkGated:
             query={},
             path="/api/ws",
             protocols=(
-                "hermes-gateway-v1",
-                f"hermes-gateway-ticket.{first}",
-                f"hermes-gateway-ticket.{second}",
+                "relayhelm-gateway-v1",
+                f"relayhelm-gateway-ticket.{first}",
+                f"relayhelm-gateway-ticket.{second}",
             ),
         )
         assert _web_server_chat._ws_auth_ok(ambiguous) is False
@@ -402,7 +402,7 @@ class TestWsHostOriginGuardOrigins:
 
 
     def test_explicit_non_loopback_file_origin_allowed(self, insecure_explicit_host_app):
-        """Packaged Hermes Desktop also uses file:// when connecting to a
+        """Packaged Relayhelm Desktop also uses file:// when connecting to a
         Tailscale/LAN dashboard bind.
 
         The WebSocket route calls _ws_auth_ok before this guard, so in

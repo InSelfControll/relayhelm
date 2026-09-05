@@ -23,7 +23,7 @@ pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="live Windows E2
 
 
 def test_plan_reconciliation_live_windows(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
 
@@ -43,7 +43,7 @@ def test_plan_reconciliation_live_windows(tmp_path, monkeypatch):
             "pid": child.pid,
             "create_time": create_time,
             "gateway_state": "running",
-            "kind": "hermes-gateway",
+            "kind": "relayhelm-gateway",
             "code_sha": "f" * 40,
             "code_version": "0.20.5",
         }), encoding="utf-8")

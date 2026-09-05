@@ -34,14 +34,14 @@ def _cmd_list(_args) -> None:
     outbound = outbound_webhooks.iter_configured_targets(cfg)
 
     if not specs and not outbound:
-        print("No shell hooks or outbound webhooks configured in ~/.hermes/config.yaml.")
+        print("No shell hooks or outbound webhooks configured in ~/.relayhelm/config.yaml.")
         print("See `hermes hooks --help` or")
         print("    website/docs/user-guide/features/hooks.md")
         print("for the config schema and worked examples.")
         return
 
     if not specs:
-        print("No shell hooks configured in ~/.hermes/config.yaml.")
+        print("No shell hooks configured in ~/.relayhelm/config.yaml.")
     else:
         by_event: Dict[str, List] = {}
         for spec in specs:
@@ -221,7 +221,7 @@ def _print_run_result(result: Dict[str, Any]) -> None:
             print(f"      {stream}: {_truncate(text, 400)}")
     parsed = result.get("parsed")
     if parsed:
-        print(f"      parsed (Hermes wire shape): {json.dumps(parsed)}")
+        print(f"      parsed (Relayhelm wire shape): {json.dumps(parsed)}")
     else:
         print("      parsed: <none — hook contributed nothing to the dispatcher>")
 

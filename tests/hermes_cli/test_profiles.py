@@ -55,12 +55,12 @@ from hermes_cli.config import DEFAULT_CONFIG
 def profile_env(tmp_path, monkeypatch):
     """Set up an isolated environment for profile tests.
 
-    * Path.home() -> tmp_path  (so _get_profiles_root() = tmp_path/.hermes/profiles)
-    * HERMES_HOME  -> tmp_path/.hermes  (so get_hermes_home() agrees)
-    * Creates the bare-minimum ~/.hermes directory.
+    * Path.home() -> tmp_path  (so _get_profiles_root() = tmp_path/.relayhelm/profiles)
+    * HERMES_HOME  -> tmp_path/.relayhelm  (so get_hermes_home() agrees)
+    * Creates the bare-minimum ~/.relayhelm directory.
     """
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    default_home = tmp_path / ".hermes"
+    default_home = tmp_path / ".relayhelm"
     default_home.mkdir(exist_ok=True)
     monkeypatch.setenv("HERMES_HOME", str(default_home))
     return tmp_path
@@ -103,7 +103,7 @@ class TestGetProfileDir:
     def test_default_returns_hermes_home(self, profile_env):
         tmp_path = profile_env
         result = get_profile_dir("default")
-        assert result == tmp_path / ".hermes"
+        assert result == tmp_path / ".relayhelm"
 
 
 # ===================================================================
@@ -139,7 +139,7 @@ class TestCreateProfile:
         with "No LLM provider configured" — created, but unable to run. Fresh
         means fresh skills and SOUL, not unreachable.
         """
-        default_home = profile_env / ".hermes"
+        default_home = profile_env / ".relayhelm"
         (default_home / "config.yaml").write_text(
             "model:\n  provider: nous\n  default: some/model\n"
         )
@@ -157,7 +157,7 @@ class TestCreateProfile:
         The model block is copied at creation, so later edits to the source
         profile never reach one already created from it.
         """
-        default_home = profile_env / ".hermes"
+        default_home = profile_env / ".relayhelm"
         (default_home / "config.yaml").write_text(
             "model:\n  provider: nous\n  default: some/model\n"
         )
@@ -176,7 +176,7 @@ class TestCreateProfile:
 
     def test_clone_config_copies_files(self, profile_env):
         tmp_path = profile_env
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".relayhelm"
         # Create source config files in default profile
         (default_home / "config.yaml").write_text("model: test")
         (default_home / ".env").write_text("KEY=val")
@@ -199,7 +199,7 @@ class TestCreateProfile:
 # ===================================================================
 
 class TestNoSkillsOptOut:
-    """Tests for `hermes profile create --no-skills` and the opt-out marker."""
+    """Tests for `relayhelm profile create --no-skills` and the opt-out marker."""
 
     def test_no_skills_writes_marker_and_skips_seeding(self, profile_env):
         profile_dir = create_profile("orchestrator", no_alias=True, no_skills=True)
@@ -233,7 +233,7 @@ class TestNoSkillsOptOut:
         # happens inside sync_skills) and its skipped_opt_out flag surfaces.
         called = []
         stdout_by_call = [
-            '{"copied": ["hermes-agent"], "skipped_opt_out": true}',
+            '{"copied": ["relayhelm"], "skipped_opt_out": true}',
             '{"copied": []}',
         ]
         monkeypatch.setattr(
@@ -245,7 +245,7 @@ class TestNoSkillsOptOut:
         )
         r1 = seed_profile_skills(profile_dir, quiet=True)
         assert r1.get("skipped_opt_out") is True
-        assert r1.get("copied") == ["hermes-agent"]
+        assert r1.get("copied") == ["relayhelm"]
         assert len(called) == 1
 
         # Delete marker → next call is a normal full sync.
@@ -260,14 +260,14 @@ class TestNoSkillsOptOut:
 # ===================================================================
 
 class TestBackfillProfileEnvs:
-    """Tests for backfill_profile_envs() — the `hermes update` pass that
+    """Tests for backfill_profile_envs() — the `relayhelm update` pass that
     gives pre-#44792 profiles (created before .env seeding) their own
     .env, copied from the default install so credentials don't break."""
 
     def test_copies_default_env_into_envless_profiles(self, profile_env):
         import stat
         tmp_path = profile_env
-        (tmp_path / ".hermes" / ".env").write_text("OPENROUTER_API_KEY=root-key\n")
+        (tmp_path / ".relayhelm" / ".env").write_text("OPENROUTER_API_KEY=root-key\n")
         p1 = create_profile("old1", no_alias=True)
         p2 = create_profile("old2", no_alias=True)
         # Simulate pre-#44792 profiles: no .env
@@ -367,7 +367,7 @@ class TestDeleteProfile:
 
     def test_backend_scan_matches_shebang_exec_of_hermes_shim(self, profile_env, monkeypatch):
         """A `hermes` console-script shim spawned directly (e.g. Electron's
-        findOnPath('hermes') resolution) reports argv[0] as the interpreter
+        findOnPath('relayhelm') resolution) reports argv[0] as the interpreter
         (python3) and argv[1] as the shim's path -- not "hermes" -- because
         the OS execs the shebang. The scanner must still recognize it so
         profile delete doesn't leave a zombie Desktop-spawned backend behind
@@ -394,10 +394,10 @@ class TestDeleteProfile:
         procs = [
             # Shebang-exec'd shim bound to coder → matched despite argv[0]
             # being the python interpreter, not "hermes".
-            FakeProc(201, ["/usr/bin/python3", "/Users/x/.local/bin/hermes", "--profile", "coder", "serve",
+            FakeProc(201, ["/usr/bin/python3", "/Users/x/.local/bin/relayhelm", "--profile", "coder", "serve",
                             "--host", "127.0.0.1", "--port", "0"]),
             # Same shape but a different profile → skipped.
-            FakeProc(202, ["/usr/bin/python3", "/Users/x/.local/bin/hermes", "--profile", "other", "serve"]),
+            FakeProc(202, ["/usr/bin/python3", "/Users/x/.local/bin/relayhelm", "--profile", "other", "serve"]),
             # Non-hermes script run by python3 → skipped.
             FakeProc(203, ["/usr/bin/python3", "/Users/x/some_script.py", "--profile", "coder", "serve"]),
         ]
@@ -419,7 +419,7 @@ class TestDeleteProfile:
         hermes-notes.py, hermes-unrelated-tool) must NOT be misidentified as
         the console-script shim just because argv[0] is a python interpreter
         and argv[1]'s basename starts with "hermes" -- only the actual known
-        console-script entry points (hermes, hermes-agent, hermes-acp) count.
+        console-script entry points (hermes, relayhelm, hermes-acp) count.
         """
         create_profile("coder", no_alias=True)
         profile_dir = get_profile_dir("coder")
@@ -461,7 +461,7 @@ class TestDeleteProfile:
         assert pids == []
 
     def test_backend_scan_matches_all_known_console_script_shims(self, profile_env, monkeypatch):
-        """The other two real console-script entry points (hermes-agent,
+        """The other two real console-script entry points (relayhelm,
         hermes-acp -- see pyproject.toml [project.scripts]) must also be
         recognized via the shebang-exec path, not just the primary "hermes"
         shim.
@@ -485,9 +485,9 @@ class TestDeleteProfile:
 
         self_pid = os.getpid()
         procs = [
-            FakeProc(401, ["/usr/bin/python3", "/Users/x/.local/bin/hermes-agent",
+            FakeProc(401, ["/usr/bin/python3", "/Users/x/.local/bin/relayhelm",
                             "--profile", "coder", "serve"]),
-            FakeProc(402, ["/usr/bin/python3", "/Users/x/.local/bin/hermes-acp",
+            FakeProc(402, ["/usr/bin/python3", "/Users/x/.local/bin/relayhelm-acp",
                             "--profile", "coder", "serve"]),
         ]
 
@@ -537,7 +537,7 @@ class TestActiveProfile:
         tmp_path = profile_env
         create_profile("coder", no_alias=True)
         set_active_profile("coder")
-        active_path = tmp_path / ".hermes" / "active_profile"
+        active_path = tmp_path / ".relayhelm" / "active_profile"
         assert active_path.exists()
 
         set_active_profile("default")
@@ -555,7 +555,7 @@ class TestGetActiveProfileName:
     def test_profile_path_returns_profile_name(self, profile_env, monkeypatch):
         tmp_path = profile_env
         create_profile("coder", no_alias=True)
-        profile_dir = tmp_path / ".hermes" / "profiles" / "coder"
+        profile_dir = tmp_path / ".relayhelm" / "profiles" / "coder"
         monkeypatch.setenv("HERMES_HOME", str(profile_dir))
         assert get_active_profile_name() == "coder"
 
@@ -618,14 +618,14 @@ class TestWrapperScript:
     """Tests for create_wrapper_script() and remove_wrapper_script()."""
 
     def test_creates_sh_on_posix(self, profile_env, monkeypatch):
-        monkeypatch.setattr("hermes_cli.profiles.shutil.which", lambda name: "/opt/hermes/bin/hermes")
+        monkeypatch.setattr("hermes_cli.profiles.shutil.which", lambda name: "/opt/hermes/bin/relayhelm")
         from hermes_cli.profiles import create_wrapper_script
         wrapper = create_wrapper_script("mybot")
         assert wrapper is not None
         assert wrapper.name == "mybot"
         content = wrapper.read_text()
         assert content.startswith("#!/bin/sh")
-        assert "exec /opt/hermes/bin/hermes -p mybot" in content
+        assert "exec /opt/hermes/bin/relayhelm -p mybot" in content
 
 
     @pytest.mark.windows_only
@@ -715,7 +715,7 @@ class TestRenameProfile:
     def test_renames_directory(self, profile_env):
         tmp_path = profile_env
         create_profile("oldname", no_alias=True)
-        old_dir = tmp_path / ".hermes" / "profiles" / "oldname"
+        old_dir = tmp_path / ".relayhelm" / "profiles" / "oldname"
         assert old_dir.is_dir()
 
         # Mock alias collision to avoid subprocess calls
@@ -724,12 +724,12 @@ class TestRenameProfile:
 
         assert not old_dir.is_dir()
         assert new_dir.is_dir()
-        assert new_dir == tmp_path / ".hermes" / "profiles" / "newname"
+        assert new_dir == tmp_path / ".relayhelm" / "profiles" / "newname"
 
     def test_renames_root_honcho_host_without_changing_ai_peer(self, profile_env):
         tmp_path = profile_env
         create_profile("ssi_health", no_alias=True)
-        honcho_path = tmp_path / ".hermes" / "honcho.json"
+        honcho_path = tmp_path / ".relayhelm" / "honcho.json"
         honcho_path.write_text(json.dumps({
             "hosts": {
                 "hermes.ssi_health": {
@@ -1016,24 +1016,23 @@ class TestEdgeCases:
         same live gateway. See get_running_pid() short-circuiting on an
         unheld runtime lock before it inspects the PID record.
         """
-        import os
-        import gateway.status as gw_status
         from hermes_cli.profiles import _check_gateway_running
 
         tmp_path = profile_env
-        default_home = tmp_path / ".hermes"
+        default_home = tmp_path / ".relayhelm"
         default_home.mkdir(parents=True, exist_ok=True)
 
-        # Write a realistic gateway_state.json pointing at THIS live process with
-        # a gateway-shaped argv, so get_runtime_status_running_pid validates it.
-        live_pid = os.getpid()
+        # Model one live gateway at the OS boundary. A sandbox can expose /proc
+        # in a different PID namespace than os.getpid(), so the test process's
+        # actual PID is not a portable stand-in for a separately running gateway.
+        live_pid = 424242
         (default_home / "gateway_state.json").write_text(
             json.dumps(
                 {
                     "pid": live_pid,
-                    "kind": "hermes-gateway",
-                    "argv": ["hermes", "gateway", "run"],
-                    "start_time": gw_status._get_process_start_time(live_pid),
+                    "kind": "relayhelm-gateway",
+                    "argv": ["relayhelm", "gateway", "run"],
+                    "start_time": 100,
                     "gateway_state": "running",
                     "active_agents": 0,
                 }
@@ -1050,9 +1049,15 @@ class TestEdgeCases:
         # runs the gateway with no profile flag).
         with patch("gateway.status.get_running_pid", return_value=None), patch(
             "gateway.status._read_process_cmdline",
-            return_value="hermes gateway run --replace",
+            return_value="relayhelm gateway run --replace",
+        ), patch("gateway.status._pid_exists", return_value=True), patch(
+            "gateway.status._get_process_start_time", return_value=100,
         ):
             assert _check_gateway_running(default_home) is True
+            # PID reuse must still fail closed; the gateway-shaped argv alone
+            # cannot vouch for a process with a different start time.
+            with patch("gateway.status._get_process_start_time", return_value=101):
+                assert _check_gateway_running(default_home) is False
 
 
 

@@ -34,9 +34,9 @@ class TestDisplayHermesHomePosix(unittest.TestCase):
         import hermes_constants as hc
 
         with patch.object(hc, "get_hermes_home",
-                          return_value=Path.home() / ".hermes"):
+                          return_value=Path.home() / ".relayhelm"):
             out = hc.display_hermes_home()
-        self.assertEqual(out, "~/.hermes")
+        self.assertEqual(out, "~/.relayhelm")
 
     def test_outside_home_falls_back_to_absolute(self):
         import hermes_constants as hc

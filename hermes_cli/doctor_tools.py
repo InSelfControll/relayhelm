@@ -1,4 +1,4 @@
-"""External-tool checks for hermes doctor: terminal backends, git/rg, Node + agent-browser, npm audit, tool availability.
+"""External-tool checks for relayhelm doctor: terminal backends, git/rg, Node + agent-browser, npm audit, tool availability.
 Split out of ``hermes_cli/doctor.py``, which re-exports every name so ``hermes_cli.doctor.<name>`` keeps resolving (and monkeypatching)."""
 
 from __future__ import annotations
@@ -189,8 +189,8 @@ def _check_vercel_backend(issues: list[str]) -> None:
              ("Vercel disk setting", "(uses platform default)"), ("Vercel custom disk unsupported", "(reset terminal.container_disk to 51200)"),
              "Vercel Sandbox does not support custom container_disk; use the shared default 51200", issues)
     _require(importlib.util.find_spec("vercel") is not None, ("vercel SDK", "(installed)"),
-             ("vercel SDK not installed", "(pip install 'hermes-agent[vercel]')"),
-             "Install the Vercel optional dependency: pip install 'hermes-agent[vercel]'", issues)
+             ("vercel SDK not installed", "(pip install 'relayhelm[vercel]')"),
+             "Install the Vercel optional dependency: pip install 'relayhelm[vercel]'", issues)
     auth_status = describe_vercel_auth()
     if auth_status.ok:
         check_ok("Vercel auth", f"({auth_status.label})")
@@ -260,7 +260,7 @@ def _check_agent_browser(should_fix: bool) -> bool:
     if resolved and _is_npx_agent_browser_sentinel(resolved):
         check_ok("agent-browser", "(resolves via npx on first use)")
         if should_fix:
-            # Can't tell whether npx's cache is warm — fire the same warm-up `hermes update` does.
+            # Can't tell whether npx's cache is warm — fire the same warm-up `relayhelm update` does.
             from tools.browser_tool_install import warm_agent_browser_npx_cache
             check_info("  Warmed npx cache for agent-browser" if warm_agent_browser_npx_cache()
                        else "  Could not warm npx cache (offline or npx unavailable)")
@@ -269,7 +269,7 @@ def _check_agent_browser(should_fix: bool) -> bool:
         check_ok("agent-browser", "(browser automation)")
         return True
     if resolved:
-        # Almost always a dangling global symlink left by npm postinstall after `hermes update` wiped node_modules.
+        # Almost always a dangling global symlink left by npm postinstall after `relayhelm update` wiped node_modules.
         check_warn("agent-browser found but not runnable", f"(broken symlink at {resolved}? run: npx agent-browser --version)")
     elif _is_termux():
         _termux_browser_hints("agent-browser is not installed (expected in the tested Termux path)",
@@ -326,7 +326,7 @@ def _check_lightpanda() -> None:
         used, reason = False, f"status check failed: {e}"
     if not used:
         check_warn("browser.engine=lightpanda is shadowed", f"({reason})")
-        check_info("Fix: pick Lightpanda in `hermes tools` → Browser Automation, or set browser.engine: auto")
+        check_info("Fix: pick Lightpanda in `relayhelm tools` → Browser Automation, or set browser.engine: auto")
     elif not check_bool(find_lightpanda_binary(), ("Lightpanda", f"({reason})"),
                         ("Lightpanda selected but binary not found", "(browser tools will fail until it is installed)")):
         check_info(LIGHTPANDA_INSTALL_HINT)
@@ -447,4 +447,4 @@ def _check_tool_availability(should_fix: bool, f: Finding) -> None:
     # disabled toolsets may warn above but must not pollute it.
     api_disabled = _missing_api_key_toolsets_for_summary(unavailable)
     if api_disabled or any(status != "ok" for status, _, _ in web_rows):
-        f.issues.append("Run 'hermes setup' to configure missing API keys for full tool access")
+        f.issues.append("Run 'relayhelm setup' to configure missing API keys for full tool access")

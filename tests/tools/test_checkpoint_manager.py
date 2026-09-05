@@ -44,7 +44,7 @@ def work_dir(tmp_path):
 
 @pytest.fixture()
 def checkpoint_base(tmp_path):
-    """Isolated checkpoint base — never writes to ~/.hermes/."""
+    """Isolated checkpoint base — never writes to ~/.relayhelm/."""
     return tmp_path / "checkpoints"
 
 
@@ -322,11 +322,11 @@ class TestSafeRestore:
     def test_safe_restore_skips_user_edited_file(self, mgr, work_dir):
         base = self._checkpoint(mgr, work_dir)
 
-        # Hermes writes main.py and records it in the ledger.
+        # Relayhelm writes main.py and records it in the ledger.
         (work_dir / "main.py").write_text("agent version\n")
         mgr.record_agent_write(str(work_dir / "main.py"))
 
-        # The user then hand-edits README.md (Hermes never wrote it).
+        # The user then hand-edits README.md (Relayhelm never wrote it).
         (work_dir / "README.md").write_text("user hand edit\n")
 
         result = mgr.restore(str(work_dir), base, safe=True)
@@ -341,14 +341,14 @@ class TestSafeRestore:
     def test_safe_restore_skips_file_user_edited_after_agent(self, mgr, work_dir):
         base = self._checkpoint(mgr, work_dir)
 
-        # Hermes writes the file, then the user modifies it afterwards.
+        # Relayhelm writes the file, then the user modifies it afterwards.
         (work_dir / "main.py").write_text("agent version\n")
         mgr.record_agent_write(str(work_dir / "main.py"))
         (work_dir / "main.py").write_text("user tweaked the agent's file\n")
 
         result = mgr.restore(str(work_dir), base, safe=True)
         assert result["success"] is True
-        # Content no longer matches what Hermes last wrote → preserved.
+        # Content no longer matches what Relayhelm last wrote → preserved.
         assert (work_dir / "main.py").read_text() == "user tweaked the agent's file\n"
         assert "main.py" in result["skipped_user_edits"]
 
@@ -377,7 +377,7 @@ class TestSafeRestore:
     def test_safe_restore_removes_agent_created_file_keeps_user_edit(self, mgr, work_dir):
         base = self._checkpoint(mgr, work_dir)
 
-        # Hermes creates a brand-new file after the checkpoint...
+        # Relayhelm creates a brand-new file after the checkpoint...
         (work_dir / "agent.txt").write_text("agent file\n")
         mgr.record_agent_write(str(work_dir / "agent.txt"))
         # ...and the user hand-edits an existing one.
@@ -396,7 +396,7 @@ class TestSafeRestore:
     # ``max_file_size_mb`` keeps generated assets out of a checkpoint
     # (test_max_file_size_mb_skips_large_files). Safe restore then sees such a
     # file as "changed since the checkpoint and absent from it" — the same
-    # shape as a file Hermes created — and the delete branch treats absence as
+    # shape as a file Relayhelm created — and the delete branch treats absence as
     # proof of authorship. For a capped file that is wrong: no checkpoint holds
     # a copy, so deleting it destroys the only one.
 

@@ -2,7 +2,7 @@
 
 Provider profiles can live in three places:
 
-1. Bundled plugins: ``plugins/model-providers/<name>/`` (shipped with hermes-agent)
+1. Bundled plugins: ``plugins/model-providers/<name>/`` (shipped with relayhelm)
 2. User plugins: ``$HERMES_HOME/plugins/model-providers/<name>/``
 3. Pip-installed plugins: distributions exposing a ``hermes_agent.plugins``
    entry point (``module:func`` callable or a self-registering ``module``)
@@ -111,7 +111,7 @@ def _user_plugins_dir() -> Path | None:
 def _installed_plugins_dir() -> Path | None:
     """Return ``$HERMES_HOME/plugins/`` if it exists.
 
-    This is where ``hermes plugins install`` clones a plugin — flat, one
+    This is where ``relayhelm plugins install`` clones a plugin — flat, one
     directory per plugin, NOT under ``model-providers/``. See
     :func:`_discover_installed_provider_plugins`.
     """
@@ -325,7 +325,7 @@ def _discover_providers() -> None:
     Order:
       1. Bundled plugins at ``<repo>/plugins/model-providers/<name>/``
       2. User plugins at ``$HERMES_HOME/plugins/model-providers/<name>/``
-      2b. Plugins installed by ``hermes plugins install`` at
+      2b. Plugins installed by ``relayhelm plugins install`` at
           ``$HERMES_HOME/plugins/<name>/`` that declare ``kind: model-provider``
       3. Legacy per-file modules at ``providers/<name>.py`` (back-compat)
 
@@ -353,7 +353,7 @@ def _discover_providers() -> None:
     #    genuinely new providers.
     _discover_entry_point_providers()
 
-    # 1. Bundled plugins — shipped with hermes-agent.
+    # 1. Bundled plugins — shipped with relayhelm.
     if _BUNDLED_PLUGINS_DIR.is_dir():
         for child in sorted(_BUNDLED_PLUGINS_DIR.iterdir()):
             if not child.is_dir() or child.name.startswith(("_", ".")):
@@ -370,7 +370,7 @@ def _discover_providers() -> None:
                 continue
             _import_plugin_dir(child, "user")
 
-    # 2b. Plugins installed by ``hermes plugins install`` / the plugin index.
+    # 2b. Plugins installed by ``relayhelm plugins install`` / the plugin index.
     #     Those clone into $HERMES_HOME/plugins/<name>/ — flat, NOT under
     #     model-providers/ — so step 2 never sees them. PluginManager does not
     #     import them either: it classifies ``kind: model-provider`` and routes

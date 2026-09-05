@@ -387,7 +387,7 @@ async def test_status_command_bypasses_active_session_guard():
 
     async def fake_handler(event):
         handler_called_with.append(event)
-        return "📊 **Hermes Gateway Status**\n**Agent Running:** Yes ⚡"
+        return "📊 **Relayhelm Gateway Status**\n**Agent Running:** Yes ⚡"
 
     # Concrete subclass to avoid abstract method errors
     class _ConcreteAdapter(BasePlatformAdapter):
@@ -434,7 +434,7 @@ async def test_profile_command_reports_source_stamped_profile(monkeypatch, tmp_p
     source (source.profile — URL prefix / per-credential adapter / room map),
     not the multiplexer's active profile, which is always the default and
     made /profile answer "default" in every persona chat."""
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     profile_home = hermes_home / "profiles" / "milo"
     profile_home.mkdir(parents=True)
 
@@ -567,7 +567,7 @@ async def test_context_all_appends_expanded_listings():
     }
     fake_details = {
         "skills": [
-            {"name": "hermes-agent", "index_tokens": 30, "skill_md_tokens": 2_500},
+            {"name": "relayhelm", "index_tokens": 30, "skill_md_tokens": 2_500},
         ],
         "toolsets": [
             {"toolset": "terminal", "tool_count": 4, "schema_tokens": 5_100},
@@ -586,6 +586,6 @@ async def test_context_all_appends_expanded_listings():
     assert "Toolsets by schema cost" in result
     assert "terminal" in result and "5,100 tokens" in result
     assert "Skills by cost" in result
-    assert "hermes-agent" in result
+    assert "relayhelm" in result
     # Expanded view drops the hint
     assert "Use /context all" not in result

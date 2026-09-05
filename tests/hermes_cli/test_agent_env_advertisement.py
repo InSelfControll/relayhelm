@@ -4,15 +4,15 @@ Port of earendil-works/pi#7493: entry points advertise the agent harness to
 child processes via the cross-agent ``AI_AGENT`` standard plus a
 Hermes-specific marker, without clobbering an outer harness.
 
-The AI_AGENT value must equal Hermes' id in the public agent-harness
-registry (``hermes-agent`` in huggingface.js ``agent-harnesses.ts``) —
+The AI_AGENT value must equal Relayhelm' id in the public agent-harness
+registry (``relayhelm`` in huggingface.js ``agent-harnesses.ts``) —
 standard-var matching there is exact, so any other value is attributed to
 "unknown".
 
 The terminal backends additionally export both vars inside every wrapped
 shell command (``BaseEnvironment._wrap_command``) so the marker reaches
 REMOTE backends (Docker/SSH/Modal/Daytona/Singularity/Vercel) whose exec
-environment does not inherit the Hermes process env, and survives the
+environment does not inherit the Relayhelm process env, and survives the
 cross-session leak guard that strips ``HERMES_SESSION_*`` from subprocess
 envs in engaged multi-session hosts.
 """
@@ -23,7 +23,7 @@ import subprocess
 from hermes_cli.main import _advertise_agent_env
 
 # Registry id — must stay in sync with huggingface.js agent-harnesses.ts.
-HARNESS_ID = "hermes-agent"
+HARNESS_ID = "relayhelm"
 
 
 class TestAdvertiseAgentEnv:

@@ -59,11 +59,11 @@ test('hermes runtime import probe checks config dependencies', () => {
   assert.match(probe, /\bimport hermes_cli\.config\b/)
 })
 
-test('explicit Hermes override is authoritative', () => {
-  assert.equal(shouldTrustHermesOverride('/nix/store/abc/bin/hermes'), true)
+test('explicit Relayhelm override is authoritative', () => {
+  assert.equal(shouldTrustHermesOverride('/nix/store/abc/bin/relayhelm'), true)
 })
 
-test('empty Hermes override is not authoritative', () => {
+test('empty Relayhelm override is not authoritative', () => {
   assert.equal(shouldTrustHermesOverride(''), false)
   assert.equal(shouldTrustHermesOverride(undefined), false)
 })
@@ -124,4 +124,31 @@ test('resolveProbeTimeoutMs honours HERMES_PROBE_TIMEOUT_MS', () => {
   assert.equal(resolveProbeTimeoutMs({ HERMES_PROBE_TIMEOUT_MS: 'nope' }), DEFAULT_PROBE_TIMEOUT_MS)
   // Cap runaway values
   assert.equal(resolveProbeTimeoutMs({ HERMES_PROBE_TIMEOUT_MS: '999999' }), 120_000)
+})
+
+test.skipIf(process.platform === 'win32')('an upstream-only Python package is not adopted as Relayhelm', async context => {
+  const { spawnSync } = await import('node:child_process')
+  const found = spawnSync('python3', ['-c', 'import sys; print(sys.executable)'], { encoding: 'utf8' })
+  if (found.status !== 0) {
+    context.skip('Python 3 is required for the runtime identity probe')
+    return
+  }
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'relayhelm-runtime-probe-'))
+  const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`
+  try {
+    // An importable legacy module alone must not qualify as our distribution.
+    fs.mkdirSync(path.join(root, 'hermes_cli'))
+    for (const file of ['yaml.py', 'dotenv.py', 'hermes_cli/__init__.py', 'hermes_cli/config.py']) {
+      fs.writeFileSync(path.join(root, file), '')
+    }
+    const launcher = path.join(root, 'python')
+    fs.writeFileSync(launcher, `#!/bin/sh\ncd ${quote(root)}\nexec ${quote(found.stdout.trim())} -S "$@"\n`, { mode: 0o755 })
+    assert.equal(canImportHermesCli(launcher, { env: { PYTHONPATH: root } }), false)
+    const metadata = path.join(root, 'relayhelm-1.0.dist-info')
+    fs.mkdirSync(metadata)
+    fs.writeFileSync(path.join(metadata, 'METADATA'), 'Metadata-Version: 2.1\nName: relayhelm\nVersion: 1.0\n')
+    assert.equal(canImportHermesCli(launcher, { env: { PYTHONPATH: root } }), true)
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
 })

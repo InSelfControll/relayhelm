@@ -81,7 +81,7 @@ class TestStoredPromptReuse:
         model reads old `Model:` metadata ("what model are you?" lies).
         """
         stored = (
-            "You are Hermes Agent.\n\n"
+            "You are Relayhelm.\n\n"
             "Conversation started: Tuesday, June 16, 2026\n"
             "Session ID: test-session-id\n"
             "Model: anthropic/claude-opus-4.8-fast\n"
@@ -92,7 +92,7 @@ class TestStoredPromptReuse:
         agent = _make_agent(
             session_db=db,
             prebuilt_prompt=(
-                "You are Hermes Agent.\n\n"
+                "You are Relayhelm.\n\n"
                 "Conversation started: Tuesday, June 16, 2026\n"
                 "Session ID: test-session-id\n"
                 "Model: openai/gpt-5.5\n"
@@ -204,7 +204,7 @@ class TestPromptStabilityInvariant:
         invalidates KV cache on every prefix-cache backend.
         """
         stored = (
-            "You are Hermes Agent.\n"
+            "You are Relayhelm.\n"
             "\n"
             "Conversation started: Sunday, May 17, 2026\n"
             "Session ID: 20260517_153500_abc123\n"
@@ -382,7 +382,7 @@ class TestReconstructStaticPrefixMemoization:
 class TestPerResponseSessionWritePath:
     """The write path under an embedding host's per-response session (#96570).
 
-    Hermes Studio group chat pre-creates the SQLite row and pre-persists the
+    Relayhelm Studio group chat pre-creates the SQLite row and pre-persists the
     user message BEFORE ``run_conversation()``, then runs one turn under a
     session id it destroys afterwards. The row therefore starts with a null
     system prompt and a non-empty history on its own genuine FIRST turn, which

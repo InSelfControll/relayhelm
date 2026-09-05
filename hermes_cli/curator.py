@@ -377,7 +377,7 @@ def _cmd_backup(args) -> int:
     if snap is None:
         print("curator: snapshot failed — check logs (backup disabled or IO error)")
         return 1
-    print(f"curator: snapshot created at ~/.hermes/skills/.curator_backups/{snap.name}")
+    print(f"curator: snapshot created at ~/.relayhelm/skills/.curator_backups/{snap.name}")
     return 0
 
 
@@ -526,7 +526,7 @@ def _cmd_rollback(args) -> int:
             else:
                 print(f"  cron jobs:   not in snapshot ({cron.get('reason', 'not captured')})")
     print(
-        "\nThis will replace the current ~/.hermes/skills/ tree (a safety "
+        "\nThis will replace the current ~/.relayhelm/skills/ tree (a safety "
         "snapshot of the current state is taken first so this is undoable). "
         "Cron jobs that still exist will have their skills/skill fields "
         "restored from the snapshot; all other cron fields are left alone.")
@@ -649,14 +649,14 @@ _SUBCOMMANDS = (
              help="Show what would be archived without doing it")),
     (
         "backup",
-        "Take a manual tar.gz snapshot of ~/.hermes/skills/ "
+        "Take a manual tar.gz snapshot of ~/.relayhelm/skills/ "
         "(curator also does this automatically before every real run)",
         _cmd_backup,
         _arg("--reason", default=None,
              help="Free-text label stored in manifest.json (default: 'manual')")),
     (
         "rollback",
-        "Restore ~/.hermes/skills/ from a curator snapshot, or a single "
+        "Restore ~/.relayhelm/skills/ from a curator snapshot, or a single "
         "mutation by ledger entry id (see `hermes curator ledger`)",
         _cmd_rollback,
         _arg("entry_id", nargs="?", default=None,
@@ -696,7 +696,7 @@ def register_cli(parent: argparse.ArgumentParser) -> None:
 
 def cli_main(argv=None) -> int:
     """Standalone entry (also usable by hermes_cli.main fallthrough)."""
-    parser = argparse.ArgumentParser(prog="hermes curator")
+    parser = argparse.ArgumentParser(prog="relayhelm curator")
     register_cli(parser)
     args = parser.parse_args(argv)
     return int(args.func(args) or 0)

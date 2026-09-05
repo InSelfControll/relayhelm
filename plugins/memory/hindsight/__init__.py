@@ -48,7 +48,7 @@ from .settings import (
 logger = logging.getLogger(__name__)
 
 _LOCAL_MODES = {"local", "local_embedded"}
-_RETAIN_CONTEXT_DEFAULT = "conversation between Hermes Agent and the User"
+_RETAIN_CONTEXT_DEFAULT = "conversation between Relayhelm and the User"
 
 
 def _ensure_client_dependency() -> None:
@@ -256,7 +256,7 @@ def _load_config() -> dict:
 
 
 def _event_timestamp() -> str:
-    """Configured Hermes event time with an explicit UTC offset."""
+    """Configured Relayhelm event time with an explicit UTC offset."""
     event_time = _hermes_now()
     # hermes_time.now() is aware; guard a replacement clock emitting offset-less dates.
     if event_time.tzinfo is None or event_time.utcoffset() is None:
@@ -431,7 +431,7 @@ class HindsightMemoryProvider(MemoryProvider):
             {"key": "retain_async","description": "Process retain asynchronously on the Hindsight server", "default": True},
             {"key": "prefetch_waits_for_retain", "description": "Have the background next-turn prefetch wait for the just-completed retain to become recall-visible on the server (local queue drain + async operation completion) before recalling, so recall includes the just-completed turn (runs off the reply path, adds no response latency)", "default": True},
             {"key": "prefetch_retain_drain_timeout", "description": "Max seconds the background prefetch waits for the retain to become recall-visible (queue drain + server-side completion) before recalling anyway", "default": 10.0},
-            {"key": "retain_context", "description": "Context label for retained memories", "default": "conversation between Hermes Agent and the User"},
+            {"key": "retain_context", "description": "Context label for retained memories", "default": "conversation between Relayhelm and the User"},
             {"key": "recall_max_tokens", "description": "Maximum tokens for recall results", "default": 4096},
             {"key": "recall_max_input_chars", "description": "Maximum input query length for auto-recall", "default": 800},
             {"key": "recall_prompt_preamble", "description": "Custom preamble for recalled memories in context"},
@@ -786,13 +786,13 @@ class HindsightMemoryProvider(MemoryProvider):
         if hasattr(os, "geteuid") and os.geteuid() == 0:
             msg = ("Hindsight local_embedded mode cannot run as root "
                    "(PostgreSQL initdb refuses root). Skipping the embedded "
-                   "memory daemon. Run Hermes as a non-root user, or switch "
-                   "to cloud / local_external mode via 'hermes memory setup'.")
+                   "memory daemon. Run Relayhelm as a non-root user, or switch "
+                   "to cloud / local_external mode via 'relayhelm memory setup'.")
             logger.warning(msg)
-            # Also print: otherwise the user would only see Hermes get sluggish.
+            # Also print: otherwise the user would only see Relayhelm get sluggish.
             with contextlib.suppress(Exception):
                 # Surface to the terminal too — a daemon that never starts would otherwise fail silently and
-                # the user would only see Hermes get sluggish. (issue #13125)
+                # the user would only see Relayhelm get sluggish. (issue #13125)
                 print(f"  ⚠ {msg}", file=sys.stderr, flush=True)
             self._mode = "disabled"
             return
@@ -898,7 +898,7 @@ class HindsightMemoryProvider(MemoryProvider):
     def prefetch(self, query: str, *, session_id: str = "") -> str:
         # Opt-in: recall synchronously against the *current* message so the
         # injected memories match this turn's query, not the previous turn's.
-        # See NousResearch/hermes-agent#5820.
+        # See InSelfControll/relayhelm#5820.
         if self._recall_sync:
             return self._finish_prefetch(*(("", 0) if self._recall_disabled() else self._do_recall(query)))
         # Default: the background worker's result for the previous turn (capped join).
@@ -1113,7 +1113,7 @@ class HindsightMemoryProvider(MemoryProvider):
 
         Without this hook, initialize()-cached state (``_session_id``, ``_document_id``, ``_session_turns``,
         ``_turn_counter``) would keep pointing at the previous session and writes would land in the wrong
-        document. See hermes-agent#6672.
+        document. See relayhelm#6672.
         Always update ``_session_id`` so metadata and tags on subsequent retains reflect the active session.
         Always clear the accumulated batch buffers (``_session_turns``, ``_turn_counter``, ``_turn_index``)
         — even for /resume and /branch, the new session's batching must start from zero so an in-flight

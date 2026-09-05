@@ -196,7 +196,7 @@ def test_cmd_restart_propagates_start_failure(hermes_home, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# _load_env_file_into_environ — setup discovers keys kept only in ~/.hermes/.env
+# _load_env_file_into_environ — setup discovers keys kept only in ~/.relayhelm/.env
 # ---------------------------------------------------------------------------
 
 
@@ -277,7 +277,7 @@ def test_register_cli_uses_egress_command_dest():
     A future grep-and-refactor on proxy_command should not hit this
     subparser by accident."""
 
-    parser = argparse.ArgumentParser(prog="hermes egress")
+    parser = argparse.ArgumentParser(prog="relayhelm egress")
     proxy_cli.register_cli(parser)
     # Parse a no-op invocation and confirm the attribute name.
     args = parser.parse_args(["install"])

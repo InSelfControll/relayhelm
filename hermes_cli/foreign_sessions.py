@@ -187,7 +187,7 @@ def _list_sessions(source: str, root: Optional[Path]) -> List[ForeignSession]:
 
 
 def import_foreign_session(source: str, path, db=None) -> str:
-    """Import one foreign session into the Hermes SessionDB; returns the new Hermes session id.
+    """Import one foreign session into the Relayhelm SessionDB; returns the new Relayhelm session id.
 
     Raises ``ValueError`` on unknown source or a session with no usable conversation turns."""
     source = (source or "").strip().lower().lstrip("@")
@@ -291,7 +291,7 @@ def run_sessions_import(args, db=None) -> Optional[str]:
         print(f"Error: {e}")
         return None
     print(f"✓ Imported {_SOURCE_LABELS.get(source, source)} session as {session_id}")
-    print(f"  Continue it with:  hermes --resume {session_id}")
+    print(f"  Continue it with:  relayhelm --resume {session_id}")
     return session_id
 
 

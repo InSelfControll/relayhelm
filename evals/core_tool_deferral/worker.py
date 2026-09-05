@@ -27,7 +27,7 @@ if not os.environ.get("OPENROUTER_API_KEY"):
     print("ABORT: OPENROUTER_API_KEY missing", file=sys.stderr)
     sys.exit(3)
 
-# --- hermetic env BEFORE any hermes import -------------------------------
+# --- hermetic env BEFORE any relayhelm import -------------------------------
 for var in list(os.environ):
     if var.endswith(("_API_KEY", "_TOKEN")) and var != "OPENROUTER_API_KEY":
         os.environ.pop(var, None)
@@ -35,7 +35,7 @@ os.environ.pop("FAL_KEY", None)
 os.environ.pop("HERMES_PROFILE", None)
 
 tmp_root = tempfile.mkdtemp(prefix=f"ab-{ARM}-{TASK_ID}-")
-hermes_home = os.path.join(tmp_root, ".hermes")
+hermes_home = os.path.join(tmp_root, ".relayhelm")
 workspace = os.path.join(tmp_root, "ws")
 os.makedirs(hermes_home)
 os.makedirs(workspace)
@@ -229,7 +229,7 @@ agent = AIAgent(
     setup_mcp_callback=setup_mcp_cb,
 )
 
-PREAMBLE = ("You are running inside the Hermes desktop app on the user's machine. "
+PREAMBLE = ("You are running inside the Relayhelm desktop app on the user's machine. "
             "Your working directory (the workspace) is: %s\n\nTask: " % workspace)
 
 t0 = time.time()

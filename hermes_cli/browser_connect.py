@@ -1,4 +1,4 @@
-"""Shared helpers for attaching Hermes to a local Chromium-family CDP port.
+"""Shared helpers for attaching Relayhelm to a local Chromium-family CDP port.
 
 Resolves the default Chromium browser + real profile dir, snapshots that profile for the
 ``browser.use_real_profile`` consent path, and discovers/launches a debug browser on a
@@ -313,7 +313,7 @@ def detect_default_chromium(system: str | None = None) -> str | None:
 # --- Real-profile SNAPSHOT launch -------------------------------------------------------
 # Never drive the live default user-data-dir: Chromium ≥136 (Google builds) refuses remote
 # debugging on it, and the user's running browser holds it (SingletonLock). Instead snapshot
-# the real profile into ``~/.hermes/browser-profile/`` and launch the user's real binary on
+# the real profile into ``~/.relayhelm/browser-profile/`` and launch the user's real binary on
 # the copy — with NO mock-keychain/basic-store switches, so OS-keyring-encrypted cookies
 # decrypt exactly as in the user's own browser.
 
@@ -367,7 +367,7 @@ def _last_used_profile(src: str) -> str:
 def _secure_snapshot(path: str, *, contents: bool = False) -> None:
     """Lock down a snapshot dir (or, with ``contents``, everything INSIDE it) as a secret store.
     It holds the user's Cookies / Login Data, so it gets the same owner-only perms (managed-mode /
-    NixOS group-share carve-out, HERMES_UID/GID) as every Hermes secret dir — via ``_secure_dir``/
+    NixOS group-share carve-out, HERMES_UID/GID) as every Relayhelm secret dir — via ``_secure_dir``/
     ``_secure_file``, not a bespoke chmod. Contents matter too (#96729): ``copy2`` keeps Chrome's
     0644 and sqlite backups land umask-wide, so cookies were world-readable under the
     ``HERMES_HOME_MODE`` hatch. Best-effort; never blocks a launch."""
@@ -593,14 +593,14 @@ def _locked_profile_error(browser: str) -> str:
     if _real_profile_autoclose():
         msg = (
             f"{browser} is running and has its profile locked, so its login data can't be copied "
-            "yet. Hermes can close it for you (this quits the browser — you'll lose unsaved "
+            "yet. Relayhelm can close it for you (this quits the browser — you'll lose unsaved "
             "tabs). Ask the user to confirm, then close it and retry; if it's still locked after "
             "that, they must fully quit it (including any background/tray instance).")
     else:
         msg = (
             f"{browser} is running and has its profile locked, so its login data can't be copied. "
             "Fully quit the browser (including any background/tray instance) and retry, or turn "
-            "browser.use_real_profile off. (Enable browser.real_profile_autoclose to let Hermes "
+            "browser.use_real_profile off. (Enable browser.real_profile_autoclose to let Relayhelm "
             "offer to close it for you.)")
     return _PROFILE_LOCKED_PREFIX + msg
 

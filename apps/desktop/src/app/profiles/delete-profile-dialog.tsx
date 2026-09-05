@@ -73,7 +73,7 @@ export function DeleteProfileDialog({
         // The profile is gone. Drop its persisted tiles now — a leftover
         // session/Bot tile restores on relaunch and dials the deleted
         // profile's backend, whose ensure_hermes_home() re-creates the
-        // directory the delete just removed (hermes-agent#94235).
+        // directory the delete just removed (relayhelm#94235).
         dropTilesForProfile(profile.name)
         await onDeleted?.()
 

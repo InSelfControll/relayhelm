@@ -65,7 +65,7 @@ const BOT_ATTENTION_CLASSES: ReadonlySet<string> = new Set<AttentionClass>([
 export const BOT_ATTENTION_HINTS: Record<string, string> = {
   provider_auth_or_access: 'Sign in again for this profile',
   provider_quota_limit: 'Quota or balance exhausted',
-  missing_config: 'Provider not configured — run hermes model',
+  missing_config: 'Provider not configured — run relayhelm model',
   agent_blocked: 'Bot is blocked — see its last message'
 }
 
@@ -595,7 +595,7 @@ export async function migrateBotMeta(storage: BotMetaStorage | undefined = getPl
 // ── data ─────────────────────────────────────────────────────────────────────
 
 /** True once profiles.list reports the backend injects the bot-to-bot
- *  protocol into the system prompt itself (hermes-agent bot_mode_probe).
+ *  protocol into the system prompt itself (relayhelm bot_mode_probe).
  *  Gates every SOUL.md protocol append below. */
 export let serverInjectsProtocol = false
 
@@ -674,7 +674,7 @@ export function useRoster() {
       // carry a second copy. Older gateways lack the flag: keep appending.
       serverInjectsProtocol = Boolean(local?.bot_mode_protocol)
 
-      // Multi-source desktops (hermes-agent #86875) also expose the union
+      // Multi-source desktops (relayhelm #86875) also expose the union
       // agent roster across every registered connection. Merge agents from
       // OTHER sources in as additional rows. Feature-detected + best-effort:
       // an older Desktop build (no host.agents) or a roster hiccup leaves
@@ -963,10 +963,10 @@ export function botHandle(name: string, bot?: Partial<RosterRow> | null): string
 }
 
 /** Taggable @-forms derived from a bot's friendly names — the core profile
- *  display name (`hermes profile rename`) and the Bot Mode title. Free text
+ *  display name (`relayhelm profile rename`) and the Bot Mode title. Free text
  *  reduces to the mention charset two ways: slugified ("Research Buddy" →
  *  research-buddy, the form autocomplete inserts) and collapsed
- *  (researchbuddy). Reserved tokens are dropped so a bot renamed "Hermes"
+ *  (researchbuddy). Reserved tokens are dropped so a bot renamed "Relayhelm"
  *  can never hijack the primary profile's @hermes alias. */
 export function mentionNameForms(value: null | string | undefined): string[] {
   const name = String(value || '')
@@ -1080,7 +1080,7 @@ export function newBotChat(bot: RosterRow) {
     host.notify?.({
       kind: 'error',
       message:
-        getPluginCtx()?.i18n?.t('bot.openAnotherChatUnsupported') ?? 'Update Hermes Desktop to open another Bot chat.'
+        getPluginCtx()?.i18n?.t('bot.openAnotherChatUnsupported') ?? 'Update Relayhelm Desktop to open another Bot chat.'
     })
 
     return
@@ -1092,7 +1092,7 @@ export function newBotChat(bot: RosterRow) {
     host.notify?.({
       kind: 'error',
       message:
-        getPluginCtx()?.i18n?.t('bot.openAnotherChatUnsupported') ?? 'Update Hermes Desktop to open another Bot chat.'
+        getPluginCtx()?.i18n?.t('bot.openAnotherChatUnsupported') ?? 'Update Relayhelm Desktop to open another Bot chat.'
     })
 
     return

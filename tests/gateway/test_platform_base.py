@@ -27,7 +27,7 @@ def test_media_delivery_denies_encrypted_bitwarden_cache(tmp_path, monkeypatch):
     """Encrypted Bitwarden cache is covered by the media credential guard."""
     import gateway.platforms.base as base
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     monkeypatch.setattr(base, "_HERMES_HOME", hermes_home)
     monkeypatch.setattr(base, "_HERMES_ROOT", hermes_home)
@@ -61,7 +61,7 @@ class TestSecretCaptureGuidance:
     def test_gateway_secret_capture_message_points_to_local_setup(self):
         message = GATEWAY_SECRET_CAPTURE_UNSUPPORTED_MESSAGE
         assert "local cli" in message.lower()
-        assert "~/.hermes/.env" in message
+        assert "~/.relayhelm/.env" in message
 
 
 class TestSafeUrlForLog:
@@ -332,7 +332,7 @@ class TestMediaInsideSerializedJson:
     def test_media_in_embedded_serialized_reply_not_extracted(self):
         """A serialized tool result that embeds a prior reply's MEDIA: tag."""
         content = (
-            '{"content":"previous reply MEDIA:/Users/ex/.hermes/media/'
+            '{"content":"previous reply MEDIA:/Users/ex/.relayhelm/media/'
             'generated/stale.png and more text"}'
         )
         media, _ = BasePlatformAdapter.extract_media(content)
@@ -612,14 +612,14 @@ class TestMediaDeliveryDefaultMode:
         ],
     )
     def test_denylist_blocks_mcp_oauth_tokens(self, tmp_path, monkeypatch, rel):
-        """Live MCP OAuth tokens/client creds under ~/.hermes/mcp-tokens/ must
+        """Live MCP OAuth tokens/client creds under ~/.relayhelm/mcp-tokens/ must
         never deliver as native media — same exfil class as auth.json/.env.
         Sibling to the pairing/ directory denylist entry.
         """
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        hermes_dir = fake_home / ".hermes"
+        hermes_dir = fake_home / ".relayhelm"
         (hermes_dir / "mcp-tokens").mkdir(parents=True)
         secret = hermes_dir / rel
         secret.write_text('{"access_token": "live-bearer-abc123"}')
@@ -646,7 +646,7 @@ class TestMediaDeliveryDefaultMode:
         self._patch_roots(monkeypatch)
 
         fake_home = tmp_path / "home"
-        hermes_dir = fake_home / ".hermes"
+        hermes_dir = fake_home / ".relayhelm"
         hermes_dir.mkdir(parents=True)
         token = hermes_dir / "google_token.json"
         token.write_text('{"access_token": "***", "refresh_token": "***"}')
@@ -658,7 +658,7 @@ class TestMediaDeliveryDefaultMode:
 
 
     def test_denylist_blocks_non_cache_file_under_hermes_home(self, tmp_path, monkeypatch):
-        """A non-credential file the agent wrote directly under ~/.hermes
+        """A non-credential file the agent wrote directly under ~/.relayhelm
         (not in a cache subdir) is still deliverable via recency trust — we
         did NOT blanket-deny the tree (per #32090/#34425). This guards against
         accidentally re-introducing the rejected whole-tree deny.
@@ -668,7 +668,7 @@ class TestMediaDeliveryDefaultMode:
         monkeypatch.setenv("HERMES_MEDIA_TRUST_RECENT_SECONDS", "600")
 
         fake_home = tmp_path / "home"
-        hermes_dir = fake_home / ".hermes"
+        hermes_dir = fake_home / ".relayhelm"
         hermes_dir.mkdir(parents=True)
         artifact = hermes_dir / "adhoc_report.pdf"
         artifact.write_bytes(b"%PDF-1.4")  # fresh mtime
@@ -723,7 +723,7 @@ class TestMediaDeliveryDefaultMode:
 
     def test_profile_scoped_cache_delivers_under_symlinked_root(self, tmp_path, monkeypatch):
         """Reopened #31733: a profile gateway whose HERMES_HOME is symlinked
-        under a denied prefix (e.g. /opt/data -> /root/.hermes) emits
+        under a denied prefix (e.g. /opt/data -> /root/.relayhelm) emits
         profile-scoped paths (``<root>/profiles/<name>/cache/images/x.png``)
         that resolve under ``/root``. ``$HOME`` is NOT that prefix, so the
         root-home exception doesn't fire, and the top-level cache allowlist
@@ -734,7 +734,7 @@ class TestMediaDeliveryDefaultMode:
 
         # Stand-in for the literal /root deny prefix in the deployment.
         denied_root = tmp_path / "root"
-        hermes_root = denied_root / ".hermes"
+        hermes_root = denied_root / ".relayhelm"
         prof_cache = hermes_root / "profiles" / "myprof" / "cache" / "images"
         prof_cache.mkdir(parents=True)
         image = prof_cache / "gen.png"
@@ -878,10 +878,10 @@ class TestDockerContainerMediaPathTranslation:
         ) == str(media.resolve())
 
     def test_cache_dir_container_path_translates_to_host_cache(self, tmp_path, monkeypatch):
-        """MEDIA:/root/.hermes/cache/images/... (the agent_visible_image path
+        """MEDIA:/root/.relayhelm/cache/images/... (the agent_visible_image path
         under docker) must translate to the HOST cache file, not the sandbox
         home copy."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         cache = hermes_home / "cache" / "images"
         cache.mkdir(parents=True)
         media = cache / "generated.png"
@@ -891,20 +891,20 @@ class TestDockerContainerMediaPathTranslation:
         monkeypatch.delenv("TERMINAL_DOCKER_VOLUMES", raising=False)
 
         assert BasePlatformAdapter.validate_media_delivery_path(
-            "/root/.hermes/cache/images/generated.png"
+            "/root/.relayhelm/cache/images/generated.png"
         ) == str(media.resolve())
 
     def test_container_credential_path_never_translates_through_home(self, tmp_path, monkeypatch):
-        """/root/.hermes/* outside a cache mount (the sandbox's credential
+        """/root/.relayhelm/* outside a cache mount (the sandbox's credential
         surface: .env, auth.json) must NOT resolve through the persistent
         home mount — those host-side copies sit outside the credential
         denylist prefixes and would otherwise deliver."""
         sandbox = tmp_path / "sandboxes"
         home = sandbox / "docker" / "default" / "home"
-        secret = home / ".hermes"
+        secret = home / ".relayhelm"
         secret.mkdir(parents=True)
         (secret / "auth.json").write_text('{"token": "SECRET"}')
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         monkeypatch.setenv("HERMES_HOME", str(hermes_home))
         monkeypatch.setenv("TERMINAL_ENV", "docker")
@@ -913,7 +913,7 @@ class TestDockerContainerMediaPathTranslation:
         monkeypatch.delenv("TERMINAL_DOCKER_VOLUMES", raising=False)
 
         assert BasePlatformAdapter.validate_media_delivery_path(
-            "/root/.hermes/auth.json"
+            "/root/.relayhelm/auth.json"
         ) is None
 
 
@@ -1247,7 +1247,7 @@ class _CapturingAdapter(BasePlatformAdapter):
 
     The four media-send fallbacks (send_voice, send_video, send_document,
     send_image_file) historically forwarded their *_path argument into the
-    chat text. That argument is a host filesystem path inside the Hermes
+    chat text. That argument is a host filesystem path inside the Relayhelm
     cache, so any subclass that fell back to super() — like the Telegram
     adapter on a rejected video — would leak the host's directory layout
     into the user's chat.
@@ -1287,7 +1287,7 @@ class TestMediaFallbackDoesNotLeakHostPath:
     — a host filesystem path with no actionable information.
     """
 
-    SENSITIVE_PATH = "/home/jayne/.hermes/cache/media/sensitive_host_path_abc123.bin"
+    SENSITIVE_PATH = "/home/jayne/.relayhelm/cache/media/sensitive_host_path_abc123.bin"
 
 
     @pytest.mark.asyncio
@@ -1406,18 +1406,18 @@ class TestDockerProfileSandboxMediaTranslation:
         ) == str(produced.resolve())
 
     def test_home_credential_surface_still_refused(self, monkeypatch):
-        """The /root/.hermes exclusion survives profile scoping: translating
+        """The /root/.relayhelm exclusion survives profile scoping: translating
         the home mount must never expose the container's secret surface —
         in the profile layout AND the legacy session layout."""
         self._enable_docker(monkeypatch)
         for task in ("default", f"session:{self.SESSION_KEY}"):
-            secrets = self._sandbox_dir(task) / "home" / ".hermes"
+            secrets = self._sandbox_dir(task) / "home" / ".relayhelm"
             secrets.mkdir(parents=True, exist_ok=True)
             (secrets / "auth.json").write_text("{}")
 
         assert (
             BasePlatformAdapter.validate_media_delivery_path(
-                "/root/.hermes/auth.json", session_key=self.SESSION_KEY
+                "/root/.relayhelm/auth.json", session_key=self.SESSION_KEY
             )
             is None
         )

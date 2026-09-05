@@ -1,6 +1,6 @@
 """A failed Desktop pack must not look like a successful update.
 
-#88251: ``hermes update`` treated a failed desktop pack as non-fatal, printed
+#88251: ``relayhelm update`` treated a failed desktop pack as non-fatal, printed
 an early warning, then still ended with ``✓ Update complete!``. The Python
 side moved on; the Electron app stayed on the previous build.
 

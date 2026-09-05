@@ -11,7 +11,7 @@ import pytest
 
 @pytest.fixture
 def hermes_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
     return home
@@ -77,7 +77,7 @@ def test_occupancy_confirmed_skips_gate_one():
                             total_device_bytes=32 * gib,
                             ram_available_bytes=64 * gib)
 
-    # Hermes' threshold (e.g. 80% of window) can sit BELOW the ladder's 85%
+    # Relayhelm' threshold (e.g. 80% of window) can sit BELOW the ladder's 85%
     # occupancy gate: 78K of a 96K window is 81%.
     kwargs = dict(current_window=98304, session_tokens=78_000,
                   measured_decode_tok_s=None, server_idle=True)

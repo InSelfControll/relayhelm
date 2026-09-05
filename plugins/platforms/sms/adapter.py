@@ -84,7 +84,7 @@ def check_sms_requirements() -> bool:
 
 
 class SmsAdapter(BasePlatformAdapter):
-    """Twilio SMS <-> Hermes: one session per inbound number; replies always from TWILIO_PHONE_NUMBER."""
+    """Twilio SMS <-> Relayhelm: one session per inbound number; replies always from TWILIO_PHONE_NUMBER."""
 
     MAX_MESSAGE_LENGTH = MAX_SMS_LENGTH
 
@@ -337,7 +337,7 @@ def _is_connected(config) -> bool:
 
 
 def register(ctx) -> None:
-    """Plugin entry point — called by the Hermes plugin system."""
+    """Plugin entry point — called by the Relayhelm plugin system."""
     ctx.register_platform(
         name="sms", label="SMS (Twilio)", adapter_factory=SmsAdapter,
         check_fn=check_sms_requirements, is_connected=_is_connected,

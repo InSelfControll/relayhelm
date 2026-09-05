@@ -1,4 +1,4 @@
-"""Unified self-relaunch for Hermes CLI: preserves inherited flags (--tui, --dev, --profile, --model…)
+"""Unified self-relaunch for Relayhelm CLI: preserves inherited flags (--tui, --dev, --profile, --model…)
 across process replacement so ``hermes sessions browse`` / post-setup relaunch keep the user's mode."""
 
 import os
@@ -59,7 +59,7 @@ def _extract_inherited_flags(argv: Sequence[str]) -> list[str]:
 
 
 def resolve_hermes_bin() -> Optional[str]:
-    """Hermes entry point: ``sys.argv[0]`` if a real executable, else ``which hermes``, else ``None``
+    """Relayhelm entry point: ``sys.argv[0]`` if a real executable, else ``which hermes``, else ``None``
     (caller falls back to ``python -m hermes_cli.main``)."""
     argv0 = sys.argv[0]
     _is_windows = sys.platform == "win32"
@@ -77,7 +77,7 @@ def resolve_hermes_bin() -> Optional[str]:
         abs_path = os.path.abspath(argv0)
         if os.access(abs_path, os.X_OK) and not (_is_windows and _is_python_script(abs_path)):
             return abs_path
-    return shutil.which("hermes") or None
+    return shutil.which("relayhelm") or None
 
 
 def build_relaunch_argv(

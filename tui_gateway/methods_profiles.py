@@ -143,7 +143,7 @@ def _canonical_session_row(db, profile_path):
     The canonical chat's identity is the NAME: the session titled exactly "Bot Chat" on this profile (core
     UNIQUE(title) makes it a registry of at most one row). Complements ``last_session``: that field answers
     "what is the newest conversation", this answers "where is the forever-chat" — so a roster row's preview
-    and its click target describe the same session (hermes-agent#88200) with no client-side pointer
+    and its click target describe the same session (relayhelm#88200) with no client-side pointer
     involved.
     """
     try:
@@ -179,7 +179,7 @@ def _latest_profile_session_rows(db):
     First element mirrors session.list's deny-list (drops ``tool`` sub-agent rows and ``kanban`` dispatcher
     workers). Second element is the newest DENIED row — the freshest kanban/tool worker — so roster UIs can
     show that a profile is actively working even though worker sessions never surface in conversation lists
-    (hermes-agent#90268). Workers heartbeat ``last_activity_at`` every ≤60s while running (#72016), so a
+    (relayhelm#90268). Workers heartbeat ``last_activity_at`` every ≤60s while running (#72016), so a
     live worker's ``last_active`` stays fresh and the client can apply its own liveness window. Best-effort:
     any failure (missing state.db, locked db, older schema) degrades to (None, None) rather than failing the
     whole profiles.list call.
@@ -236,7 +236,7 @@ def _profile_ui_meta_fields(row: dict, profile_dir) -> None:
 
 @_profile_handler("profiles.list", 5061)
 def _(rid, params: dict) -> dict:
-    """List Hermes profiles. ``include_sessions`` (default true) adds ``last_session`` /
+    """List Relayhelm profiles. ``include_sessions`` (default true) adds ``last_session`` /
     ``worker_session`` / ``canonical_session`` so a roster paints previews without N calls."""
     from hermes_cli.profiles import list_profiles
     include_sessions = is_truthy_value(params.get("include_sessions", True))
@@ -375,7 +375,7 @@ def _(rid, params: dict) -> dict:
 
 
 def _describe_toolsets(cfg):
-    """``(toolsets, pinned_set)`` as the `hermes tools` checklist presents them (the raw registry
+    """``(toolsets, pinned_set)`` as the `relayhelm tools` checklist presents them (the raw registry
     leaks platform composites and reports everything enabled without a pin)."""
     from hermes_cli.tools_config import (
         _get_effective_configurable_toolsets, _get_platform_tools, _toolset_allowed_for_platform)

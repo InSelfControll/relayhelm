@@ -29,18 +29,18 @@ logger = logging.getLogger(__name__)
 
 # --- Exclusion rules ---
 
-# Where ``hermes backup --quick`` / ``/snapshot`` / the pre-update safety net write state
+# Where ``relayhelm backup --quick`` / ``/snapshot`` / the pre-update safety net write state
 # snapshots (see ``create_quick_snapshot``); defined here because the exclusion set needs it.
 _QUICK_SNAPSHOTS_DIR = "state-snapshots"
 
-# Directory names to skip (matched against each path component). ``hermes-agent`` only matches at
-# the root (``_should_exclude``) so skill dirs like ``skills/.../hermes-agent/`` survive. The
+# Directory names to skip (matched against each path component). ``relayhelm`` only matches at
+# the root (``_should_exclude``) so skill dirs like ``skills/.../relayhelm/`` survive. The
 # dependency/cache entries matter: one plugin venv or pip/uv cache under HERMES_HOME walked
 # file-by-file balloons a backup to hundreds of thousands of entries ("backup stuck for days").
 # Mostly mirrors ``agent.skill_utils.EXCLUDED_SKILL_DIRS``; ``.cache`` is backup-only. ``.archive``
 # is deliberately NOT excluded: the curator's ``skills/.archive/`` holds restorable user skills.
 _EXCLUDED_DIRS = {
-    "hermes-agent",     # the codebase repo — re-clone instead
+    "relayhelm",     # the codebase repo — re-clone instead
     "__pycache__",      # bytecode caches — regenerated on import
     ".git",             # nested git dirs (profiles shouldn't have these, but safety)
     "node_modules",     # js deps — reinstalled on demand
@@ -87,7 +87,7 @@ _EXCLUDED_NAMES = {".backup.lock", "gateway.pid", "cron.pid"}
 # a plain ``.bak`` suffix rule would drop user files.
 _EXCLUDED_PREFIXES = ("state.db.pre-update-emergency-",)
 
-# Files ``hermes import`` must never overwrite, matched by basename so root and named profiles are
+# Files ``relayhelm import`` must never overwrite, matched by basename so root and named profiles are
 # both covered. They hold runtime state namespaced to the SOURCE machine: ``gateway_state.json``
 # drives the container-boot reconciler (a foreign value leaves the gateway stuck "starting" and
 # disconnected from the Nous portal); PID/lock/registry files reference source PIDs. Mirrors
@@ -105,7 +105,7 @@ _EXTERNAL_PREFIX = "_external/"
 
 
 class BackupInProgressError(RuntimeError):
-    """Raised when another process already owns the Hermes backup slot."""
+    """Raised when another process already owns the Relayhelm backup slot."""
 
 
 class _SQLiteSnapshotError(RuntimeError):
@@ -145,7 +145,7 @@ def _backup_operation_lock(hermes_home: Path, timeout_seconds: float = 0.25):
                 acquired = True
             except OSError:
                 if time.monotonic() >= deadline:
-                    raise BackupInProgressError("another Hermes backup is already running")
+                    raise BackupInProgressError("another Relayhelm backup is already running")
                 time.sleep(0.05)
         yield
     finally:
@@ -225,8 +225,8 @@ def _should_exclude(rel_path: Path) -> bool:
     parts = rel_path.parts
     if _in_excluded_root_dir(rel_path):
         return True
-    # ``hermes-agent`` only matches at the root level; nested same-named dirs are preserved.
-    if any(p in _EXCLUDED_DIRS and (p != "hermes-agent" or p == parts[0]) for p in parts):
+    # ``relayhelm`` only matches at the root level; nested same-named dirs are preserved.
+    if any(p in _EXCLUDED_DIRS and (p != "relayhelm" or p == parts[0]) for p in parts):
         return True
     name = rel_path.name
     return name in _EXCLUDED_NAMES or name.startswith(_EXCLUDED_PREFIXES) or name.endswith(_EXCLUDED_SUFFIXES)
@@ -236,15 +236,15 @@ def _iter_backup_files(hermes_root: Path, out_path: Path, skipped_dirs: Optional
     """Yield ``(abs_path, rel_path)`` for every file a full backup should hold.
 
     The one owner of the walk policy (directory pruning so os.walk never descends a multi-GB
-    excluded tree, the root-only ``hermes-agent`` carve-out, root runtime trees, per-file rules),
-    shared by ``hermes backup`` and the pre-update / pre-migration path so they can never drift.
+    excluded tree, the root-only ``relayhelm`` carve-out, root runtime trees, per-file rules),
+    shared by ``relayhelm backup`` and the pre-update / pre-migration path so they can never drift.
     """
     for dirpath, dirnames, filenames in os.walk(hermes_root, followlinks=False):
         rel_dir = Path(dirpath).relative_to(hermes_root)
         is_root = rel_dir == Path(".")
         kept = [
             d for d in dirnames
-            if (d not in _EXCLUDED_DIRS or (d == "hermes-agent" and not is_root))
+            if (d not in _EXCLUDED_DIRS or (d == "relayhelm" and not is_root))
             and not _in_excluded_root_dir(rel_dir / d)]
         if skipped_dirs is not None:
             skipped_dirs.update(str(rel_dir / d) for d in set(dirnames) - set(kept))
@@ -347,7 +347,7 @@ def is_zeroed_sqlite_file(path: Path, *, probe_bytes: int = 100, force: bool = F
 _SQLITE_HEADER = b"SQLite format 3\0"
 
 # Above this size ``PRAGMA integrity_check`` (walks every b-tree page — minutes of pegged CPU on a
-# 30 GB state.db, reading as a hung ``hermes update``) is replaced by the O(1) header+schema probe.
+# 30 GB state.db, reading as a hung ``relayhelm update``) is replaced by the O(1) header+schema probe.
 # Default ceiling above which ``PRAGMA integrity_check`` is skipped in favour of the (O(1)) header +
 # structural probe. Sessions databases in the tens of GB are normal for heavy users, so the size-unbounded
 # check is never an acceptable default on the update path. See #70553.
@@ -499,7 +499,7 @@ def _unlink_move_restore_db(src: Path, dst: Path) -> bool:
         return True
     except LiveConnectionError as exc2:
         logger.error("Refusing unlink+move restore of %s: %s Close the in-process "
-                     "database handles (or restart Hermes) and retry.", dst, exc2)
+                     "database handles (or restart Relayhelm) and retry.", dst, exc2)
         return False
     except Exception as exc2:
         logger.error("Fallback restore also failed for %s -> %s: %s", src, dst, exc2)
@@ -604,11 +604,11 @@ def _collect_external_entries() -> tuple[list[tuple[Path, str]], list[str]]:
 
 
 def run_backup(args) -> None:
-    """Create a zip backup of the Hermes home directory."""
+    """Create a zip backup of the Relayhelm home directory."""
     hermes_root = get_default_hermes_root()
 
     if not hermes_root.is_dir():
-        print(f"Error: Hermes home directory not found at {hermes_root}")
+        print(f"Error: Relayhelm home directory not found at {hermes_root}")
         sys.exit(1)
 
     try:
@@ -678,19 +678,19 @@ def _run_backup_locked(args, hermes_root: Path) -> None:
     if errors:
         _print_capped(f"\n  Warnings ({len(errors)} files skipped):", errors, "  ")
     else:
-        print(f"\nRestore with: hermes import {out_path.name}")
+        print(f"\nRestore with: relayhelm import {out_path.name}")
 
 
 # --- Import ---
 
 def _validate_backup_zip(zf: zipfile.ZipFile) -> tuple[bool, str]:
-    """Check that a zip looks like a Hermes backup."""
+    """Check that a zip looks like a Relayhelm backup."""
     names = zf.namelist()
     if not names:
         return False, "zip archive is empty"
     # Telltale files a hermes home has — at the root or one level deep (zipped directory).
     if not any(Path(n).name in {"config.yaml", ".env", "state.db"} for n in names):
-        return False, "zip does not appear to be a Hermes backup (no config.yaml, .env, or state databases found)"
+        return False, "zip does not appear to be a Relayhelm backup (no config.yaml, .env, or state databases found)"
     return True, ""
 
 
@@ -698,7 +698,7 @@ def _detect_prefix(zf: zipfile.ZipFile) -> str:
     """Detect if the zip has a common directory prefix wrapping all entries."""
     names = [n for n in zf.namelist() if not n.endswith("/")]
     first_parts = {Path(n).parts[0] for n in names if len(Path(n).parts) > 1}
-    if len(first_parts) == 1 and first_parts <= {".hermes", "hermes"}:
+    if len(first_parts) == 1 and first_parts <= {".relayhelm", "hermes"}:
         return first_parts.pop() + "/"
     return ""
 
@@ -767,7 +767,7 @@ def _extract_member_atomically(
 def _count_session_rows(path: Path) -> Optional[Tuple[int, int]]:
     """``(sessions, messages)`` in session database *path*; read-only, best effort.
 
-    ``None`` means "unknown" (missing, not a Hermes session store, unreadable) — never "zero":
+    ``None`` means "unknown" (missing, not a Relayhelm session store, unreadable) — never "zero":
     acting on an unreadable database would mask the very loss this count exists to surface.
     Same contract as :func:`_count_cron_jobs`.
     """
@@ -830,7 +830,7 @@ def _confirm_import_overwrite(hermes_root: Path) -> bool:
     """Prompt before importing over an existing installation; True when import may proceed."""
     if not any((hermes_root / m).exists() for m in ("config.yaml", ".env")):
         return True
-    print("\nWarning: Target directory already has Hermes configuration.\n"
+    print("\nWarning: Target directory already has Relayhelm configuration.\n"
           "Importing will overwrite existing files with backup contents.\n")
     try:
         answer = input("Continue? [y/N] ").strip().lower()
@@ -917,7 +917,7 @@ def _import_members(
 
 
 def run_import(args) -> None:
-    """Restore a Hermes backup from a zip file."""
+    """Restore a Relayhelm backup from a zip file."""
     zip_path = Path(args.zipfile).expanduser().resolve()
     if not zip_path.is_file():
         print(f"Error: File not found: {zip_path}")
@@ -968,15 +968,15 @@ def run_import(args) -> None:
                           sorted(skipped_runtime), "    ")
         restored_profiles = _restore_profile_wrappers(hermes_root)
         print()
-        if not (hermes_root / "hermes-agent").is_dir():
-            print("Note: The hermes-agent codebase was not included in the backup.\n"
-                  "  If this is a fresh install, run: hermes update")
+        if not (hermes_root / "relayhelm").is_dir():
+            print("Note: The relayhelm codebase was not included in the backup.\n"
+                  "  If this is a fresh install, run: relayhelm update")
         if restored_profiles:
             print("\nTo re-enable gateway services for profiles:")
             for pname in restored_profiles:
-                print(f"  hermes -p {pname} gateway install")
+                print(f"  relayhelm -p {pname} gateway install")
         _revive_gateway_after_import(hermes_root)
-        print("Done. Your Hermes configuration has been restored.")
+        print("Done. Your Relayhelm configuration has been restored.")
 
 
 def _restore_profile_wrappers(hermes_root: Path) -> List[str]:
@@ -1011,7 +1011,7 @@ def _restore_profile_wrappers(hermes_root: Path) -> List[str]:
     except ImportError:  # hermes_cli.profiles unavailable (fresh install)
         if any(profiles_dir.iterdir()):
             print("\n  Profiles detected but aliases could not be created.\n"
-                  "  Run: hermes profile list  (after installing hermes)")
+                  "  Run: relayhelm profile list  (after installing hermes)")
     return [n for n, _ in restored_profiles]
 
 
@@ -1028,7 +1028,7 @@ def _revive_gateway_after_import(hermes_root: Path) -> None:
             (native_default / marker).exists() for marker in ("config.yaml", ".env", "state.db")):
         print("\nRestored into a non-default home; leaving the gateway service alone to avoid clashing "
               f"with the install at {native_default}.\n"
-              "To start a gateway for this home, run:  hermes gateway install")
+              "To start a gateway for this home, run:  relayhelm gateway install")
         return
     try:
         from hermes_cli.gateway import ensure_gateway_service, _is_service_running
@@ -1036,15 +1036,15 @@ def _revive_gateway_after_import(hermes_root: Path) -> None:
             print()
             ensure_gateway_service(context="import")
     except Exception:
-        print("\nStart the gateway to activate cron jobs and messaging:\n  hermes gateway install")
+        print("\nStart the gateway to activate cron jobs and messaging:\n  relayhelm gateway install")
 
 
-# --- Quick state snapshots (used by /snapshot slash command and hermes backup --quick) ---
+# --- Quick state snapshots (used by /snapshot slash command and relayhelm backup --quick) ---
 
 # Critical state files (relative to HERMES_HOME) for quick snapshots; everything else is
 # regeneratable or managed separately (skills, repo, sessions/). Entries may be files OR
 # directories (recursive); missing entries are skipped. Pairing data lives in platform JSON blobs
-# outside state.db, so it is listed explicitly — ``hermes update`` snapshots this set (#15733).
+# outside state.db, so it is listed explicitly — ``relayhelm update`` snapshots this set (#15733).
 _QUICK_STATE_FILES = (
     "state.db", "config.yaml", ".env", "auth.json", "cron/jobs.json", "cron/executions.db",
     "gateway_state.json", "channel_directory.json", "channel_aliases.json", "processes.json",
@@ -1147,7 +1147,7 @@ def _create_quick_snapshot_locked(
     """Copy the quick-snapshot set to a timestamped dir under state-snapshots/ and prune old ones.
 
     ``max_file_size`` skips (with a warning) larger files: the pre-update snapshot uses it so a
-    multi-GB ``state.db`` never stalls ``hermes update`` while the small files are always captured.
+    multi-GB ``state.db`` never stalls ``relayhelm update`` while the small files are always captured.
     """
     root = _quick_snapshot_root(home)
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -1297,7 +1297,7 @@ def _count_cron_jobs(path: Path) -> Optional[int]:
 
 
 def restore_cron_jobs_if_emptied(snapshot_id: str, hermes_home: Optional[Path] = None) -> Optional[Dict[str, Any]]:
-    """Safety net for silent cron-job loss across ``hermes update``.
+    """Safety net for silent cron-job loss across ``relayhelm update``.
 
     Conservative: restores only when the snapshot had MORE jobs than the live file (a user who
     deleted jobs is never second-guessed); an unreadable live file is left so corruption surfaces.
@@ -1412,7 +1412,7 @@ def _set_config_path_value(data: Dict[str, Any], dotted: Tuple[str, ...], value:
 
 def restore_config_model_settings_if_rewritten(
     snapshot_id: str, hermes_home: Optional[Path] = None) -> Optional[Dict[str, Any]]:
-    """Safety net for silent config.yaml model/MoA loss across ``hermes update``.
+    """Safety net for silent config.yaml model/MoA loss across ``relayhelm update``.
 
     Mirrors :func:`restore_cron_jobs_if_emptied`: restore only the protected keys — never the
     whole file — whose user-set value in the same-run pre-update snapshot changed or vanished.
@@ -1511,7 +1511,7 @@ def prune_quick_snapshots(keep: int = _QUICK_DEFAULT_KEEP, hermes_home: Optional
 
 
 def run_quick_backup(args) -> None:
-    """CLI entry point for hermes backup --quick."""
+    """CLI entry point for relayhelm backup --quick."""
     snap_id = create_quick_snapshot(label=getattr(args, "label", None))
     if snap_id:
         print(f"State snapshot created: {snap_id}\n"
@@ -1612,14 +1612,14 @@ def _create_prefixed_full_backup(
 def create_pre_update_backup(
     hermes_home: Optional[Path] = None, keep: int = _PRE_UPDATE_DEFAULT_KEEP) -> Optional[Path]:
     """Full zip backup to ``backups/pre-update-<timestamp>.zip``, auto-pruned; ``None`` if nothing
-    was found or the backup failed. Never raises — ``hermes update`` continues anyway."""
+    was found or the backup failed. Never raises — ``relayhelm update`` continues anyway."""
     return _create_prefixed_full_backup(hermes_home, _PRE_UPDATE_PREFIX, max(keep, 1), "pre-update", "backup")
 
 
 def create_pre_migration_backup(
     hermes_home: Optional[Path] = None, keep: int = _PRE_MIGRATION_DEFAULT_KEEP) -> Optional[Path]:
     """Full zip backup to ``backups/pre-migration-<timestamp>.zip`` before ``hermes claw migrate``
-    (same dir as update backups so listings/``hermes import`` find it); ``None`` if nothing was
+    (same dir as update backups so listings/``relayhelm import`` find it); ``None`` if nothing was
     found or the write failed. Never raises."""
     return _create_prefixed_full_backup(
         hermes_home, _PRE_MIGRATION_PREFIX, max(keep, 0), "pre-migration", "pre-migration backup")

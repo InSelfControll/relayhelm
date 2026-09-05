@@ -196,7 +196,7 @@ def _qwen_oauth_login(args) -> dict:
 
 @dataclass(frozen=True)
 class _OAuthAddSpec:
-    """Per-provider parameters for the generic ``hermes auth add <provider> --type oauth`` path."""
+    """Per-provider parameters for the generic ``relayhelm auth add <provider> --type oauth`` path."""
 
     login: Callable[[Any], dict]
     token: Callable[[dict], str]
@@ -259,7 +259,7 @@ def _ask(prompt: str, reader: Callable[[str], str] | None = None) -> str | None:
 
 
 def _add_nous_oauth_credential(args, provider: str) -> None:
-    """``hermes auth add nous --type oauth``: shared-credential import, else device-code login."""
+    """``relayhelm auth add nous --type oauth``: shared-credential import, else device-code login."""
     custom_label = (getattr(args, "label", None) or "").strip() or None
     timeout = getattr(args, "timeout", None) or 15.0
 
@@ -272,7 +272,7 @@ def _add_nous_oauth_credential(args, provider: str) -> None:
         print(f'{what} {provider} OAuth {"device-code " if what == "Saved" else ""}credentials: "{shown_label}"')
 
     # Codex-style auto-import: a shared Nous credential at <hermes-root>/shared/nous_auth.json
-    # (written by any previous login) makes `hermes --profile <name> auth add nous --type oauth`
+    # (written by any previous login) makes `relayhelm --profile <name> auth add nous --type oauth`
     # a one-tap operation for multi-profile users.
     if auth_mod._read_shared_nous_state():
         try:
@@ -358,7 +358,7 @@ def auth_add_command(args) -> None:
 
     spec = _OAUTH_ADD_SPECS.get(provider)
     if spec is None:
-        raise SystemExit(f"`hermes auth add {provider}` is not implemented for auth type {requested_type} yet.")
+        raise SystemExit(f"`relayhelm auth add {provider}` is not implemented for auth type {requested_type} yet.")
 
     creds = spec.login(args)
     token = spec.token(creds)
@@ -424,7 +424,7 @@ def auth_remove_command(args) -> None:
         raise SystemExit(f'No credential matching "{target}" for provider {provider}.')
     print(f"Removed {provider} credential #{index} ({removed.label})")
 
-    # Every credential source Hermes reads from (env vars, external OAuth files, auth.json blocks,
+    # Every credential source Relayhelm reads from (env vars, external OAuth files, auth.json blocks,
     # custom config) has a RemovalStep in agent.credential_sources; it does the source-specific
     # cleanup while suppression + user-facing output are centralised here.
     from agent.credential_sources import find_removal_step
@@ -450,7 +450,7 @@ def auth_reset_command(args) -> None:
 def auth_status_command(args) -> None:
     provider = _normalize_provider(getattr(args, "provider", "") or "")
     if not provider:
-        raise SystemExit("Provider is required. Example: `hermes auth status spotify`.")
+        raise SystemExit("Provider is required. Example: `relayhelm auth status spotify`.")
     if provider in auth_mod.SINGLE_USE_REFRESH_POOL_PROVIDERS:
         load_pool(provider)  # runs the forked-grant heal first so the report reflects the consolidated grant
     status = auth_mod.get_auth_status(provider)
@@ -538,7 +538,7 @@ def _print_azure_entra_status() -> None:
 
 
 def _interactive_auth() -> None:
-    """Interactive credential pool management when `hermes auth` is called bare."""
+    """Interactive credential pool management when `relayhelm auth` is called bare."""
     print("Credential Pool Status")
     print("=" * 50)
     auth_list_command(SimpleNamespace(provider=None))

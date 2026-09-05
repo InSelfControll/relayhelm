@@ -15,7 +15,7 @@ import pytest
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
     """Fresh HERMES_HOME with an empty local skills dir."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     (home / "skills").mkdir(parents=True)
     monkeypatch.setenv("HERMES_HOME", str(home))
 

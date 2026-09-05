@@ -50,7 +50,7 @@ except Exception as e:
     err=repr(e)[:200]
 dt=time.perf_counter()-t0
 rss=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-tree=os.getcwd(); foreign=[m for m,mod in list(sys.modules.items()) if getattr(mod,"__file__",None) and "hermes-agent" in mod.__file__ and not mod.__file__.startswith(tree) and "site-packages" not in mod.__file__]
+tree=os.getcwd(); foreign=[m for m,mod in list(sys.modules.items()) if getattr(mod,"__file__",None) and "relayhelm" in mod.__file__ and not mod.__file__.startswith(tree) and "site-packages" not in mod.__file__]
 if foreign: err=(err or "")+f" FOREIGN_MODULES:{foreign[:3]}"
 print(json.dumps({"dt":dt,"mods":len(sys.modules)-n0,"rss_kb":rss,"err":err}))
 '''
@@ -68,7 +68,7 @@ for tgt in IMPORT_TARGETS:
                 "err": next((x["err"] for x in rows if x["err"]), None)}
 results["import"] = imp
 
-# 2. CLI end-to-end startup: `hermes --version`, `hermes --help`, `hermes doctor --help`, `hermes config get model` (no network)
+# 2. CLI end-to-end startup: `relayhelm --version`, `relayhelm --help`, `relayhelm doctor --help`, `relayhelm config get model` (no network)
 CLI = {"version": ["hermes_cli/main.py", "--version"], "help": ["hermes_cli/main.py", "--help"], "config_get": ["hermes_cli/main.py", "config", "get", "model"], "tools_list": ["hermes_cli/main.py", "tools", "--help"], "skills_help": ["hermes_cli/main.py", "skills", "--help"]}
 cli = {}
 for name, argv in CLI.items():

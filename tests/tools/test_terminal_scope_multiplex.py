@@ -34,7 +34,7 @@ _LAUNCH_VOLUMES = '["/host/secret:/data:rw"]'
 def _polluted_launch_env(monkeypatch, tmp_path):
     """Launch profile A bridged a docker backend with sensitive policy into
     the process env; every test proves a routed profile observes none of it."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".relayhelm"))
     monkeypatch.setenv("TERMINAL_ENV", "docker")
     monkeypatch.setenv("TERMINAL_CWD", _LAUNCH_CWD)
     monkeypatch.setenv("TERMINAL_DOCKER_VOLUMES", _LAUNCH_VOLUMES)

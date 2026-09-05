@@ -259,7 +259,7 @@ def cmd_sync(args) -> None:
 
 
 def sync_honcho_profiles_quiet() -> int:
-    """Sync host blocks for all profiles from `hermes update`; no output, no exceptions."""
+    """Sync host blocks for all profiles from `relayhelm update`; no output, no exceptions."""
     return _sync_profiles(verbose=False)
 
 
@@ -407,7 +407,7 @@ def _setup_identity_mapping(cfg: dict, hermes_host: dict, current_peer: str) -> 
     else:
         notice, question = (
             ("\n  Gateway identity mapping routes platform users to memory peers.",
-             "Running the Hermes gateway (Telegram/Discord/etc.)? (y/N)") if gw_platforms is None else
+             "Running the Relayhelm gateway (Telegram/Discord/etc.)? (y/N)") if gw_platforms is None else
             ("\n  No gateway platforms connected — identity mapping only affects\n"
              "  gateway users, so this step doesn't apply here.", "Configure gateway mapping anyway? (y/N)"))
         print(notice)
@@ -701,7 +701,7 @@ def cmd_setup(args) -> None:
     """Interactive Honcho setup wizard."""
     cfg = _read_config()
     write_path, read_path = _local_config_path(), _config_path()
-    print(f"\nHoncho memory setup\n{RULE}\n  Honcho gives Hermes persistent cross-session memory.\n  Config: {write_path}")
+    print(f"\nHoncho memory setup\n{RULE}\n  Honcho gives Relayhelm persistent cross-session memory.\n  Config: {write_path}")
     if read_path != write_path and read_path.exists():
         print(f"  (seeding from existing config at {read_path})")
     print()
@@ -748,7 +748,7 @@ def cmd_setup(args) -> None:
         save_config(hermes_config)
         print("  Memory provider set to 'honcho' in config.yaml")
     except Exception as e:
-        print(f"  Could not auto-enable in config.yaml: {e}\n  Run: hermes config set memory.provider honcho")
+        print(f"  Could not auto-enable in config.yaml: {e}\n  Run: relayhelm config set memory.provider honcho")
 
     print("  Testing connection... ", end="", flush=True)
     try:
@@ -787,7 +787,7 @@ def cmd_setup(args) -> None:
 # ── status / peers ─────────────────────────────────────────────────────────
 
 def _active_profile_name() -> str:
-    """Active Hermes profile name (respects --target-profile override)."""
+    """Active Relayhelm profile name (respects --target-profile override)."""
     if _profile_override:
         return _profile_override
     try:
@@ -993,7 +993,7 @@ Honcho peers
   User peer:   {_pref(hermes, cfg, 'peerName') or '(not set)'}
     Your identity in Honcho. Messages you send build this peer's card.
   AI peer:     {_pref(hermes, cfg, 'aiPeer') or _host_key()}
-    Hermes' identity in Honcho. Seed with 'hermes honcho identity <file>'.
+    Relayhelm' identity in Honcho. Seed with 'hermes honcho identity <file>'.
     Dialectic calls ask this peer questions to warm session context.
 
   Dialectic reasoning:  {_pref(hermes, cfg, 'dialecticReasoningLevel') or 'low'}  ({', '.join(REASONING_LEVELS)})
@@ -1045,7 +1045,7 @@ Honcho budgets
     the user and session, injected directly into the system prompt.
 
   Dialectic   {_pref(hermes, cfg, 'dialecticMaxChars') or 600} chars, reasoning: {_pref(hermes, cfg, 'dialecticReasoningLevel') or 'low'}
-    AI-to-AI inference. Hermes asks Honcho's AI peer a question
+    AI-to-AI inference. Relayhelm asks Honcho's AI peer a question
     (e.g. "what were we working on?") and Honcho runs its own model
     to synthesize an answer. Used for first-turn session continuity.
     Level controls how much reasoning Honcho spends on the answer.
@@ -1145,13 +1145,13 @@ def _offer(question: str, action, files: list[Path]) -> None:
 
 
 def cmd_migrate(args) -> None:
-    """Step-by-step migration guide: OpenClaw native memory → Hermes + Honcho."""
+    """Step-by-step migration guide: OpenClaw native memory → Relayhelm + Honcho."""
     user_files = _find_memory_files(["USER.md", "MEMORY.md"])  # facts about the user
     agent_files = _find_memory_files(["SOUL.md", "IDENTITY.md", "AGENTS.md", "TOOLS.md", "BOOTSTRAP.md"])
     cfg = _read_config()
     has_key = bool(_resolve_api_key(cfg))
 
-    print("\nHoncho migration: OpenClaw native memory → Hermes\n" + "─" * 50)
+    print("\nHoncho migration: OpenClaw native memory → Relayhelm\n" + "─" * 50)
     print("""
   OpenClaw's native memory stores context in local markdown files
   (USER.md, MEMORY.md, SOUL.md, ...) and injects them via QMD search.
@@ -1164,7 +1164,7 @@ Step 1  Create a Honcho account
     if has_key:
         print(f"  Honcho API key already configured: {_mask(cfg['apiKey'])}\n  Skip to Step 2.")
     else:
-        print("""  Honcho is a cloud memory service that gives Hermes persistent memory
+        print("""  Honcho is a cloud memory service that gives Relayhelm persistent memory
   across sessions. You need an API key to use it.
 
   1. Get your API key at https://app.honcho.dev
@@ -1202,7 +1202,7 @@ Step 3  Migrate user memory files → Honcho user peer
         print("""
   These are picked up automatically the first time you run 'hermes'
   with Honcho configured and no prior session history.
-  (Hermes calls migrate_memory_files() on first session init.)
+  (Relayhelm calls migrate_memory_files() on first session init.)
 
   If you want to migrate them now without starting a session:""")
         print("    hermes honcho migrate  — this step handles it interactively\n" * len(user_files), end="")
@@ -1220,7 +1220,7 @@ Step 4  Seed AI identity files → Honcho AI peer
   agent's character, capabilities, and behavioral rules. In OpenClaw
   these are injected via file search at prompt-build time.
 
-  In Hermes, they are seeded once into Honcho's AI peer through the
+  In Relayhelm, they are seeded once into Honcho's AI peer through the
   observation pipeline. Honcho builds a representation from them and
   from every subsequent assistant message (observe_me=True). Over time
   the representation reflects actual behavior, not just declaration.
@@ -1241,17 +1241,17 @@ Step 5  What changes vs. OpenClaw native memory
 
   Storage
     OpenClaw: markdown files on disk, searched via QMD at prompt-build time.
-    Hermes:   cloud-backed Honcho peers. Files can stay on disk as source
+    Relayhelm:   cloud-backed Honcho peers. Files can stay on disk as source
               of truth; Honcho holds the live representation.
 
   Context injection
     OpenClaw: file excerpts injected synchronously before each LLM call.
-    Hermes:   Honcho context fetched async at turn end, injected next turn.
+    Relayhelm:   Honcho context fetched async at turn end, injected next turn.
               First turn has no Honcho context; subsequent turns are loaded.
 
   Memory growth
     OpenClaw: you edit files manually to update memory.
-    Hermes:   Honcho observes every message and updates representations
+    Relayhelm:   Honcho observes every message and updates representations
               automatically. Files become the seed, not the live store.
 
   Honcho tools (available to the agent during conversation)
@@ -1263,7 +1263,7 @@ Step 5  What changes vs. OpenClaw native memory
 
   Session naming
     OpenClaw: no persistent session concept — files are global.
-    Hermes:   per-session by default — each run gets its own session
+    Relayhelm:   per-session by default — each run gets its own session
               Map a custom name:  hermes honcho map <session-name>
 
 Step 6  Next steps
@@ -1285,7 +1285,7 @@ Step 6  Next steps
 
 # (subcommand, help, handler, ((arg, kwargs), ...)); order defines --help order.
 _SUBCOMMANDS = (
-    ("setup", "Initial Honcho setup (redirects to hermes memory setup)", None, ()),
+    ("setup", "Initial Honcho setup (redirects to relayhelm memory setup)", None, ()),
     ("status", "Show current Honcho config and connection status", cmd_status, (
         ("--all", dict(action="store_true", help="Show config overview across all profiles")),
     )),
@@ -1317,7 +1317,7 @@ _SUBCOMMANDS = (
         ("file", dict(nargs="?", default=None, help="Path to file to seed from (e.g. SOUL.md). Omit to show usage.")),
         ("--show", dict(action="store_true", help="Show current AI peer representation from Honcho")),
     )),
-    ("migrate", "Step-by-step migration guide from openclaw-honcho to Hermes Honcho", cmd_migrate, ()),
+    ("migrate", "Step-by-step migration guide from openclaw-honcho to Relayhelm Honcho", cmd_migrate, ()),
     ("enable", "Enable Honcho for the active profile", cmd_enable, ()),
     ("disable", "Disable Honcho for the active profile", cmd_disable, ()),
     ("sync", "Sync Honcho config to all existing profiles", cmd_sync, ()),
@@ -1331,7 +1331,7 @@ def honcho_command(args) -> None:
     _profile_override = getattr(args, "target_profile", None)
     sub = getattr(args, "honcho_command", None)
     if sub == "setup":  # honcho setup goes through the unified memory-provider path
-        print("\n  Honcho is configured via the memory provider system.\n  Running 'hermes memory setup'...\n")
+        print("\n  Honcho is configured via the memory provider system.\n  Running 'relayhelm memory setup'...\n")
         from hermes_cli.memory_setup import cmd_setup_provider
         return cmd_setup_provider("honcho")
     handler = cmd_status if sub is None else _HANDLERS.get(sub)

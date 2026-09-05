@@ -1,7 +1,7 @@
 """Uninstall must not leave a dangling ``hermes`` command on Windows.
 
 Every uninstall mode deletes the code checkout, but the launchers install.ps1
-staged in the managed binary dir (the default Hermes root's ``bin``, shared
+staged in the managed binary dir (the default Relayhelm root's ``bin``, shared
 with the managed uv) live outside it. A surviving launcher makes ``hermes``
 in a new terminal resolve and then error on its missing venv target — worse
 than command-not-found. The managed uv next to them must survive keep-data
@@ -22,11 +22,11 @@ from hermes_cli._install_repair import _WINDOWS_BIN_LAUNCHERS
 @pytest.fixture
 def managed_bin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Default-root ``bin`` holding launchers of both forms plus managed uv."""
-    home = tmp_path / "hermes"
+    home = tmp_path / "relayhelm"
     bin_dir = home / "bin"
     bin_dir.mkdir(parents=True)
-    (bin_dir / "hermes.exe").write_bytes(b"MZ launcher")
-    (bin_dir / "hermes-acp.cmd").write_text("@echo off\r\n", encoding="ascii")
+    (bin_dir / "relayhelm.exe").write_bytes(b"MZ launcher")
+    (bin_dir / "relayhelm-acp.cmd").write_text("@echo off\r\n", encoding="ascii")
     (bin_dir / "uv.exe").write_bytes(b"MZ managed uv")
     (bin_dir / "uvx.exe").write_bytes(b"MZ managed uvx")
     monkeypatch.setenv("HERMES_HOME", str(home))
@@ -36,9 +36,9 @@ def managed_bin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def test_removes_both_launcher_forms_and_keeps_managed_uv(managed_bin: Path):
     removed = uninstall.remove_windows_bin_launchers(windows=True)
 
-    assert sorted(p.name for p in removed) == ["hermes-acp.cmd", "hermes.exe"]
-    assert not (managed_bin / "hermes.exe").exists()
-    assert not (managed_bin / "hermes-acp.cmd").exists()
+    assert sorted(p.name for p in removed) == ["relayhelm-acp.cmd", "relayhelm.exe"]
+    assert not (managed_bin / "relayhelm.exe").exists()
+    assert not (managed_bin / "relayhelm-acp.cmd").exists()
     # The managed uv stays — keep-data reinstalls still need it.
     assert (managed_bin / "uv.exe").exists()
     assert (managed_bin / "uvx.exe").exists()
@@ -54,17 +54,17 @@ def test_anchors_on_default_root_not_profile_home(
 
     removed = uninstall.remove_windows_bin_launchers(windows=True)
 
-    assert sorted(p.name for p in removed) == ["hermes-acp.cmd", "hermes.exe"]
-    assert not (managed_bin / "hermes.exe").exists()
+    assert sorted(p.name for p in removed) == ["relayhelm-acp.cmd", "relayhelm.exe"]
+    assert not (managed_bin / "relayhelm.exe").exists()
 
 
 def test_noop_on_posix(managed_bin: Path):
     assert uninstall.remove_windows_bin_launchers(windows=False) == []
-    assert (managed_bin / "hermes.exe").exists()
+    assert (managed_bin / "relayhelm.exe").exists()
 
 
 def test_noop_when_no_launchers_staged(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    home = tmp_path / "hermes"
+    home = tmp_path / "relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
 
@@ -86,7 +86,7 @@ def test_launcher_names_stay_in_lockstep_with_install_ps1():
 
     assert staged == set(_WINDOWS_BIN_LAUNCHERS)
     for name in _WINDOWS_BIN_LAUNCHERS:
-        assert name.startswith("hermes")  # never a generic name it could clobber
+        assert name.startswith("relayhelm")  # never a generic name it could clobber
 
 
 class TestManagedBinPathMarker:

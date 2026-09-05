@@ -66,7 +66,7 @@ Without v2: the "realtime" path is skipped; transcribe runs alone.
 ## Local quick start
 
 ```bash
-hermes plugins enable google_meet
+relayhelm plugins enable google_meet
 hermes meet install                                      # pip + Chromium
 hermes meet setup                                        # preflight
 hermes meet auth                                         # optional
@@ -78,7 +78,7 @@ hermes meet join https://meet.google.com/abc-defg-hij    # transcribe
 Linux (preferred, most automated):
 ```bash
 hermes meet install --realtime                     # installs pulseaudio-utils
-echo 'OPENAI_API_KEY=sk-...' >> ~/.hermes/.env
+echo 'OPENAI_API_KEY=sk-...' >> ~/.relayhelm/.env
 hermes meet join https://meet.google.com/abc-defg-hij --mode realtime
 # then from the agent or CLI:
 hermes meet say "Good morning everyone, I'm the note-taker bot."
@@ -88,7 +88,7 @@ macOS:
 ```bash
 hermes meet install --realtime     # runs: brew install blackhole-2ch ffmpeg
 # then — manually! — open System Settings → Sound → Input → BlackHole 2ch
-echo 'OPENAI_API_KEY=sk-...' >> ~/.hermes/.env
+echo 'OPENAI_API_KEY=sk-...' >> ~/.relayhelm/.env
 hermes meet join https://meet.google.com/abc-defg-hij --mode realtime
 ```
 
@@ -102,7 +102,7 @@ On the node machine (e.g. user's Mac with a signed-in Chrome):
 ```bash
 pip install playwright websockets
 python -m playwright install chromium
-hermes plugins enable google_meet
+relayhelm plugins enable google_meet
 hermes meet node run --display-name my-mac --host 0.0.0.0 --port 18789
 # prints the bearer token on first run; copy it
 ```

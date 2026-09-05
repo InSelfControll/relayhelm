@@ -24,7 +24,7 @@ from hermes_cli.config import (
 @pytest.fixture
 def container_env(tmp_path, monkeypatch):
     """Set up a fake HERMES_HOME with .container-mode file."""
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(hermes_home))
     monkeypatch.delenv("HERMES_DEV", raising=False)
@@ -33,9 +33,9 @@ def container_env(tmp_path, monkeypatch):
     container_mode.write_text(
         "# Written by NixOS activation script. Do not edit manually.\n"
         "backend=podman\n"
-        "container_name=hermes-agent\n"
+        "container_name=relayhelm\n"
         "exec_user=hermes\n"
-        "hermes_bin=/data/current-package/bin/hermes\n"
+        "hermes_bin=/data/current-package/bin/relayhelm\n"
     )
     return hermes_home
 
@@ -47,9 +47,9 @@ def test_get_container_exec_info_returns_metadata(container_env):
 
     assert info is not None
     assert info["backend"] == "podman"
-    assert info["container_name"] == "hermes-agent"
+    assert info["container_name"] == "relayhelm"
     assert info["exec_user"] == "hermes"
-    assert info["hermes_bin"] == "/data/current-package/bin/hermes"
+    assert info["hermes_bin"] == "/data/current-package/bin/relayhelm"
 
 
 
@@ -67,9 +67,9 @@ def test_get_container_exec_info_returns_metadata(container_env):
 def docker_container_info():
     return {
         "backend": "docker",
-        "container_name": "hermes-agent",
+        "container_name": "relayhelm",
         "exec_user": "hermes",
-        "hermes_bin": "/data/current-package/bin/hermes",
+        "hermes_bin": "/data/current-package/bin/relayhelm",
     }
 
 
@@ -77,9 +77,9 @@ def docker_container_info():
 def podman_container_info():
     return {
         "backend": "podman",
-        "container_name": "hermes-agent",
+        "container_name": "relayhelm",
         "exec_user": "hermes",
-        "hermes_bin": "/data/current-package/bin/hermes",
+        "hermes_bin": "/data/current-package/bin/relayhelm",
     }
 
 
@@ -110,8 +110,8 @@ def test_exec_in_container_calls_execvp(docker_container_info):
     e_values = [cmd[i + 1] for i in e_indices]
     assert "TERM=xterm-256color" in e_values
     assert "LANG=en_US.UTF-8" in e_values
-    assert "hermes-agent" in cmd
-    assert "/data/current-package/bin/hermes" in cmd
+    assert "relayhelm" in cmd
+    assert "/data/current-package/bin/relayhelm" in cmd
     assert "chat" in cmd
 
 

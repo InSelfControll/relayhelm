@@ -45,7 +45,7 @@ opencode_free = OpenCodeFreeProfile(
     default_headers={
         "Authorization": "",
         "HTTP-Referer": "https://hermes-agent.nousresearch.com",
-        "X-Title": "Hermes Agent",
+        "X-Title": "Relayhelm",
         "User-Agent": f"HermesAgent/{_HERMES_VERSION}",
     },
     # laguna is the fastest non-UA-gated free model; big-pickle 429s every

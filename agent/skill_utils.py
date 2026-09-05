@@ -265,9 +265,9 @@ def _home_relative(p: Path) -> Path:
     return p if p.is_absolute() else get_hermes_home() / p
 
 
-# Never disableable: `hermes-agent` is the agent's own operating manual and the
+# Never disableable: `relayhelm` is the agent's own operating manual and the
 # system prompt points at it unconditionally.
-ESSENTIAL_SKILLS: frozenset = frozenset({"hermes-agent"})
+ESSENTIAL_SKILLS: frozenset = frozenset({"relayhelm"})
 
 
 def get_disabled_skill_names(platform: str | None = None) -> Set[str]:
@@ -287,7 +287,7 @@ def get_disabled_skill_names(platform: str | None = None) -> Set[str]:
 
 def parse_config_string_list(value) -> List[str]:
     """Normalize a config value that may hold a JSON-array string into a list.
-    ``hermes config set`` stores lists as quoted JSON/Python-literal strings;
+    ``relayhelm config set`` stores lists as quoted JSON/Python-literal strings;
     treating one as a single name would silently filter nothing. A scalar
     string still means one name.
 
@@ -391,7 +391,7 @@ def display_skill_create_dir() -> str:
 
 
 def get_all_skills_dirs() -> List[Path]:
-    """Skill dirs: local ``~/.hermes/skills/`` first, then create_dir, then external.
+    """Skill dirs: local ``~/.relayhelm/skills/`` first, then create_dir, then external.
     Trusted project dirs are NOT included (higher precedence; see get_project_skills_dirs)."""
     dirs = [get_skills_dir()]
     create_dir = get_skill_create_dir()
@@ -401,13 +401,13 @@ def get_all_skills_dirs() -> List[Path]:
     return dirs
 
 
-# Project-local skills (<root>/.hermes/skills, <root>/.agents/skills; root = nearest
+# Project-local skills (<root>/.relayhelm/skills, <root>/.agents/skills; root = nearest
 # .git ancestor) are a prompt-injection vector if auto-sourced from any clone, so
 # they load only when the root is in ``skills.trusted_project_dirs``; then they
 # override same-named profile/bundled skills. cwd + trust list are session-fixed
 # so the skills index stays byte-stable.
 
-PROJECT_SKILLS_SUBDIRS = (os.path.join(".hermes", "skills"), os.path.join(".agents", "skills"))
+PROJECT_SKILLS_SUBDIRS = (os.path.join(".relayhelm", "skills"), os.path.join(".agents", "skills"))
 
 _PROJECT_ROOT_MAX_DEPTH = 64  # walk-up bound for pathological cwds
 
@@ -511,7 +511,7 @@ def get_untrusted_project_skills_root() -> Optional[Tuple[Path, int]]:
 # cached under HERMES_HOME, never inside the repo); "dangerous" excludes the
 # skill from index, list, view and slash commands ("caution" loads, as on the hub).
 
-# ── Project skill quarantine (scan-time injection defense) ──────────────── Trust (`hermes skills trust`)
+# ── Project skill quarantine (scan-time injection defense) ──────────────── Trust (`relayhelm skills trust`)
 # is a REPO-level decision made once; the repo's skill content keeps changing underneath it with every pull.
 # The hub install path runs skills_guard on install, but project skills are read straight from a checkout —
 # without this gate a `git pull` could inject a malicious skill into an already-trusted repo with no scan
@@ -584,7 +584,7 @@ def normalize_skill_lookup_name(identifier: str) -> str:
         except Exception:
             pass
     # Prefer the lexical path under a trusted root before resolving symlinks:
-    # ~/.hermes/skills/<name> may be a symlink to a checkout elsewhere, and
+    # ~/.relayhelm/skills/<name> may be a symlink to a checkout elsewhere, and
     # resolving first would turn that trusted path into one skill_view rejects.
     for root in trusted_roots:
         if identifier_path.is_relative_to(root):

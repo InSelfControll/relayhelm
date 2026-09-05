@@ -27,19 +27,19 @@ simplex-chat -p 5225
 
 守护进程默认在 `ws://127.0.0.1:5225` 上监听 WebSocket 连接。
 
-## 配置 Hermes
+## 配置 Relayhelm
 
 ### 通过设置向导
 
 ```bash
-hermes gateway setup
+relayhelm gateway setup
 ```
 
 选择 **SimpleX Chat** 并按提示操作。
 
 ### 通过环境变量
 
-将以下内容添加到 `~/.hermes/.env`：
+将以下内容添加到 `~/.relayhelm/.env`：
 
 ```
 SIMPLEX_WS_URL=ws://127.0.0.1:5225
@@ -86,7 +86,7 @@ send_message(target="simplex:<contact-id>", message="Done!")
 ## 隐私说明
 
 - SimpleX 从不暴露手机号或电子邮件地址——联系人使用不透明 ID 标识
-- Hermes 与守护进程之间的连接为本地 WebSocket（`ws://127.0.0.1:5225`）——数据不会离开你的机器
+- Relayhelm 与守护进程之间的连接为本地 WebSocket（`ws://127.0.0.1:5225`）——数据不会离开你的机器
 - 消息在到达守护进程之前已由 SimpleX 协议进行端到端加密
 
 ## 故障排查

@@ -283,8 +283,8 @@ class TestLoadGatewayConfig:
         auto-reset sessions.
 
         Installers (scripts/install.sh, scripts/install.ps1,
-        docker/stage2-hook.sh, hermes doctor) copy the template verbatim to
-        ~/.hermes/config.yaml, so whatever ``session_reset.mode`` the template
+        docker/stage2-hook.sh, relayhelm doctor) copy the template verbatim to
+        ~/.relayhelm/config.yaml, so whatever ``session_reset.mode`` the template
         ships becomes an EXPLICIT user setting that overrides the code
         default. After #60194 flipped the default to "none", the template
         still said "both" — every new install kept 24h-idle resets on
@@ -294,7 +294,7 @@ class TestLoadGatewayConfig:
         template = (
             Path(__file__).resolve().parents[2] / "cli-config.yaml.example"
         )
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             template.read_text(encoding="utf-8"), encoding="utf-8"
@@ -307,7 +307,7 @@ class TestLoadGatewayConfig:
 
     def test_no_config_yaml_means_no_auto_reset(self, tmp_path, monkeypatch):
         """With no config.yaml at all, sessions must never auto-reset."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         monkeypatch.setenv("HERMES_HOME", str(hermes_home))
 
@@ -318,7 +318,7 @@ class TestLoadGatewayConfig:
 
     def test_explicit_session_reset_opt_in_is_honored(self, tmp_path, monkeypatch):
         """Users who explicitly opt in to auto-reset keep their policy."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "session_reset:\n  mode: idle\n  idle_minutes: 30\n",
@@ -333,7 +333,7 @@ class TestLoadGatewayConfig:
 
 
     def test_slack_ignored_channels_config_sets_env_bridge(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "slack:\n"
@@ -354,7 +354,7 @@ class TestLoadGatewayConfig:
     def test_typing_status_text_from_nested_platforms_block(self, tmp_path, monkeypatch):
         """``platforms.slack.typing_status_text`` reaches PlatformConfig via
         _merge_platform_map + the from_dict top-level read."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "platforms:\n"
@@ -373,7 +373,7 @@ class TestLoadGatewayConfig:
 
     def test_multiplex_profiles_from_nested_gateway_section(self, tmp_path, monkeypatch):
         """``gateway.multiplex_profiles: true`` (the nested form written by
-        ``hermes config set gateway.multiplex_profiles true``) must enable
+        ``relayhelm config set gateway.multiplex_profiles true``) must enable
         multiplexing when loaded via load_gateway_config().
 
         Regression: load_gateway_config() only surfaced the *top-level*
@@ -383,7 +383,7 @@ class TestLoadGatewayConfig:
         load_gateway_config builds gw_data from the top-level keys before
         calling from_dict, so the nested value never reached it.)
         """
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -398,7 +398,7 @@ class TestLoadGatewayConfig:
         assert config.multiplex_profiles is True
 
     def test_multiplex_allowlist_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "gateway:\n"
@@ -417,7 +417,7 @@ class TestLoadGatewayConfig:
         assert config.multiplex_profile_allowlist == ["worker", "guest"]
 
     def test_discord_websocket_health_settings_seed_platform_extra(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "discord:\n"
@@ -445,7 +445,7 @@ class TestLoadGatewayConfig:
     def test_session_reset_from_nested_gateway_section(self, tmp_path, monkeypatch):
         """``gateway.session_reset`` (nested form) must reach default_reset_policy,
         mirroring the gateway.multiplex_profiles precedent."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -460,7 +460,7 @@ class TestLoadGatewayConfig:
         assert config.default_reset_policy.idle_minutes == 30
 
     def test_quick_commands_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -477,7 +477,7 @@ class TestLoadGatewayConfig:
         """Asserts False (not the True default) so the test fails if the
         nested gateway.stt value never reaches from_dict() and silently
         falls back to the class default instead."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -514,7 +514,7 @@ class TestLoadGatewayConfig:
         server unless API_SERVER_* env vars were also set.
         """
         self._clear_api_server_env(monkeypatch)
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "gateway:\n  api_server:\n    enabled: true\n",
@@ -533,7 +533,7 @@ class TestLoadGatewayConfig:
         (gateway/platforms/api_server.py), and from_dict discards unknown
         top-level keys, so without the bridge the port is silently lost."""
         self._clear_api_server_env(monkeypatch)
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "gateway:\n"
@@ -557,7 +557,7 @@ class TestLoadGatewayConfig:
 
     def test_room_link_url_from_nested_gateway_section(self, tmp_path, monkeypatch):
         """The supported config path advertises no endpoint until restart."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "gateway:\n"
@@ -579,7 +579,7 @@ class TestLoadGatewayConfig:
         Platform enum: ``gateway.streaming`` / ``gateway.timeout`` must not
         be turned into phantom platform entries or break loading."""
         self._clear_api_server_env(monkeypatch)
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "gateway:\n"
@@ -602,7 +602,7 @@ class TestLoadGatewayConfig:
 
 
     def test_group_sessions_per_user_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -617,7 +617,7 @@ class TestLoadGatewayConfig:
 
 
     def test_reset_triggers_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -631,7 +631,7 @@ class TestLoadGatewayConfig:
         assert config.reset_triggers == ["/new", "/clear"]
 
     def test_always_log_local_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -646,7 +646,7 @@ class TestLoadGatewayConfig:
 
 
     def test_unauthorized_dm_behavior_from_nested_gateway_section(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -664,7 +664,7 @@ class TestLoadGatewayConfig:
         """Key-presence precedence: a present (even empty) top-level
         session_reset must NOT be replaced by gateway.session_reset —
         the fallback fires only when the top-level key is absent."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -689,7 +689,7 @@ class TestLoadGatewayConfig:
         the adapter in the platform_registry is NOT enough — the connect loop
         iterates config.platforms, so an un-enabled RELAY never connects (the
         'relay registered but no inbound' bug)."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         monkeypatch.setenv("HERMES_HOME", str(hermes_home))
         monkeypatch.setenv("GATEWAY_RELAY_URL", "https://connector.example/relay/")
@@ -709,7 +709,7 @@ class TestLoadGatewayConfig:
         connections: directly-connected messaging platforms must be disabled,
         even when explicitly enabled in config.yaml, while non-messaging
         surfaces (api_server et al.) survive."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -740,7 +740,7 @@ class TestLoadGatewayConfig:
     def test_relay_yaml_url_keeps_other_platforms_enabled(self, tmp_path, monkeypatch):
         """gateway.relay_url in config.yaml (no env stamp) keeps the old
         additive behavior: relay runs beside directly-connected platforms."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -768,7 +768,7 @@ class TestLoadGatewayConfig:
         """GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true opts a deployment out of
         the relay-exclusive sweep: direct adapters stay enabled beside the
         relay even with the GATEWAY_RELAY_URL env stamp present."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -801,7 +801,7 @@ class TestLoadGatewayConfig:
         load_hermes_dotenv exports that file into os.environ at startup.)"""
         from agent import secret_scope as ss
 
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -858,7 +858,7 @@ class TestLoadGatewayConfig:
         load."""
         import logging as _logging
 
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -894,7 +894,7 @@ class TestLoadGatewayConfig:
 
     def test_thread_require_mention_yaml_does_not_overwrite_env(self, tmp_path, monkeypatch):
         """Explicit env var should win over config.yaml (env > yaml precedence)."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -919,7 +919,7 @@ class TestLoadGatewayConfig:
         adapter reads it from PlatformConfig.extra, but gateway auth
         (_is_user_authorized) only consults the env var.
         """
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -947,7 +947,7 @@ class TestLoadGatewayConfig:
 
 
     def test_top_level_platforms_override_nested_gateway_platforms(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -986,7 +986,7 @@ class TestLoadGatewayConfig:
         and allow_from was silently ignored.  The apply_yaml_config_fn dispatch
         received the same fix in #44f3e51; the shared-key loop now mirrors it.
         """
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -1015,7 +1015,7 @@ class TestLoadGatewayConfig:
 
 
     def test_bridges_unauthorized_dm_behavior_from_config_yaml(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -1034,7 +1034,7 @@ class TestLoadGatewayConfig:
 
 
     def test_loads_telegram_rich_messages_from_gateway_platform_extra(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -1054,7 +1054,7 @@ class TestLoadGatewayConfig:
 
 
     def test_telegram_proxy_env_takes_precedence_over_config(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -1134,7 +1134,7 @@ class TestWebhookPortBridging:
     causing port conflicts between profiles that configure different ports."""
 
     def test_webhook_port_bridged_from_toplevel(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -1161,7 +1161,7 @@ class TestWebhookPortBridging:
     def test_msgraph_webhook_port_host_secret_bridged_from_toplevel(self, tmp_path, monkeypatch):
         """msgraph_webhook top-level port/host/secret must be bridged into extra,
         with an explicit extra: value still winning over the top-level one."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         config_path = hermes_home / "config.yaml"
         config_path.write_text(
@@ -1284,7 +1284,7 @@ class TestMultiplexProfilesEnvOverride:
     """
 
     def _load(self, tmp_path, monkeypatch, config_text=None):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir(exist_ok=True)
         if config_text is not None:
             (hermes_home / "config.yaml").write_text(config_text, encoding="utf-8")
@@ -1331,12 +1331,12 @@ class TestMultiplexProfilesConfig:
 
 
     def test_multiplex_profiles_nested_under_gateway(self, tmp_path, monkeypatch):
-        """gateway.multiplex_profiles (the form written by `hermes config set
+        """gateway.multiplex_profiles (the form written by `relayhelm config set
         gateway.multiplex_profiles true`) must be honored. Regression test for
         the silent-fallback bug where the loader only forwarded the top-level
         key, so users who wrote it under gateway: got multiplex_profiles=False
         with no warning."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "gateway:\n  multiplex_profiles: true\n",
@@ -1360,7 +1360,7 @@ class TestMultiplexProfilesConfig:
         nested form (so a stale `gateway.multiplex_profiles: true` cannot
         silently re-enable multiplexing). Guards against a future regression
         that flips the check to `not _mp`."""
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(
             "multiplex_profiles: false\n"

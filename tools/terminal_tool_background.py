@@ -31,7 +31,7 @@ _SILENT_BACKGROUND_HINT = (
 # Detector is deliberately narrow: the canonical column-2 awk poller is fine.
 _HOMEBREW_CI_POLLER_HINT = (
     'This looks like a homebrewed CI poller built from `gh pr view --json statusCheckRollup` '
-    'and/or `gh pr checks | jq`. That shape has burned us repeatedly in hermes-agent dev work '
+    'and/or `gh pr checks | jq`. That shape has burned us repeatedly in relayhelm dev work '
     '(PRs #31329, #31448, #31695, #31709, #31745, #32264, #33131) — stdout buffering kills '
     'output capture, jq null-key edge cases silently exit the loop, conclusion-vs-status field '
     'confusion exits early with bogus all-green verdicts, TTY-only summary banners never '
@@ -48,7 +48,7 @@ _HOMEBREW_CI_POLLER_HINT = (
 
 _ASYNC_UNSUPPORTED_NOTE = (
     'notify_on_complete / watch_patterns are not available in this session — it cannot receive '
-    'an async completion after the turn ends (a one-shot runner such as `hermes -z`, a cron '
+    'an async completion after the turn ends (a one-shot runner such as `relayhelm -z`, a cron '
     'job, a Kanban worker, or a stateless HTTP endpoint). The process is running in the '
     "background; retrieve its result with process(action='poll') or process(action='wait')."
 )

@@ -5,7 +5,7 @@ server wrapping Camoufox (Firefox fork with C++ fingerprint spoofing); its REST 
 1:1 to our browser tool interface (accessibility snapshots with element refs, click/type/
 scroll by ref, screenshots). Setup: ``npm start`` in a checkout or ``docker run -p 9377:9377
 -e CAMOFOX_PORT=9377 jo-inc/camofox-browser``, then ``CAMOFOX_URL=http://localhost:9377`` in
-``~/.hermes/.env`` (Docker: see ``CAMOFOX_REWRITE_LOOPBACK_URLS`` below).
+``~/.relayhelm/.env`` (Docker: see ``CAMOFOX_REWRITE_LOOPBACK_URLS`` below).
 """
 
 from __future__ import annotations
@@ -151,7 +151,7 @@ def _env_or_cfg(env_name: str, camofox_cfg: Dict[str, Any], cfg_key: str, *, sec
 
 def _camofox_identity_override(task_id: Optional[str], camofox_cfg: Dict[str, Any]) -> Optional[Dict[str, str]]:
     """Externally configured identity (integrations owning the visible Camofox browser
-    share a user ID so Hermes uses the same profile), or None."""
+    share a user ID so Relayhelm uses the same profile), or None."""
     user_id = _env_or_cfg("CAMOFOX_USER_ID", camofox_cfg, "user_id", secret=True)
     if not user_id:
         return None

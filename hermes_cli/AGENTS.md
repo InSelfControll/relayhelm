@@ -12,7 +12,7 @@ the `┊` activity feed. `load_cli_config()` in `cli.py` merges CLI defaults + u
 `process_command()` resolves the canonical name via `resolve_command()` then dispatches through
 `HermesCLI._SLASH_DISPATCH` (`canonical -> (method name, pass_arg)`), falling back to a
 `_handle_<name>_command` method by naming convention. **There is no `elif` ladder — do not add one.**
-Skill slash commands (`agent/skill_commands.py`) scan `~/.hermes/skills/` and inject as a **user
+Skill slash commands (`agent/skill_commands.py`) scan `~/.relayhelm/skills/` and inject as a **user
 message**, never into the system prompt (prompt caching).
 
 Rules: all interactive menu-pickers use curses (`hermes_cli/curses_ui.py`; example
@@ -58,7 +58,7 @@ invalidation with `--now` opt-in (root invariant).
   (`gateway_timeout`; `terminal.cwd` → `TERMINAL_CWD`). `MESSAGING_CWD` is removed and `TERMINAL_CWD`
   in `.env` is deprecated — the loader warns; canonical is `terminal.cwd`.
 - **Three loaders — know which you're in:** `load_cli_config()` (CLI, `cli.py`); `load_config()`
-  (`hermes tools/setup`, most subcommands, `hermes_cli/config.py`, merges `DEFAULT_CONFIG`); raw
+  (`relayhelm tools/setup`, most subcommands, `hermes_cli/config.py`, merges `DEFAULT_CONFIG`); raw
   YAML (gateway runtime, `gateway/run.py` + `gateway/config.py`). If the CLI sees a key and the
   gateway doesn't (or vice versa), you're on the wrong loader — check `DEFAULT_CONFIG` coverage.
 - **Working directory:** CLI uses `os.getcwd()`; messaging uses `terminal.cwd`, bridged to
@@ -68,19 +68,19 @@ invalidation with `--now` opt-in (root invariant).
 
 Skins are **pure data** (`SkinConfig`); no code change to add one. `init_skin_from_config()` reads
 `display.skin` at startup; `get_active_skin()` (cached), `set_active_skin(name)` (`/skin`),
-`load_skin(name)` (user `~/.hermes/skins/*.yaml` → built-ins → default; missing values inherit
+`load_skin(name)` (user `~/.relayhelm/skins/*.yaml` → built-ins → default; missing values inherit
 from `default`). Built-ins in `_BUILTIN_SKINS`: `default`, `ares`, `mono`, `slate`. Keys: `colors.*`
 (banner border/title/accent/dim/text, response_border), `spinner.*` (waiting/thinking faces,
 thinking_verbs, wings), `tool_prefix`, `tool_emojis`, `branding.*` (agent_name, welcome,
 response_label, prompt_symbol). Consumers: `banner.py`, `display.py`, `cli.py`. Key-by-key table
 and YAML template: `website/docs/user-guide/features/skins.md`.
 
-## Update pipeline (`hermes update`) — transactional; every stage guards a real field failure
+## Update pipeline (`relayhelm update`) — transactional; every stage guards a real field failure
 
 Fleet-update campaign #91277 (Aug 2026). A PR that weakens a stage must answer for the failure class
 it guards. `plan → snapshot → apply → restart-per-kind → verify → report`
 
-- **Plan** (`update_inventory.py`, `hermes update --plan`): read-only inventory — install kind, all
+- **Plan** (`update_inventory.py`, `relayhelm update --plan`): read-only inventory — install kind, all
   profiles, every live gateway with supervisor + running code version. Deployment kinds are
   first-class: `git` updates in place; `docker`/`nix`/`apt` are NOT in-place-updatable and the
   updater reports the correct external command instead of fighting the deployment model.
@@ -95,15 +95,15 @@ it guards. `plan → snapshot → apply → restart-per-kind → verify → repo
   trigger a tree-clobbering re-download), REFUSES a dirty working tree (`-uall` + a pre-swap TOCTOU
   re-check), and grafts the live `apps/desktop/release/` into the staged swap (the GitHub source
   ZIP has no built desktop app; without the graft the swap deletes it).
-- **Restart-per-kind**: systemd and launchd restarts are FLEET-WIDE (every `hermes-gateway*` unit /
-  `ai.hermes.gateway*` LaunchAgent), drain-first (SIGUSR1), with per-unit/per-label failure
+- **Restart-per-kind**: systemd and launchd restarts are FLEET-WIDE (every `relayhelm-gateway*` unit /
+  `io.github.inselfcontroll.relayhelm.gateway*` LaunchAgent), drain-first (SIGUSR1), with per-unit/per-label failure
   isolation. Restarting only the invoking profile's service leaves siblings on stale `sys.modules`
   until they crash — the largest dupe-PR cluster in the repo's history came from that bug.
 - **Verify**: gateways stamp `code_sha`/`code_version` into `gateway_state.json` on every
   runtime-status write (`gateway/status.py`); the updater compares each live gateway against the
   fresh checkout and prints a fleet version matrix. A provably-stale gateway fails the update
   (exit 1) — automation must never treat a mixed-version fleet as healthy.
-- **Report**: every run writes a machine-readable receipt to `~/.hermes/logs/update_receipts/`
+- **Report**: every run writes a machine-readable receipt to `~/.relayhelm/logs/update_receipts/`
   (`latest.json` pointer; steps, skips WITH reasons, restart outcome, plan, fleet snapshot).
   Finalization is owned by the `cmd_update` command boundary — early `sys.exit` paths (preflight
   refusals, fetch failures) still persist a receipt with the real exit code. A begun-but-unwritten

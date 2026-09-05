@@ -12,7 +12,7 @@ from utils import base_url_host_matches
 
 
 def _single_query_clarify_callback(question: str, choices=None, multi_select=False) -> str:
-    """Headless clarify answer for ``hermes chat -q``.
+    """Headless clarify answer for ``relayhelm chat -q``.
 
     A -q turn never builds the prompt_toolkit app, so the interactive clarify modal
     can never be painted or answered — the CLI callback would poll until
@@ -215,12 +215,12 @@ class CLIAgentSetupMixin:
                     print(f"\n⚠️  No API key found for provider '{_prov}'.")
                 else:
                     print("\n⚠️  No inference provider is configured.")
-                print("   Run 'hermes model' to choose a provider, or "
-                      "'hermes setup' for first-time setup.")
+                print("   Run 'relayhelm model' to choose a provider, or "
+                      "'relayhelm setup' for first-time setup.")
                 return False
         if not isinstance(base_url, str) or not base_url:
             print("\n⚠️  Provider resolver returned an empty base URL. "
-                  "Check your provider config or run: hermes setup")
+                  "Check your provider config or run: relayhelm setup")
             return False
         credentials_changed = api_key != self.api_key or base_url != self.base_url
         routing_changed = resolved_routing != (self.provider, self.api_mode, self.acp_command, self.acp_args)
@@ -231,14 +231,14 @@ class CLIAgentSetupMixin:
         self.base_url = base_url
 
         # A custom_provider entry's explicit `model` wins when the CLI model is unset or
-        # is just the provider slug/display name (`hermes chat --model <provider-name>`
+        # is just the provider slug/display name (`relayhelm chat --model <provider-name>`
         # would otherwise send the provider name as the model string -> 400).
         runtime_model = runtime.get("model")
         if runtime_model and isinstance(runtime_model, str) and (
             not self.model or self.model == self.provider or self.model == runtime.get("name")):
             self.model = runtime_model
 
-        # Still empty (e.g. `hermes auth add` without `hermes model`): fall back to the
+        # Still empty (e.g. `relayhelm auth add` without `relayhelm model`): fall back to the
         # provider's first catalog model so the API doesn't reject an empty model.
         if not self.model and resolved_provider:
             try:
@@ -322,7 +322,7 @@ class CLIAgentSetupMixin:
 
     def _offer_first_run_setup(self) -> bool:
         """Offer the provider picker when no provider is configured at all (interactive
-        startup, TTY). Runs the same flow as ``hermes model`` so onboarding has a single
+        startup, TTY). Runs the same flow as ``relayhelm model`` so onboarding has a single
         source of truth. True when a provider was configured."""
         from cli import _cprint, logger
         _cprint("")
@@ -335,19 +335,19 @@ class CLIAgentSetupMixin:
             print()
             answer = "n"
         if answer in {"n", "no"}:
-            _cprint("  Skipped. Run 'hermes model' or 'hermes setup' any time.")
+            _cprint("  Skipped. Run 'relayhelm model' or 'relayhelm setup' any time.")
             return False
         try:
             from hermes_cli.main import select_provider_and_model
             select_provider_and_model()
         except (KeyboardInterrupt, EOFError, SystemExit):
             print()
-            _cprint("  Setup cancelled. Run 'hermes model' any time.")
+            _cprint("  Setup cancelled. Run 'relayhelm model' any time.")
             return False
         except Exception as exc:
             logger.debug("first-run provider setup failed: %s", exc)
             _cprint(f"  ⚠️  Provider setup failed: {exc}")
-            _cprint("  Run 'hermes model' to try again.")
+            _cprint("  Run 'relayhelm model' to try again.")
             return False
 
         # Re-sync CLI state from what the picker persisted so the next turn uses it without a restart.
@@ -366,7 +366,7 @@ class CLIAgentSetupMixin:
         if self._runtime_credentials_ready():
             _cprint("  ✓ Provider configured — you're ready to chat.")
             return True
-        _cprint("  Provider setup didn't complete. Run 'hermes model' to retry.")
+        _cprint("  Provider setup didn't complete. Run 'relayhelm model' to retry.")
         return False
 
     def _resolve_turn_agent_config(self, user_message: str) -> dict:
@@ -416,7 +416,7 @@ class CLIAgentSetupMixin:
         from cli import ChatConsole, _DIM, _RST, _accent_hex, _cprint
         session_meta = self._session_db.get_session(self.session_id)
         # Quiet mode (tool_progress_mode == "off") routes resume status lines to
-        # stderr so stdout stays machine-readable for `$(hermes chat -Q --resume ...)`.
+        # stderr so stdout stays machine-readable for `$(relayhelm chat -Q --resume ...)`.
         # Without this, the resume banner pollutes captured stdout. See #11793.
         _quiet_mode = getattr(self, "tool_progress_mode", "full") == "off"
 
@@ -685,8 +685,8 @@ class CLIAgentSetupMixin:
         # role -> (label, label style, body style, continuation indent)
         role_styles = {
             "user": ("  ● You: ", f"dim bold {_session_label_c}", "dim", " " * 9),
-            "assistant": ("  ◆ Hermes: ", f"dim bold {_assistant_label_c}", "dim", " " * 12),
-            "assistant_last": ("  ◆ Hermes: ", f"bold {_assistant_label_c}", "", " " * 12),  # full, non-dim
+            "assistant": ("  ◆ Relayhelm: ", f"dim bold {_assistant_label_c}", "dim", " " * 12),
+            "assistant_last": ("  ◆ Relayhelm: ", f"bold {_assistant_label_c}", "", " " * 12),  # full, non-dim
         }
         lines = Text()
         if skipped:

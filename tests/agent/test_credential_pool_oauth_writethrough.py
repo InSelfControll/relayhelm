@@ -60,7 +60,7 @@ def profile_and_root(tmp_path, monkeypatch):
     """Wire a profile auth store + a distinct global-root auth store on disk.
 
     The pytest seat belt in ``_write_through_provider_state_to_global_root``
-    only refuses the *real* user's ``$HOME/.hermes/auth.json``; a tmp_path
+    only refuses the *real* user's ``$HOME/.relayhelm/auth.json``; a tmp_path
     root is allowed, so point HOME away from the tmp root to keep the guard
     from tripping on these fixtures.
     """
@@ -173,7 +173,7 @@ def test_global_write_through_preserves_concurrent_root_update(
 def test_codex_pool_refresh_holds_auth_store_lock_across_post(monkeypatch, tmp_path):
     """The Codex OAuth pool refresh must POST under the cross-process auth lock.
 
-    Codex refresh tokens are single-use. If two Hermes processes both read the
+    Codex refresh tokens are single-use. If two Relayhelm processes both read the
     same on-disk token and both POST it, the loser gets ``refresh_token_reused``.
     Serializing the sync -> refresh POST -> write-back sequence through the
     shared ``_auth_store_lock`` closes that window: a second process blocks on
@@ -324,7 +324,7 @@ def test_write_through_fires_on_every_refresh_not_just_first(
 
 def test_hermes_pkce_refresh_writes_back_to_singleton(tmp_path, monkeypatch):
     """A successful hermes_pkce refresh must update
-    ~/.hermes/.anthropic_oauth.json, or ``_seed_from_singletons()`` on the
+    ~/.relayhelm/.anthropic_oauth.json, or ``_seed_from_singletons()`` on the
     next ``load_pool()`` re-seeds the pre-refresh (already-consumed,
     single-use) token pair over the freshly rotated one.
     """
@@ -368,7 +368,7 @@ def test_hermes_pkce_refresh_writes_back_to_singleton(tmp_path, monkeypatch):
     on_disk = json.loads(oauth_file.read_text(encoding="utf-8"))
     assert on_disk["refreshToken"] == "rt1", (
         "successful hermes_pkce refresh must write back to "
-        "~/.hermes/.anthropic_oauth.json, or _seed_from_singletons() will "
+        "~/.relayhelm/.anthropic_oauth.json, or _seed_from_singletons() will "
         "revert the pool entry to the pre-refresh (spent) token on next load"
     )
 

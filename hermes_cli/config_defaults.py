@@ -1,4 +1,4 @@
-"""Default configuration data for Hermes Agent: DEFAULT_CONFIG and OPTIONAL_ENV_VARS.
+"""Default configuration data for Relayhelm: DEFAULT_CONFIG and OPTIONAL_ENV_VARS.
 
 Pure-data leaf module — must not import from hermes_cli.config. Comments are the user-facing
 docs of config.yaml.
@@ -24,7 +24,7 @@ DEFAULT_CONFIG = {
     "fallback_providers": [],
     "credential_pool_strategies": {},
     "toolsets": ["hermes-cli"],
-    # journal_mode: SQLite journal mode for every Hermes DB. "wal" default; use "delete" on
+    # journal_mode: SQLite journal mode for every Relayhelm DB. "wal" default; use "delete" on
     # weak-fsync/shared filesystems where WAL is not crash-safe (macOS virtiofs, NFS, SMB).
     "database": {
         "journal_mode": "wal",
@@ -41,7 +41,7 @@ DEFAULT_CONFIG = {
     # 0/null disables.
     "max_live_sessions": 16,
     "session": {
-        # Per-terminal `hermes -c`: each CLI session writes a breadcrumb under
+        # Per-terminal `relayhelm -c`: each CLI session writes a breadcrumb under
         # $HERMES_HOME/terminal-sessions/<terminal-id>, so bare -c/--continue resumes THIS
         # terminal's session (tmux/kitty/wezterm pane, tty). false = resume globally most-recent.
         "terminal_continue": True,
@@ -52,7 +52,7 @@ DEFAULT_CONFIG = {
         "max_turns": None,
         # Wall-clock budget (seconds) per run. null = off. When set: one-time wrap-up notice at 80%
         # elapsed; implicit provider stale timeouts capped to remaining budget. CLI equivalent:
-        # `hermes chat --run-budget N`.
+        # `relayhelm chat --run-budget N`.
         "run_budget_seconds": None,
         # Gateway inactivity timeout (seconds). Only fires when the agent is completely idle — not
         # while calling tools or receiving API responses. 0 = unlimited.
@@ -152,7 +152,7 @@ DEFAULT_CONFIG = {
         # Bot Mode teammate-messaging protocol section (silent unless desktop Bot Mode manages it).
         "bot_mode_protocol": True,
         # Embedder-supplied text appended to the system prompt's environment-hints block, so a host
-        # wrapping Hermes (sandbox runner, managed platform) can describe proxy/credential/ mount
+        # wrapping Relayhelm (sandbox runner, managed platform) can describe proxy/credential/ mount
         # layout without editing SOUL.md. Env HERMES_ENVIRONMENT_HINT overrides it.
         "environment_hint": "",
         # Coding posture: on interactive coding surfaces (CLI, TUI, desktop, ACP) in a code
@@ -200,12 +200,12 @@ DEFAULT_CONFIG = {
         "session_stall_timeout": 300,
         # Transcript-sanitiser heal escalation: after this many pre-send heal passes within a
         # 10-minute window, log one ERROR and queue a ONE-TIME out-of-band notice pointing at /debug
-        # share or `hermes doctor` (status channel only; prompt cache untouched). 0 = no escalation
+        # share or `relayhelm doctor` (status channel only; prompt cache untouched). 0 = no escalation
         # (per-window WARNINGs still fire).
         # See #96870.
         "sanitizer_heal_escalation_threshold": 3,
         # Seconds of continuous reconnect failure before a platform gets needs_attention flagged in
-        # gateway status (`hermes status` / fleet monitoring). Retries never stop — a signal, not a
+        # gateway status (`relayhelm status` / fleet monitoring). Retries never stop — a signal, not a
         # circuit breaker. 0 = disable.
         "reconnect_attention_after": 7200,
         # Freshness window (seconds) for the auto-continue note. After a crash/restart mid-run the
@@ -317,7 +317,7 @@ DEFAULT_CONFIG = {
         "container_disk": 51200,        # MB (default 50GB)
         "container_persistent": True,   # Persist filesystem across sessions
         # Docker volume mounts, "host_path:container_path" (docker -v syntax), e.g.
-        # ["/home/user/.hermes/cache/documents:/output"]. For gateway MEDIA delivery, write to
+        # ["/home/user/.relayhelm/cache/documents:/output"]. For gateway MEDIA delivery, write to
         # /output/... inside Docker and emit the host-visible path in MEDIA:, not the container one.
         "docker_volumes": [],
         "docker_mount_cwd_to_workspace": False,  # mount host cwd at /workspace (weakens isolation)
@@ -329,7 +329,7 @@ DEFAULT_CONFIG = {
         "docker_shm_size": "1g",
         # Run the container as the host uid:gid (`--user`) so files written to bind mounts
         # (docker_volumes, persistent workspace, mounted cwd) are owned by you, not root. Off by
-        # default for images whose entrypoints must start as root (e.g. the bundled Hermes image,
+        # default for images whose entrypoints must start as root (e.g. the bundled Relayhelm image,
         # which drops to `hermes` via s6-setuidgid). When on, SETUID/SETGID caps are omitted.
         "docker_run_as_host_user": False,
         # Trusted profiles sharing one Docker container identity; empty = per-profile boundary.
@@ -354,8 +354,8 @@ DEFAULT_CONFIG = {
         # keyless_fallback is false.
         "keyless_rescue": True,
         # Per-vendor tier for vendors with both a keyless free endpoint and a keyed paid path (exa,
-        # parallel, firecrawl, keenable; tavily is opt-in keyless via `hermes tools`, not a ring
-        # member). Set by the `hermes tools` picker. "free" = always anonymous endpoint even with a
+        # parallel, firecrawl, keenable; tavily is opt-in keyless via `relayhelm tools`, not a ring
+        # member). Set by the `relayhelm tools` picker. "free" = always anonymous endpoint even with a
         # key; "paid" = always keyed (missing key = error; vendor excluded from the ring); unset =
         # keyed when the key is present, else the ring.
         "provider_tier": {},
@@ -394,9 +394,9 @@ DEFAULT_CONFIG = {
         "cdp_url": "",  # persistent CDP endpoint for attaching to an existing Chromium/Chrome
         # Consent to browse with the user's REAL logins locally: runs on a Hermes-managed SNAPSHOT
         # of the ACTIVE default-Chromium profile (Local State -> profile.last_used; cookies, logins,
-        # prefs copied and re-synced per fresh session) driven by Hermes' packaged Chromium. The
+        # prefs copied and re-synced per fresh session) driven by Relayhelm' packaged Chromium. The
         # snapshot dir sidesteps Chrome 136+'s default-profile debugging block and never contends
-        # with the running browser. Turning off deletes ~/.hermes/browser-profile/ so credentials
+        # with the running browser. Turning off deletes ~/.relayhelm/browser-profile/ so credentials
         # don't outlive consent. Chromium-family only (Chrome, Edge, Brave, Brave Origin, Chromium);
         # Firefox etc. fails closed. Also gates the browser_exec `local` argument (real-profile
         # local session even under a cloud backend). Desktop Settings -> Browser.
@@ -441,13 +441,13 @@ DEFAULT_CONFIG = {
         "extension_control": {"enabled": False, "developer_mode": False},
     },
     # Filesystem checkpoints: snapshot the working directory once per turn (on the first
-    # write_file/patch call); restore with /rollback. Opt-in via `hermes chat --checkpoints` or
+    # write_file/patch call); restore with /rollback. Opt-in via `relayhelm chat --checkpoints` or
     # enabled=True (most users never use /rollback). Single shared shadow store with real pruning.
     "checkpoints": {
         "enabled": False,
         # Max checkpoints per working directory; enforced by ref rewrite + GC of older commits.
         "max_snapshots": 20,
-        # Hard ceiling on total ~/.hermes/checkpoints/ size (MB); the oldest checkpoint per project
+        # Hard ceiling on total ~/.relayhelm/checkpoints/ size (MB); the oldest checkpoint per project
         # is dropped round-robin until under the cap. 0 disables.
         "max_total_size_mb": 500,
         # Skip files larger than this (MB) when staging (datasets, model weights). 0 = no filter.
@@ -477,7 +477,7 @@ DEFAULT_CONFIG = {
     # up by the between-turns refresh (agent/turn_context.py), so keep it small — a dead server adds
     # this much to first-response latency.
     "mcp_discovery_timeout": 1.5,
-    # Same bound for single-query mode (``hermes -q/-z``). With only ONE turn there is no
+    # Same bound for single-query mode (``relayhelm -q/-z``). With only ONE turn there is no
     # between-turns refresh, so a server that misses the window is invisible for the whole session;
     # the larger bound lets slow cold-start servers (npx, uvx, remote HTTP) land. Reachable servers
     # still only wait their real handshake time.
@@ -604,7 +604,7 @@ DEFAULT_CONFIG = {
         # Show the one-time autoraise banner; False keeps the autoraise, hides the notice.
         "codex_gpt55_autoraise_notice": True,
         # Codex app-server thread compaction mode. The codex agent owns the thread context, so
-        # Hermes' summarizer cannot shrink it. native = codex decides; hermes = Hermes' threshold
+        # Relayhelm' summarizer cannot shrink it. native = codex decides; hermes = Relayhelm' threshold
         # triggers thread/compact/start; off = never auto-trigger.
         "codex_app_server_auto": "native",
         # Opt in to OpenAI server-side compaction on the Responses API. Only gpt-5.6-family on
@@ -726,7 +726,7 @@ DEFAULT_CONFIG = {
         "profile_describer": _aux(60),   # 1-2 sentence profile blurb; short, cheap
         "goal_judge": _aux(60),          # /goal satisfaction + contract drafting; JSON calls
         # Curator skill-usage review can take minutes on reasoning models (umbrellas over hundreds
-        # of skills); route cheaper via `hermes model` → auxiliary → Curator.
+        # of skills); route cheaper via `relayhelm model` → auxiliary → Curator.
         "curator": _aux(600),
         "monitor": _aux(60),   # important-mail 0-10 scorer; high-volume, small model fine
         # Post-turn self-improvement fork (save memory / patch skill). "auto" = main model replaying
@@ -761,10 +761,10 @@ DEFAULT_CONFIG = {
         # continues, Shift+Enter reported distinctly. False restores the c-j submit fallback for
         # POSIX PTYs whose plain Enter arrives as LF.
         "cli_multiline_shortcuts": True,
-        # Interface bare `hermes`/`hermes chat` launches: "cli" (prompt_toolkit REPL) | "tui" (Ink).
+        # Interface bare `hermes`/`relayhelm chat` launches: "cli" (prompt_toolkit REPL) | "tui" (Ink).
         # Flags win: `--cli` forces the REPL, `--tui` / HERMES_TUI=1 forces the TUI.
         "interface": "cli",
-        # `hermes --tui` auto-resumes the most recent human-facing session (like `hermes -c`).
+        # `relayhelm --tui` auto-resumes the most recent human-facing session (like `relayhelm -c`).
         # HERMES_TUI_RESUME=<id> always wins.
         "tui_auto_resume_recent": False,
         # Desktop reopens the last chat/page on cold start (also in Settings → Appearance).
@@ -1041,7 +1041,7 @@ DEFAULT_CONFIG = {
         "piper": {
             # Voice name (downloaded on first use) or absolute path to a .onnx file; list:
             # github.com/OHF-Voice/piper1-gpl/blob/main/docs/VOICES.md. Optional keys: voices_dir
-            # (~/.hermes/cache/piper-voices/), use_cuda, length_scale (2.0 = twice as slow),
+            # (~/.relayhelm/cache/piper-voices/), use_cuda, length_scale (2.0 = twice as slow),
             # noise_scale, noise_w_scale, volume, normalize_audio.
             "voice": "en_US-lessac-medium",
         },
@@ -1130,7 +1130,7 @@ DEFAULT_CONFIG = {
         # instead of going to the agent. [] disables.
         "stop_phrases": ["stop"],
     },
-    # "Hey Hermes" hands-free wake word: always-on, on-device hotword detection that starts a fresh
+    # "Hey Relayhelm" hands-free wake word: always-on, on-device hotword detection that starts a fresh
     # voice session. Off by default; toggle with /wake.
     "wake_word": {
         "enabled": False,
@@ -1172,7 +1172,7 @@ DEFAULT_CONFIG = {
     
     # Context engine — how the context window is managed near the token limit. "compressor" =
     # built-in lossy summarization; or a plugin name (e.g. "lcm") installed in
-    # plugins/context_engine/<name>/ or ~/.hermes/plugins/.
+    # plugins/context_engine/<name>/ or ~/.relayhelm/plugins/.
     "context": {
         "engine": "compressor",
         # Return freed glibc pages at agent/TUI cleanup boundaries (no-op elsewhere).
@@ -1223,7 +1223,7 @@ DEFAULT_CONFIG = {
         "max_iterations": 250,
         # Hard per-summary char ceiling on subagent results, layered on the dynamic budget (each
         # summary is sized to the parent's remaining context headroom; trimmed text spills to
-        # ~/.hermes/cache/delegation/ with a head+tail window + read_file offset footer, nothing
+        # ~/.relayhelm/cache/delegation/ with a head+tail window + read_file offset footer, nothing
         # lost). 0 disables the ceiling; the dynamic budget still applies.
         "max_summary_chars": 24000,
         # Wall-clock cap per child (seconds, floor 30). 0 = no timeout: children fail only from real
@@ -1298,18 +1298,18 @@ DEFAULT_CONFIG = {
         },
     },
     # Skills — external skill directories shared across tools/agents. Paths are expanded (~, ${VAR})
-    # and resolved; read-only — creation goes to ~/.hermes/skills/ unless create_dir redirects it.
+    # and resolved; read-only — creation goes to ~/.relayhelm/skills/ unless create_dir redirects it.
     "skills": {
         "external_dirs": [],   # e.g. ["~/.agents/skills", "/shared/team-skills"]
         # Where skill_manage-created skills go (empty = profile-local dir). When set, new skills
         # land here AND agent-facing instructions name this path; expanded (~, ${VAR}), relative to
         # HERMES_HOME, scanned alongside the local dir.
         "create_dir": "",
-        # In a git checkout, <root>/.hermes/skills/ and <root>/.agents/skills/ load as the
+        # In a git checkout, <root>/.relayhelm/skills/ and <root>/.agents/skills/ load as the
         # highest-precedence tier — ONLY if the root is in trusted_project_dirs. false = no scan, no
         # untrusted-skills notice.
         "project_discovery": True,
-        # Trusted project roots; managed by `hermes skills trust` / `untrust`.
+        # Trusted project roots; managed by `relayhelm skills trust` / `untrust`.
         "trusted_project_dirs": [],
         # Substitute ${HERMES_SKILL_DIR} / ${HERMES_SESSION_ID} in SKILL.md content.
         "template_vars": True,
@@ -1321,7 +1321,7 @@ DEFAULT_CONFIG = {
         # code via terminal() ungated, so it mostly blocks prose with risky keywords. On: a
         # dangerous verdict is a tool error the agent can retry. Hub installs are always scanned.
         "guard_agent_created": False,
-        # Advisory NVIDIA SkillEvaluator Tier 1 scan on `hermes skills install` (alongside the
+        # Advisory NVIDIA SkillEvaluator Tier 1 scan on `relayhelm skills install` (alongside the
         # enforcing built-in guard), only if `skillevaluator` is on PATH (uv tool install
         # "skillevaluator @ git+https://github.com/NVIDIA/SkillEvaluator.git"). Informational, never
         # blocking; secrets-class findings shown red. No-op without it.
@@ -1330,8 +1330,8 @@ DEFAULT_CONFIG = {
         # review fork. true = ALWAYS stage (SKILL.md too large for an inline prompt): /skills
         # pending, /skills diff <id>, /skills approve|reject <id>.
         "write_approval": False,
-        # Audit ledger: every skill mutation appends to ~/.hermes/skills/.curator_ledger.jsonl with
-        # before/after hashes (blobs under ~/.hermes/.curator_backups/blobs/); powers `hermes
+        # Audit ledger: every skill mutation appends to ~/.relayhelm/skills/.curator_ledger.jsonl with
+        # before/after hashes (blobs under ~/.relayhelm/.curator_backups/blobs/); powers `hermes
         # curator ledger` / `rollback <entry-id>`. Never a gate — failures can't block.
         # See #79686.
         "ledger": True,
@@ -1349,15 +1349,15 @@ DEFAULT_CONFIG = {
         # LLM consolidation (umbrella-building) pass. OFF = deterministic inactivity prune only, no
         # aux-model cost. `hermes curator run --consolidate` overrides once.
         "consolidate": False,
-        # Also prune bundled built-ins (a suppression list stops `hermes update` restoring them);
+        # Also prune bundled built-ins (a suppression list stops `relayhelm update` restoring them);
         # hub-installed skills are NEVER pruned. A built-in's clock starts when the curator first
         # sees it, so never a mass-prune on the first run. false = keep all.
         "prune_builtins": True,
         # TTL purge of skills/.archive/: 0 = never; > 0 lets the explicit `hermes curator purge`
         # delete older archived skills (never automatic; logged in the ledger).
         "archive_ttl_days": 0,
-        # Before every real (non-dry-run) pass, snapshot ~/.hermes/skills/ to
-        # ~/.hermes/skills/.curator_backups/<utc-iso>/skills.tar.gz (`hermes curator rollback`).
+        # Before every real (non-dry-run) pass, snapshot ~/.relayhelm/skills/ to
+        # ~/.relayhelm/skills/.curator_backups/<utc-iso>/skills.tar.gz (`hermes curator rollback`).
         "backup": {
             "enabled": True,
             "keep": 5,  # retain last N regular snapshots
@@ -1456,7 +1456,7 @@ DEFAULT_CONFIG = {
     },
 
     "whatsapp": {
-        # reply_prefix: None = built-in "⚕ *Hermes Agent*" header; "" disables; \n allowed.
+        # reply_prefix: None = built-in "⚕ *Relayhelm*" header; "" disables; \n allowed.
     },
 
     "telegram": {
@@ -1541,20 +1541,20 @@ DEFAULT_CONFIG = {
     # substitutes it; a bare string is shorthand for append. `replace` wins over `append` if both
     # are given.
     "platform_hints": {},
-    # Plugin system. `enabled`/`disabled` lists are written by `hermes plugins enable|disable` and
+    # Plugin system. `enabled`/`disabled` lists are written by `relayhelm plugins enable|disable` and
     # deliberately omitted here so an empty default never clobbers a user allow-list.
     "plugins": {
         # Wall-clock cap (seconds) for one in-process Python plugin hook callback; shell hooks keep
         # their own per-entry `timeout`. 0 = no cap (sync call on agent thread). Max 600.
         "hook_callback_timeout": 30,
         # Keep loading external plugins that still import pre-decomposition module paths after the
-        # 2026-09-14 removal date (see COMPAT_MANIFEST.md, `hermes plugins compat`). Stopgap only: the
+        # 2026-09-14 removal date (see COMPAT_MANIFEST.md, `relayhelm plugins compat`). Stopgap only: the
         # old paths raise ImportError once the compat layer is actually removed.
         "allow_deprecated_imports": False,
     },
     # Shell-script hooks: event name (pre_tool_call, post_tool_call, pre_llm_call, subagent_stop,
     # ...) -> list of {matcher, command, timeout}. First run of a new command prompts for consent;
-    # approvals persist in ~/.hermes/shell-hooks-allowlist.json. Schema + examples:
+    # approvals persist in ~/.relayhelm/shell-hooks-allowlist.json. Schema + examples:
     # website/docs/user-guide/features/hooks.md.
     "hooks": {},
     # Auto-accept shell-hook registrations without a TTY prompt (also --accept-hooks or
@@ -1576,7 +1576,7 @@ DEFAULT_CONFIG = {
         # suppress, or auto-approve commands outside a correlated human response.
         "approval": {"transport": "builtin", "transport_fallback": "deny"},
         # Writes to agent-instruction files (AGENTS.md/CLAUDE.md/SOUL.md/.cursorrules, project-local
-        # .hermes config) always need human approval, even under yolo. Extra patterns are fnmatch
+        # .relayhelm config) always need human approval, even under yolo. Extra patterns are fnmatch
         # globs on the basename (e.g. "*.mdc").
         "protected_instruction_files": True,
         "protected_instruction_extra_patterns": [],
@@ -1586,7 +1586,7 @@ DEFAULT_CONFIG = {
         "tirith_fail_open": True,
         "website_blocklist": {"enabled": False, "domains": [], "shared_files": []},
         # IDs of supply-chain advisories the user has read and acted on; acked ones stop the startup
-        # banner. Add via `hermes doctor --ack <id>`; remove by editing the list. Catalog:
+        # banner. Add via `relayhelm doctor --ack <id>`; remove by editing the list. Catalog:
         # hermes_cli/security_advisories.py.
         "acked_advisories": [],
         # Lazy-install opt-in backend packages from PyPI when a backend that needs them is first
@@ -1671,7 +1671,7 @@ DEFAULT_CONFIG = {
         "media_send_timeout_seconds": 300,
     },
     # Kanban multi-agent coordination. The dispatcher ticks every N seconds, reclaims stale claims,
-    # promotes dependency-satisfied todos to ready, and fires `hermes -p <assignee> chat -q ...` per
+    # promotes dependency-satisfied todos to ready, and fires `relayhelm -p <assignee> chat -q ...` per
     # claimable task. Run ONE dispatcher per profile; two on the same kanban.db race for claims.
     "kanban": {
         # Auto-subscribe the originating gateway/TUI session to completion + block events when
@@ -1717,7 +1717,7 @@ DEFAULT_CONFIG = {
         # fan-out workflows that would otherwise saturate one profile's local model / API quota / browser
         # pool while leaving other profiles idle. See #21582.
         "max_in_progress_per_profile": None,
-        # Auto-run the decomposer on Triage tasks every tick. False = manual via `hermes kanban
+        # Auto-run the decomposer on Triage tasks every tick. False = manual via `relayhelm kanban
         # decompose <id>` or the dashboard's Decompose button.
         "auto_decompose": True,
         # Max triage tasks decomposed per tick, bounding the aux-LLM burst from a bulk load. Excess
@@ -1749,7 +1749,7 @@ DEFAULT_CONFIG = {
     },
     "code_execution": {  # execute_code settings (programmatic tool calls).
         # project = run in the session cwd with the active venv/conda python so project deps and
-        # relative paths resolve. strict = isolated temp dir with hermes-agent's own python
+        # relative paths resolve. strict = isolated temp dir with relayhelm's own python
         # (sys.executable): max isolation, project deps/relative paths won't work. Env scrubbing
         # (*_API_KEY, *_TOKEN, *_SECRET, ...) and the tool whitelist apply in both modes.
         "mode": "project",
@@ -1764,7 +1764,7 @@ DEFAULT_CONFIG = {
         "max_session_kernels": 4,
     },
     # Tool Search: deferrable (MCP / non-core plugin) tools are replaced in the model-facing array
-    # by tool_search / tool_describe / tool_call bridges and surfaced on demand. Core Hermes tools
+    # by tool_search / tool_describe / tool_call bridges and surfaced on demand. Core Relayhelm tools
     # (terminal, file tools, todo, memory, browser_*, ...) are NEVER deferred.
     "tools": {
         "tool_search": {
@@ -1793,7 +1793,7 @@ DEFAULT_CONFIG = {
             "listing_max_tokens": 4000,
         },
     },
-    "logging": {  # File logging to ~/.hermes/logs/: agent.log captures INFO+, errors.log WARNING+.
+    "logging": {  # File logging to ~/.relayhelm/logs/: agent.log captures INFO+, errors.log WARNING+.
         "level": "INFO",       # minimum level for agent.log: DEBUG, INFO, WARNING
         "max_size_mb": 5,      # max size per log file before rotation
         "backup_count": 3,     # rotated backups to keep
@@ -1805,7 +1805,7 @@ DEFAULT_CONFIG = {
         "enabled": True,
         "url": "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json",
         # Disk cache TTL in minutes. The gateway refreshes in the background on this cadence; the
-        # CLI refetches on the next /model or `hermes model` once the cache is older. Network
+        # CLI refetches on the next /model or `relayhelm model` once the cache is older. Network
         # failures silently use the stale cache. Legacy `ttl_hours` is honoured if set.
         "ttl_minutes": 20,
         # Per-provider override URLs for self-hosted curation lists using the same schema, e.g.
@@ -1817,7 +1817,7 @@ DEFAULT_CONFIG = {
     # models.dev/OpenRouter/hardcoded defaults for the fields it sets (chain order in
     # agent/model_metadata.py). <provider>._default and top-level _default fill gaps ONLY for models
     # the catalog does not know, so they never clamp known models. Unknown ids start from safe
-    # defaults (200K context, tools on, vision/reasoning off) and get patched. Provider keys: Hermes
+    # defaults (200K context, tools on, vision/reasoning off) and get patched. Provider keys: Relayhelm
     # or models.dev id; model ids match case-insensitively. Example: {"custom:my-local-vllm":
     # {"my-llava-model": {"context_window": 8192}}}
     # Semantics: 1. NOTE: an explicit model.context_length (global) and a custom_providers per-model
@@ -1852,7 +1852,7 @@ DEFAULT_CONFIG = {
             "export_interval_seconds": 60,
             "logs_export_interval_seconds": 5,
             "resource_attributes": {
-                "service.name": "hermes-gateway", "deployment.environment.name": "production"
+                "service.name": "relayhelm-gateway", "deployment.environment.name": "production"
             },
         },
         # OTLP destination. headers_env maps header names to ENVIRONMENT VARIABLE NAMES (never
@@ -1897,7 +1897,7 @@ DEFAULT_CONFIG = {
         # and re-arms the live handle; explicit env wins.
         "startup_watchdog": True,
         "startup_watchdog_timeout_seconds": 300,
-        # Keep writing the legacy ~/.hermes/sessions/sessions.json mirror of the routing index
+        # Keep writing the legacy ~/.relayhelm/sessions/sessions.json mirror of the routing index
         # (primary copy: state.db gateway_routing table). True for external tooling and downgrade
         # safety; False stops producing the file.
         "write_sessions_json": True,
@@ -1934,13 +1934,13 @@ DEFAULT_CONFIG = {
         # honored.
         "trust_env": True,
         # Media delivery. False: any emitted file path is delivered natively unless under the
-        # credential/system denylist (/etc, /proc, ~/.ssh, ~/.aws, ~/.hermes/.env, auth.json). True:
-        # files must be under the Hermes cache, media_delivery_allow_dirs, or fresher than
+        # credential/system denylist (/etc, /proc, ~/.ssh, ~/.aws, ~/.relayhelm/.env, auth.json). True:
+        # files must be under the Relayhelm cache, media_delivery_allow_dirs, or fresher than
         # trust_recent_files_seconds — recommended for public-facing gateways so prompt injection
         # can't exfiltrate host secrets. Bridged to HERMES_MEDIA_DELIVERY_STRICT.
         "strict": False,
         # Extra roots (project/scratch dirs, mounted shares) from which bare file paths may be
-        # uploaded; the Hermes cache is always trusted. List of absolute paths or one
+        # uploaded; the Relayhelm cache is always trusted. List of absolute paths or one
         # os.pathsep-separated string; tildes expanded. Bridged to HERMES_MEDIA_ALLOW_DIRS. Honored
         # in both modes.
         "media_delivery_allow_dirs": [],
@@ -1976,7 +1976,7 @@ DEFAULT_CONFIG = {
         # edit is sent as a fresh message so the timestamp reflects completion.
         "fresh_final_after_seconds": 0.0,
     },
-    # Automatic cleanup of ~/.hermes/state.db, which otherwise grows without bound and slows FTS5
+    # Automatic cleanup of ~/.relayhelm/state.db, which otherwise grows without bound and slows FTS5
     # inserts, /resume listing, and insights queries.
     "sessions": {
         # Prune ENDED sessions inactive for retention_days (activity = latest message, else
@@ -2009,18 +2009,18 @@ DEFAULT_CONFIG = {
         # Minimum hours between auto-maintenance runs (tracked in state.db state_meta, shared across
         # processes).
         "min_interval_hours": 24,
-        # Legacy ~/.hermes/sessions/session_{sid}.json snapshots rewritten every turn. state.db is
+        # Legacy ~/.relayhelm/sessions/session_{sid}.json snapshots rewritten every turn. state.db is
         # canonical (superset); snapshots consumed GBs on heavy users. Enable only for an external
         # tool that reads the JSON files directly.
         "write_json_snapshots": False,
         # Notice about the compact FTS layout (reclaims ~60%+ of state.db). OPT-IN: legacy indexes
         # stay until `hermes sessions optimize-storage` runs, since the rebuild is disk-heavy on
-        # large DBs. advise = `hermes update` prints a one-line notice with reclaimable size when a
+        # large DBs. advise = `relayhelm update` prints a one-line notice with reclaimable size when a
         # legacy index is detected; require = shown as a REQUIRED upgrade (tooling may gate on it);
         # off = none.
         "fts_optimize_notice": "advise",
         # CJK-bigram search index (messages_fts_cjk). When the extension is built
-        # (native/fts5_cjk/build.sh → ~/.hermes/lib/libfts5_cjk.so), 1-2 char CJK terms get exact
+        # (native/fts5_cjk/build.sh → ~/.relayhelm/lib/libfts5_cjk.so), 1-2 char CJK terms get exact
         # index matches instead of LIKE scans. True = use when present (inert otherwise); False =
         # never load/serve it. Bridged to HERMES_CJK_FTS.
         "cjk_fts": True,
@@ -2060,15 +2060,15 @@ DEFAULT_CONFIG = {
     },
 
     "doctor": {
-        # Per-probe timeout (seconds) for `hermes doctor --live` real-call probes.
+        # Per-probe timeout (seconds) for `relayhelm doctor --live` real-call probes.
         "live_probe_timeout": 10,
     },
 
     "updates": {
         # Pre-update backup. quick = snapshot small critical state (pairing JSONs, cron jobs,
         # config.yaml, .env, auth.json, profile DBs) into <HERMES_HOME>/state-snapshots/, skipping
-        # files >1 GiB; restore via ``/snapshot``. full = quick PLUS a ``hermes backup`` zip in
-        # <HERMES_HOME>/backups/ (``hermes import`` restores; slow on large homes; ``--backup``
+        # files >1 GiB; restore via ``/snapshot``. full = quick PLUS a ``relayhelm backup`` zip in
+        # <HERMES_HOME>/backups/ (``relayhelm import`` restores; slow on large homes; ``--backup``
         # forces once). off = none (``--no-backup`` forces once). Legacy booleans: true -> full,
         # false -> off.
         # Pre-update safety backup — ONE consolidated mechanism, three modes: Files over 1 GiB (e.g. a
@@ -2091,9 +2091,9 @@ DEFAULT_CONFIG = {
         # Clean parked branch with unmerged commits: switch = move to the update target, commits
         # stay on the branch (never conflicts). update_in_place = for a maintained custom branch:
         # merge origin/<target> INTO it after leaving a pre-update-<stamp> tag; a conflict stops the
-        # update cleanly. `hermes update --switch-branch` overrides to switch for one run.
+        # update cleanly. `relayhelm update --switch-branch` overrides to switch for one run.
         "parked_branch_strategy": "switch",
-        # Refresh an installed cua-driver during `hermes update` (best-effort, macOS only). Turn off
+        # Refresh an installed cua-driver during `relayhelm update` (best-effort, macOS only). Turn off
         # e.g. on non-admin accounts where /Applications isn't writable.
         "refresh_cua_driver": True,
     },
@@ -2119,7 +2119,7 @@ DEFAULT_CONFIG = {
         "servers": {},
     },
     # X (Twitter) Search via xAI's x_search Responses tool. Registers when xAI creds exist
-    # (SuperGrok OAuth or XAI_API_KEY) AND the toolset is enabled in `hermes tools`.
+    # (SuperGrok OAuth or XAI_API_KEY) AND the toolset is enabled in `relayhelm tools`.
     "x_search": {
         # xAI model for the Responses call; any Grok model with x_search access works.
         "model": "grok-4.5",
@@ -2131,7 +2131,7 @@ DEFAULT_CONFIG = {
         "retries": 2,
     },
     # External secret sources — pull credentials from secret managers at startup instead of storing
-    # them in ~/.hermes/.env.
+    # them in ~/.relayhelm/.env.
     "secrets": {
         # Optional ordering of enabled sources (e.g. [onepassword, bitwarden]); default registration
         # order. Mapped sources (explicit VAR→ref) always beat bulk sources (BSM project dumps);
@@ -2139,19 +2139,19 @@ DEFAULT_CONFIG = {
         "bitwarden": {
             "enabled": False,  # When false, BSM is never contacted and bws is never auto-installed.
             # Env var holding the machine-account token — the one bootstrap secret; lives in
-            # ~/.hermes/.env (or the shell), never in config.yaml.
+            # ~/.relayhelm/.env (or the shell), never in config.yaml.
             "access_token_env": "BWS_ACCESS_TOKEN",
             "project_id": "",  # UUID of the BSM project to sync from.
             # Seconds to reuse a fresh disk/memory cache entry before contacting Bitwarden again. 0
             # disables fresh-cache reuse.
             "cache_ttl_seconds": 300,
-            # Last-good fallback for NETWORK/TIMEOUT outages: AES-GCM cache under ~/.hermes/cache/,
+            # Last-good fallback for NETWORK/TIMEOUT outages: AES-GCM cache under ~/.relayhelm/cache/,
             # reused up to max_stale_seconds. Auth failures never fall back.
             "encrypted_cache": {"enabled": False, "max_stale_seconds": 0},
             # BSM values overwrite existing env vars, so rotating in Bitwarden takes effect without
             # clearing the matching .env line.
             "override_existing": True,
-            # Auto-download bws into ~/.hermes/bin/ on first use; False = bws must be on PATH.
+            # Auto-download bws into ~/.relayhelm/bin/ on first use; False = bws must be on PATH.
             "auto_install": True,
             # Passed to bws as BWS_SERVER_URL. Empty = US Cloud (bws default);
             # https://vault.bitwarden.eu for EU; your own URL for self-hosted.
@@ -2182,7 +2182,7 @@ DEFAULT_CONFIG = {
     "paste_collapse_char_threshold": 2000,
 
     "computer_use": {
-        # cua-driver's upstream PostHog telemetry defaults ON; Hermes sets
+        # cua-driver's upstream PostHog telemetry defaults ON; Relayhelm sets
         # CUA_DRIVER_RS_TELEMETRY_ENABLED=0 in every child env unless this is true.
         "cua_telemetry": False,
         "native_wayland": False,
@@ -2196,7 +2196,7 @@ DEFAULT_CONFIG = {
         # Linux/WSL2 idle spin). None = auto (off on macOS + headless/ WSL2 Linux, on elsewhere);
         # True = always disable; False = always enable.
         # The overlay shows where agent actions land but can peg a core when idle (macOS vImage redraw loop
-        # #47032; Linux/WSL2 idle spin #28152). cua-driver ≥ 0.6.x supports --no-overlay; Hermes also calls
+        # #47032; Linux/WSL2 idle spin #28152). cua-driver ≥ 0.6.x supports --no-overlay; Relayhelm also calls
         # set_agent_cursor_enabled(false) after start_session when this is on.
         "no_overlay": None,
         # standard = cua-driver's own approval boundary; bounded = no runtime prompts, anything
@@ -2219,7 +2219,7 @@ DEFAULT_CONFIG = {
         "enabled": False,  # When false, nothing starts, no docker mounts, no binary installs.
         # Tunnel listener port; sandboxes get HTTPS_PROXY=http://<host>:<port>.
         "tunnel_port": 9090,
-        # Auto-download the pinned binary into ~/.hermes/bin/; False = iron-proxy on PATH.
+        # Auto-download the pinned binary into ~/.relayhelm/bin/; False = iron-proxy on PATH.
         "auto_install": True,
         # Upstream secret source: env = process env; bitwarden = refetch via `bws secret list` on
         # each proxy restart (requires secrets.bitwarden.enabled).
@@ -2238,7 +2238,7 @@ DEFAULT_CONFIG = {
         # (`*.foo.com`) supported.
         "extra_allowed_hosts": [],
     },
-    "desktop": {  # Hermes Desktop (Electron) launch options; only affect `hermes desktop`.
+    "desktop": {  # Relayhelm Desktop (Electron) launch options; only affect `hermes desktop`.
         # Git repo discovery for the Projects sidebar; empty roots = bounded scan of $HOME.
         "repo_scan_enabled": True,
         "repo_scan_roots": [],
@@ -2294,9 +2294,9 @@ DEFAULT_CONFIG = {
     # Managed llama.cpp runtime (docs: user-guide/local-models): official binaries, one supervised
     # llama-server in router mode. No context/VRAM knobs by design.
     "local_runtime": {
-        # Off = detection-only (Hermes still finds an external llama-server you run).
+        # Off = detection-only (Relayhelm still finds an external llama-server you run).
         "enabled": False,
-        # Pinned llama.cpp release tag; bumped by Hermes releases after validation.
+        # Pinned llama.cpp release tag; bumped by Relayhelm releases after validation.
         "tag": "b10679",
         # auto = CUDA on NVIDIA, Metal on macOS, Vulkan on other GPUs, else CPU. Explicit:
         # cuda|metal|vulkan|hip|cpu.
@@ -2366,7 +2366,7 @@ OPTIONAL_ENV_VARS = {
     "GEMINI_BASE_URL": _base_url("Google AI Studio", "Gemini"),
     "VERTEX_CREDENTIALS_PATH": _prov(
         "Path to a Google Cloud service account JSON for Vertex AI (Gemini). Vertex uses "
-        "OAuth2, not a static API key — this points at the credentials Hermes mints short-lived "
+        "OAuth2, not a static API key — this points at the credentials Relayhelm mints short-lived "
         "tokens from. Falls back to GOOGLE_APPLICATION_CREDENTIALS, then to ADC (gcloud auth "
         "application-default login). Set project/region under vertex: in config.yaml.",
         "Vertex service account JSON path (leave empty to use ADC / "
@@ -2460,7 +2460,7 @@ OPTIONAL_ENV_VARS = {
     "AZURE_FOUNDRY_API_KEY": _prov("Azure Foundry API key for custom Azure endpoints",
         "Azure Foundry API Key", "https://ai.azure.com/", advanced=False),
     "AZURE_FOUNDRY_BASE_URL": _prov(
-        "Azure Foundry base URL (set via 'hermes model' for endpoint-specific config)",
+        "Azure Foundry base URL (set via 'relayhelm model' for endpoint-specific config)",
         "Azure Foundry base URL", None, password=False),
     # ── Tool API keys ──
     "EXA_API_KEY": _tool("Exa API key for AI-native web search and contents", "Exa API key",
@@ -2485,7 +2485,7 @@ OPTIONAL_ENV_VARS = {
         None, password=False, advanced=True),
     "TOOL_GATEWAY_USER_TOKEN": _tool(
         "Explicit Nous Subscriber access token for tool-gateway requests (optional; otherwise "
-        "read from the Hermes auth store)", "Tool-gateway user token", None, advanced=True),
+        "read from the Relayhelm auth store)", "Tool-gateway user token", None, advanced=True),
     "TAVILY_API_KEY": _tool(
         "Tavily API key for AI-native web search and extract (optional — keyless works when "
         "Tavily is selected)", "Tavily API key", "https://app.tavily.com/home",
@@ -2549,7 +2549,7 @@ OPTIONAL_ENV_VARS = {
     "MISTRAL_API_KEY": _tool("Mistral API key for Voxtral TTS and transcription (STT)",
         "Mistral API key", "https://console.mistral.ai/"),
     "PORCUPINE_ACCESS_KEY": _tool(
-        "Picovoice access key for the Porcupine 'Hey Hermes' wake word engine (optional; "
+        "Picovoice access key for the Porcupine 'Hey Relayhelm' wake word engine (optional; "
         "openWakeWord is the free default)", "Picovoice access key",
         "https://console.picovoice.ai/"),
     "GITHUB_TOKEN": _tool("GitHub token for Skills Hub (higher API rate limits, skill publish)",
@@ -2638,7 +2638,7 @@ OPTIONAL_ENV_VARS = {
         help=("In your Slack app, enable Socket Mode, then create Basic Information > App-Level "
         "Tokens with the connections:write scope."), password=True),
     "SLACK_ALLOWED_USERS": _msg(
-        "Comma-separated Slack member IDs allowed to use Hermes, e.g. U01ABC2DEF3. Without "
+        "Comma-separated Slack member IDs allowed to use Relayhelm, e.g. U01ABC2DEF3. Without "
         "this, Slack may connect but deny messages by default.", "Allowed Slack member IDs",
         "https://api.slack.com/apps",
         help=("In Slack, open your profile, choose More or the three-dot menu, then Copy member "
@@ -2731,17 +2731,17 @@ OPTIONAL_ENV_VARS = {
         "Host/bind address for the API server (default: 127.0.0.1). API_SERVER_KEY is still "
         "required even on loopback binds.", "API server host", None, advanced=True),
     "API_SERVER_MODEL_NAME": _msg(
-        "Model name advertised on /v1/models. Defaults to the profile name (or 'hermes-agent' "
+        "Model name advertised on /v1/models. Defaults to the profile name (or 'relayhelm' "
         "for the default profile). Useful for multi-user setups with OpenWebUI.",
         "API server model name", None, advanced=True),
     "GATEWAY_PROXY_URL": _msg(
-        "URL of a remote Hermes API server to forward messages to (proxy mode). When set, the "
+        "URL of a remote Relayhelm API server to forward messages to (proxy mode). When set, the "
         "gateway handles platform I/O only — all agent work is delegated to the remote server. "
         "Use for Docker E2EE containers that relay to a host agent. Also configurable via "
         "gateway.proxy_url in config.yaml.",
-        "Remote Hermes API server URL (e.g. http://192.168.1.100:8642)", None, advanced=True),
+        "Remote Relayhelm API server URL (e.g. http://192.168.1.100:8642)", None, advanced=True),
     "GATEWAY_PROXY_KEY": _msg(
-        "Bearer token for authenticating with the remote Hermes API server (proxy mode). Must "
+        "Bearer token for authenticating with the remote Relayhelm API server (proxy mode). Must "
         "match the API_SERVER_KEY on the remote host.", "Remote API server auth key", None,
         password=True, advanced=True),
     "WEBHOOK_ENABLED": _msg(

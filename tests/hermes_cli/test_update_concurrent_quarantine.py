@@ -1,5 +1,5 @@
 """Tests for issue #26670 — concurrent hermes.exe detection and improved
-quarantine retry / reboot-deferred fallback during `hermes update` on Windows.
+quarantine retry / reboot-deferred fallback during `relayhelm update` on Windows.
 
 These tests force ``_is_windows`` to return ``True`` via patching so the
 Windows-specific code paths can be exercised on any host.
@@ -928,15 +928,15 @@ def _fake_psutil_classify(argv_by_pid):
 
 def test_classify_concurrent_instance_recognises_gateway_runtimes(monkeypatch):
     """Gateway runtime command lines classify as ``gateway`` regardless of
-    launcher shape (python -m, hermes.exe shim, hermes-gateway.exe,
-    gateway/run.py, bare `hermes gateway` which defaults to run)."""
+    launcher shape (python -m, hermes.exe shim, relayhelm-gateway.exe,
+    gateway/run.py, bare `relayhelm gateway` which defaults to run)."""
     cases = [
         [r"C:\venv\Scripts\python.exe", "-m", "hermes_cli.main", "gateway", "run"],
-        [r"C:\venv\Scripts\hermes.exe", "gateway", "run"],
-        [r"C:\venv\Scripts\hermes-gateway.exe"],
+        [r"C:\venv\Scripts\relayhelm.exe", "gateway", "run"],
+        [r"C:\venv\Scripts\relayhelm-gateway.exe"],
         [r"C:\venv\Scripts\python.exe", "gateway/run.py"],
         ["hermes.exe", "GATEWAY", "RUN"],  # matcher is case-insensitive
-        ["hermes.exe", "gateway"],  # bare `hermes gateway` defaults to run
+        ["hermes.exe", "gateway"],  # bare `relayhelm gateway` defaults to run
         # profile selector before the subcommand — canonical matcher strips it
         ["hermes.exe", "--profile", "work", "gateway", "run"],
     ]
@@ -952,8 +952,8 @@ def test_classify_concurrent_instance_recognises_non_gateways(monkeypatch):
     matcher rejects but a substring matcher would misclassify. These keep
     the pre-update abort."""
     cases = [
-        [r"C:\venv\Scripts\hermes.exe"],  # interactive REPL
-        [r"C:\venv\Scripts\hermes.exe", "dashboard"],
+        [r"C:\venv\Scripts\relayhelm.exe"],  # interactive REPL
+        [r"C:\venv\Scripts\relayhelm.exe", "dashboard"],
         ["hermes.exe", "gateway", "status"],  # management, not runtime
         ["hermes.exe", "gateway", "stop"],
         ["python", "-m", "hermes_cli.main"],
@@ -1013,11 +1013,11 @@ def test_filter_non_gateway_concurrent_instances_gateway_only(monkeypatch):
         _fake_psutil_classify(
             {
                 111: ["hermes.exe", "gateway", "run"],
-                222: [r"C:\venv\Scripts\hermes-gateway.exe"],
+                222: [r"C:\venv\Scripts\relayhelm-gateway.exe"],
             }
         ),
     )
-    matches = [(111, "hermes.exe"), (222, "hermes-gateway.exe")]
+    matches = [(111, "hermes.exe"), (222, "relayhelm-gateway.exe")]
     assert cli_main._filter_non_gateway_concurrent_instances(matches) == []
 
 
@@ -1052,7 +1052,7 @@ def test_update_gate_skips_abort_when_only_concurrent_is_gateway(
     ), patch.object(
         cli_main,
         "_detect_concurrent_hermes_instances",
-        return_value=[(1000, "hermes.exe"), (2000, "hermes-gateway.exe")],
+        return_value=[(1000, "hermes.exe"), (2000, "relayhelm-gateway.exe")],
     ), patch.object(
         cli_main, "_filter_non_gateway_concurrent_instances", return_value=[]
     ) as mock_filter, patch.object(

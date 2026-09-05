@@ -15,7 +15,7 @@ RETRY_POLICY = REPO_ROOT / "scripts" / "desktop-update" / "retry-policy.ps1"
 
 @pytest.mark.windows_only
 def test_retry_policy_distinguishes_self_lock_deferral(tmp_path: Path) -> None:
-    install_root = tmp_path / "hermes-agent"
+    install_root = tmp_path / "relayhelm"
     install_root.mkdir()
     marker = install_root / ".update-incomplete"
 

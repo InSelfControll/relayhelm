@@ -2,10 +2,10 @@
 
 Verifies that Hermes-managed provider, tool, and gateway env vars are
 stripped from subprocess environments so external CLIs are not silently
-misrouted or handed Hermes secrets.
+misrouted or handed Relayhelm secrets.
 
-See: https://github.com/NousResearch/hermes-agent/issues/1002
-See: https://github.com/NousResearch/hermes-agent/issues/1264
+See: https://github.com/InSelfControll/relayhelm/issues/1002
+See: https://github.com/InSelfControll/relayhelm/issues/1264
 """
 
 import os
@@ -67,7 +67,7 @@ def _run_with_env(extra_os_env=None, self_env=None):
 
 
 class TestProviderEnvBlocklist:
-    """Provider env vars loaded from ~/.hermes/.env must not leak."""
+    """Provider env vars loaded from ~/.relayhelm/.env must not leak."""
 
     def test_blocked_vars_are_stripped(self):
         """OPENAI_BASE_URL and other provider vars must not appear in subprocess env."""
@@ -103,14 +103,14 @@ class TestProviderEnvBlocklist:
             assert var not in result_env, f"{var} leaked into subprocess env"
 
     def test_bedrock_bearer_token_is_stripped(self):
-        """The Bedrock-specific bearer token is a Hermes inference secret
+        """The Bedrock-specific bearer token is a Relayhelm inference secret
         (analogous to OPENAI_API_KEY) and must not leak into subprocesses.
 
         Regression for #32314: AWS_BEARER_TOKEN_BEDROCK leaked into terminal /
         execute_code children because the ``bedrock`` ProviderConfig declares
         ``api_key_env_vars=()`` (auth_type="aws_sdk") and the blocklist builder
         only consulted that field. The reporter caught it when ``opencode
-        models`` run inside a Hermes terminal enumerated the entire Bedrock
+        models`` run inside a Relayhelm terminal enumerated the entire Bedrock
         catalog off the leaked bearer token.
         """
         result_env = _run_with_env(extra_os_env={
@@ -238,7 +238,7 @@ class TestProviderEnvBlocklist:
         assert "PATH" in result_env
 
     def test_bare_hermes_resolves_from_sanitized_subprocess_path(self):
-        """Cron children can resolve Hermes even when the gateway PATH cannot."""
+        """Cron children can resolve Relayhelm even when the gateway PATH cannot."""
         from tools.environments.local import _sanitize_subprocess_env
 
         with patch(
@@ -556,15 +556,15 @@ class TestActiveVenvMarkerStripping:
     VIRTUAL_ENV (and possibly CONDA_PREFIX). If those leak into commands the
     agent runs against ANOTHER Python project, ``uv``/``poetry`` treat the
     inherited value as the active environment and build that project's deps
-    into the Hermes venv path instead of the project's own ``.venv`` —
-    silently clobbering the Hermes environment (and, when the other project
-    pins a different Python, breaking the gateway outright). The Hermes venv
+    into the Relayhelm venv path instead of the project's own ``.venv`` —
+    silently clobbering the Relayhelm environment (and, when the other project
+    pins a different Python, breaking the gateway outright). The Relayhelm venv
     stays reachable via PATH, so stripping the markers is safe.
     """
 
     def test_virtualenv_marker_stripped_end_to_end(self):
         result_env = _run_with_env(extra_os_env={
-            "VIRTUAL_ENV": "/home/user/.hermes/hermes-agent/venv",
+            "VIRTUAL_ENV": "/home/user/.relayhelm/relayhelm/venv",
         })
         assert "VIRTUAL_ENV" not in result_env
 
@@ -626,7 +626,7 @@ def _make_directory_link(link: Path, target: Path) -> None:
 
 def _physical_repo_root(tmp_path: Path) -> Path:
     """Create the physical repo checkout directory for junction tests."""
-    physical_root = tmp_path / "physical-home" / "hermes-agent"
+    physical_root = tmp_path / "physical-home" / "relayhelm"
     physical_root.mkdir(parents=True)
     return physical_root
 
@@ -634,12 +634,12 @@ def _physical_repo_root(tmp_path: Path) -> Path:
 class TestPythonpathSelectiveStrip:
     """PYTHONPATH Hermes-owned entry stripping (#74817).
 
-    The Desktop Electron app injects the Hermes repo root and the Hermes
+    The Desktop Electron app injects the Relayhelm repo root and the Relayhelm
     venv's site-packages (Python 3.11) into PYTHONPATH.  When this leaks
     into subprocesses running a different Python (e.g. 3.13), 3.11 C
     extensions appear on sys.path and crash with ImportError.
     ``_strip_hermes_owned_pythonpath`` surgically removes only the
-    entries Hermes itself owns (repo root, own venv site-packages),
+    entries Relayhelm itself owns (repo root, own venv site-packages),
     preserving user paths — including user paths whose names merely
     contain another Python version.
     """
@@ -650,8 +650,8 @@ class TestPythonpathSelectiveStrip:
 
         Covers: the running venv's site-packages, the repo root (computed
         independently via parents[2] so an off-by-one in _hermes_repo_root
-        cannot silently pass), duplicate Hermes entries, all-owned input
-        (PYTHONPATH key removed), and mixed user/Hermes ordering with an
+        cannot silently pass), duplicate Relayhelm entries, all-owned input
+        (PYTHONPATH key removed), and mixed user/Relayhelm ordering with an
         empty component preserved.
         """
         from tools.environments.local_pythonpath import _strip_hermes_owned_pythonpath
@@ -701,7 +701,7 @@ class TestPythonpathSelectiveStrip:
 
     def test_non_owned_runtime_shaped_entries_preserved(self):
         """Runtime-derived user spellings are preserved: site-packages for a
-        different interpreter version, a descendant of the Hermes venv
+        different interpreter version, a descendant of the Relayhelm venv
         site-packages, and direct/deeper children of the repo root.  The
         repo root is computed independently (parents[2] of this file) so an
         off-by-one in _hermes_repo_root cannot silently pass; no launcher
@@ -738,7 +738,7 @@ class TestPythonpathSelectiveStrip:
         Hermes-owned — the critical invariant is that user Windows paths
         (including site-packages paths for another Python version) are
         never destroyed.  On a real Windows host, Path splits on
-        backslashes and Hermes venv site-packages entries are stripped
+        backslashes and Relayhelm venv site-packages entries are stripped
         by the same Hermes-owned check (covered by the Windows-only test
         below).
         """
@@ -746,7 +746,7 @@ class TestPythonpathSelectiveStrip:
         import sys
 
         pyver = f"python{sys.version_info[0]}.{sys.version_info[1]}"
-        hermes_win = f"C:\\\\Users\\\\u\\\\.hermes\\\\hermes-agent\\\\venv\\\\lib\\\\{pyver}\\\\site-packages"
+        hermes_win = f"C:\\\\Users\\\\u\\\\.relayhelm\\\\relayhelm\\\\venv\\\\lib\\\\{pyver}\\\\site-packages"
         user_win = "D:\\\\user\\\\lib"
         env = {
             "PYTHONPATH": ";".join([hermes_win, user_win]),
@@ -763,7 +763,7 @@ class TestPythonpathSelectiveStrip:
 
     @pytest.mark.windows_only
     def test_windows_hermes_owned_paths_stripped(self):
-        """On Windows, a Hermes venv site-packages entry written with
+        """On Windows, a Relayhelm venv site-packages entry written with
         backslashes is stripped by the same Hermes-owned check, while a
         user Windows path is preserved.  Windows-only: POSIX ``Path`` does
         not split on backslashes, so this cannot be meaningfully simulated
@@ -823,14 +823,14 @@ class TestPythonpathSelectiveStrip:
     def test_base_python_sanitizer_uses_validated_separate_runtime_venv(self, tmp_path, monkeypatch):
         """A base interpreter strips the exact Windows runtime site-packages.
 
-        This deliberately uses a synthetic Hermes venv separate from the test
+        This deliberately uses a synthetic Relayhelm venv separate from the test
         runner: sys.prefix represents base Python, while validated VIRTUAL_ENV
-        identifies ``<repo>/venv`` as the Hermes runtime producer contract.
+        identifies ``<repo>/venv`` as the Relayhelm runtime producer contract.
         """
         import tools.environments.local as local
         from tools.environments import local_pythonpath
 
-        repo_root = tmp_path / "hermes-agent"
+        repo_root = tmp_path / "relayhelm"
         runtime_venv = repo_root / "venv"
         runtime_sp = runtime_venv / "Lib" / "site-packages"
         runtime_sp.mkdir(parents=True)
@@ -860,7 +860,7 @@ class TestPythonpathSelectiveStrip:
         import tools.environments.local as local
         from tools.environments import local_pythonpath
 
-        repo_root = tmp_path / "hermes-agent"
+        repo_root = tmp_path / "relayhelm"
         repo_root.mkdir()
         unrelated_venv = tmp_path / "user-venv"
         unrelated_sp = unrelated_venv / "Lib" / "site-packages"
@@ -895,7 +895,7 @@ class TestPythonpathSelectiveStrip:
     ])
     def test_builders_strip_hermes_venv_pythonpath(self, builder):
         """Every subprocess env builder applies the same sanitation contract:
-        Hermes venv site-packages is stripped, user entries survive.
+        Relayhelm venv site-packages is stripped, user entries survive.
         """
         from tools.environments import local as local_mod
 
@@ -918,7 +918,7 @@ class TestPythonpathSelectiveStrip:
         assert "/home/user/my-lib" in entries
 
     def test_scrub_child_env_strips_hermes_venv_pythonpath(self):
-        """execute_code's _scrub_child_env path: after scrubbing, Hermes venv
+        """execute_code's _scrub_child_env path: after scrubbing, Relayhelm venv
         site-packages entries should be stripped when
         _strip_hermes_owned_pythonpath is applied (as the spawn path does),
         while user entries (even for another Python version) are preserved.
@@ -948,12 +948,12 @@ class TestPythonpathSelectiveStrip:
     def test_execute_code_composition_strips_inherited_hermes_entries(self, same_env):
         """Integration: execute_code's real spawn path composes a clean PYTHONPATH.
 
-        Seeds a contaminated inherited PYTHONPATH (Hermes repo root + Hermes
+        Seeds a contaminated inherited PYTHONPATH (Relayhelm repo root + Relayhelm
         venv site-packages + user entries) through os.environ and drives
         execute_code all the way to Popen.  Proves the #84500 conditional
         composition and the #82581 selective strip compose correctly:
 
-        * inherited Hermes venv site-packages never survive into the sandbox;
+        * inherited Relayhelm venv site-packages never survive into the sandbox;
         * the staging tmpdir stays the first entry;
         * the repo root is deliberately re-added exactly once for a same-env
           child (the single occurrence proves the inherited copy was stripped
@@ -1014,7 +1014,7 @@ class TestPythonpathSelectiveStrip:
         assert norm_parts[0] == norm_staging, \
             "staging tmpdir must be the first PYTHONPATH entry"
         assert norm_venv not in norm_parts, \
-            "inherited Hermes venv site-packages must be stripped"
+            "inherited Relayhelm venv site-packages must be stripped"
         assert norm_user_a in norm_parts and norm_user_b in norm_parts, \
             "user PYTHONPATH entries must survive"
         assert norm_parts.index(norm_user_a) > norm_parts.index(norm_staging), \
@@ -1079,7 +1079,7 @@ class TestPythonpathSelectiveStrip:
             configured_home,
         )
 
-        assert launcher_entry == configured_home / "hermes-agent"
+        assert launcher_entry == configured_home / "relayhelm"
         assert launcher_entry in aliases
 
         monkeypatch.setattr(local, "_hermes_repo_root_aliases", aliases)
@@ -1113,7 +1113,7 @@ class TestPythonpathSelectiveStrip:
         from hermes_cli.profiles import resolve_profile_env
 
         physical_home = tmp_path / "physical-home"
-        physical_root = physical_home / "hermes-agent"
+        physical_root = physical_home / "relayhelm"
         physical_root.mkdir(parents=True)
         (physical_home / "profiles" / "coder").mkdir(parents=True)
         configured_home = tmp_path / "configured-home"
@@ -1124,7 +1124,7 @@ class TestPythonpathSelectiveStrip:
 
         # Launcher contract: the configured spelling is the env and the root.
         monkeypatch.setenv("HERMES_HOME", str(configured_home))
-        lexical_root = configured_home / "hermes-agent"
+        lexical_root = configured_home / "relayhelm"
 
         # Profile re-home keeps the configured spelling (physically identical
         # through the link; lexically the launcher spelling is preserved).
@@ -1147,7 +1147,7 @@ class TestPythonpathSelectiveStrip:
 
     def test_repo_level_junction_recovers_lexical_alias(self, tmp_path, monkeypatch):
         """The repo itself may be a junction under the configured root
-        (e.g. D:\\hermes\\hermes-agent -> C:\\...\\hermes-agent) while the
+        (e.g. D:\\hermes\\relayhelm -> C:\\...\\relayhelm) while the
         editable import spelling resolves to the physical location.  The
         alias builder must recover the lexical spelling via exact-identity
         proof (strict resolve), not a name-based guess.
@@ -1158,13 +1158,13 @@ class TestPythonpathSelectiveStrip:
         physical_root = _physical_repo_root(tmp_path)
         configured_home = tmp_path / "configured-home"
         configured_home.mkdir()
-        # repo-level link: <configured-home>/hermes-agent -> physical repo
+        # repo-level link: <configured-home>/relayhelm -> physical repo
         try:
-            _make_directory_link(configured_home / "hermes-agent", physical_root)
+            _make_directory_link(configured_home / "relayhelm", physical_root)
         except OSError as exc:
             pytest.skip(f"directory link unavailable on this host: {exc}")
 
-        lexical_root = configured_home / "hermes-agent"
+        lexical_root = configured_home / "relayhelm"
         aliases = local_pythonpath._build_hermes_repo_root_aliases(
             physical_root.resolve(),
             physical_root,
@@ -1188,8 +1188,8 @@ class TestPythonpathSelectiveStrip:
 
         physical_root = _physical_repo_root(tmp_path)
         configured_home = tmp_path / "configured-home"
-        (configured_home / "hermes-agent").mkdir(parents=True)
-        unrelated = tmp_path / "user-tools" / "hermes-agent"
+        (configured_home / "relayhelm").mkdir(parents=True)
+        unrelated = tmp_path / "user-tools" / "relayhelm"
         unrelated.mkdir(parents=True)
 
         aliases = local_pythonpath._build_hermes_repo_root_aliases(
@@ -1197,18 +1197,18 @@ class TestPythonpathSelectiveStrip:
             physical_root,
             configured_home,
         )
-        for lookalike in (configured_home / "hermes-agent", unrelated):
+        for lookalike in (configured_home / "relayhelm", unrelated):
             assert not any(local_pythonpath._same_path(a, lookalike) for a in aliases)
 
         monkeypatch.setattr(local, "_hermes_repo_root_aliases", aliases)
-        for lookalike in (configured_home / "hermes-agent", unrelated):
+        for lookalike in (configured_home / "relayhelm", unrelated):
             env = {"PYTHONPATH": os.pathsep.join([str(lookalike), "/home/user/my-lib"])}
             local_pythonpath._strip_hermes_owned_pythonpath(env)
             assert env["PYTHONPATH"].split(os.pathsep) == [str(lookalike), "/home/user/my-lib"]
 
     def test_profile_home_with_repo_level_junction(self, tmp_path, monkeypatch):
         """Profile re-home + repo-level junction together: the configured home
-        is <root>/profiles/<name> while the repo is a link at <root>/hermes-agent.
+        is <root>/profiles/<name> while the repo is a link at <root>/relayhelm.
         The root spelling must be derived (profiles -> grandparent) and then
         the lexical repo alias recovered from it.
         """
@@ -1219,19 +1219,19 @@ class TestPythonpathSelectiveStrip:
         configured_root = tmp_path / "configured-root"
         (configured_root / "profiles" / "coder").mkdir(parents=True)
         try:
-            _make_directory_link(configured_root / "hermes-agent", physical_root)
+            _make_directory_link(configured_root / "relayhelm", physical_root)
         except OSError as exc:
             pytest.skip(f"directory link unavailable on this host: {exc}")
 
         configured_home = configured_root / "profiles" / "coder"
-        lexical_root = configured_root / "hermes-agent"
+        lexical_root = configured_root / "relayhelm"
         aliases = local_pythonpath._build_hermes_repo_root_aliases(
             physical_root.resolve(),
             physical_root,
             configured_home,
         )
         assert any(local_pythonpath._same_path(a, lexical_root) for a in aliases)
-        assert not any(local_pythonpath._same_path(a, configured_home / "hermes-agent") for a in aliases)
+        assert not any(local_pythonpath._same_path(a, configured_home / "relayhelm") for a in aliases)
 
         monkeypatch.setattr(local, "_hermes_repo_root_aliases", aliases)
         env = {"PYTHONPATH": os.pathsep.join([str(lexical_root), "/home/user/my-lib"])}
@@ -1253,11 +1253,11 @@ class TestPythonpathSelectiveStrip:
         configured_home = tmp_path / "configured-home"
         configured_home.mkdir()
         try:
-            _make_directory_link(configured_home / "hermes-agent", physical_root)
+            _make_directory_link(configured_home / "relayhelm", physical_root)
         except OSError as exc:
             pytest.skip(f"directory link unavailable on this host: {exc}")
 
-        lexical_root = configured_home / "hermes-agent"
+        lexical_root = configured_home / "relayhelm"
         aliases = local_pythonpath._build_hermes_repo_root_aliases(
             physical_root.resolve(),
             physical_root,
@@ -1285,11 +1285,11 @@ class TestPythonpathSelectiveStrip:
 
 
 class TestPythonhomeSanitized:
-    """PYTHONHOME must not leak from the Hermes runtime into subprocesses.
+    """PYTHONHOME must not leak from the Relayhelm runtime into subprocesses.
 
     The gateway inherits/sets PYTHONHOME in its process environment; a child
     interpreter (system Python, another venv, cron no_agent scripts) that
-    inherits it redirects its stdlib search to the Hermes venv and crashes
+    inherits it redirects its stdlib search to the Relayhelm venv and crashes
     with version-mismatch errors before importing anything (#75018).
     """
 
@@ -1412,7 +1412,7 @@ class TestBlocklistCoverage:
         must appear in the blocklist — ensures no drift.
 
         CLAUDE_CODE_OAUTH_TOKEN is the one deliberate exemption: it is owned
-        by the user's Claude Code install, not Hermes (#55878).
+        by the user's Claude Code install, not Relayhelm (#55878).
         """
         from hermes_cli.auth import PROVIDER_REGISTRY
 
@@ -1439,7 +1439,7 @@ class TestBlocklistCoverage:
     def test_general_aws_chain_not_in_blocklist(self):
         """The general AWS credential chain must NOT be in the blocklist —
         no-regression guard for #32314. These belong to the user's trusted
-        operator shell (SECURITY.md §3.2), not to Hermes, and blocklisting
+        operator shell (SECURITY.md §3.2), not to Relayhelm, and blocklisting
         them would be unrecoverable via env_passthrough (GHSA-rhgp-j443-p4rf).
         """
         general_chain = {
@@ -1468,7 +1468,7 @@ class TestBlocklistCoverage:
 
     def test_claude_code_oauth_token_is_inheritable(self):
         """CLAUDE_CODE_OAUTH_TOKEN is owned by the user's Claude Code install
-        (subscription OAuth), not a Hermes inference credential. Stripping it
+        (subscription OAuth), not a Relayhelm inference credential. Stripping it
         made agent-spawned ``claude`` fall through to the shared Keychain /
         ~/.claude credential store and clobber the user's interactive login
         on auth failure (#55878). It must stay inheritable."""
@@ -1649,7 +1649,7 @@ class TestHermesBinDirOnPath:
         from tools.environments import local as local_mod
         self._reset_cache()
         monkeypatch.setattr(local_mod.shutil, "which",
-                            lambda name: "/opt/hermes/bin/hermes" if name == "hermes" else None)
+                            lambda name: "/opt/hermes/bin/relayhelm" if name == "hermes" else None)
         monkeypatch.setattr(local_mod.os.path, "isdir", lambda p: p == "/opt/hermes/bin")
         assert local_mod._resolve_hermes_bin_dir() == "/opt/hermes/bin"
 
@@ -1681,7 +1681,7 @@ class TestHermesBinDirOnPath:
 
 
 class TestHermesInternalDynamicSecrets:
-    """Dynamically-named Hermes secrets injected at gateway/CLI startup must
+    """Dynamically-named Relayhelm secrets injected at gateway/CLI startup must
     not leak into terminal subprocesses.
 
     The static ``_HERMES_PROVIDER_ENV_BLOCKLIST`` is name-based and derived

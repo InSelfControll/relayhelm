@@ -1,4 +1,4 @@
-"""``hermes plugins`` subcommand parser."""
+"""``relayhelm plugins`` subcommand parser."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
     """Attach the ``plugins`` subcommand to ``subparsers``."""
     plugins_parser = subparsers.add_parser(
         "plugins", help="Manage and validate plugins",
-        description="Install, update, remove, list, or validate native Hermes plugins "
+        description="Install, update, remove, list, or validate native Relayhelm plugins "
             "and portable Agent Plugins v1 packages. Portable packages install disabled.")
     plugins_subparsers = plugins_parser.add_subparsers(dest="plugins_action")
 
@@ -21,7 +21,7 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
         "identifier",
         help="Git URL, owner/repo shorthand (e.g. anpicasso/hermes-plugin-chrome-profiles), "
             "or a bare plugin name resolved through the community index "
-            "(see `hermes plugins search`)")
+            "(see `relayhelm plugins search`)")
     plugins_install.add_argument(
         "--force", "-f", action="store_true", help="Remove existing plugin and reinstall")
     plugins_install.add_argument(
@@ -33,7 +33,7 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
         help="Auto-enable the plugin after install (skip confirmation prompt)")
     _install_enable_group.add_argument(
         "--no-enable", action="store_true",
-        help="Install disabled (skip confirmation prompt); enable later with `hermes plugins enable <name>`",
+        help="Install disabled (skip confirmation prompt); enable later with `relayhelm plugins enable <name>`",
     )
 
     plugins_search = plugins_subparsers.add_parser(

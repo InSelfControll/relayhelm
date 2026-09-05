@@ -122,7 +122,7 @@ def build_computer_use_parser(subparsers) -> None:
             "Linux.\n\n"
             "Use `hermes computer-use install` to fetch and run the\n"
             "upstream cua-driver installer. This is equivalent to the\n"
-            "post-setup hook that `hermes tools` runs when you first\n"
+            "post-setup hook that `relayhelm tools` runs when you first\n"
             "enable the Computer Use toolset, and is a stable target\n"
             "for re-running the install if it didn't fire (e.g. when\n"
             "toggling the toolset on a returning-user setup).\n\n"
@@ -163,7 +163,7 @@ def build_computer_use_parser(subparsers) -> None:
         "permissions", help="Check or grant macOS Accessibility + Screen Recording (macOS)",
         description="Computer Use drives the Mac through cua-driver, whose TCC grants\n"
             "attach to cua-driver's own identity (com.trycua.driver) — not the\n"
-            "terminal or the Hermes app. `status` reports the driver's grant\n"
+            "terminal or the Relayhelm app. `status` reports the driver's grant\n"
             "state; `grant` launches CuaDriver via LaunchServices so the macOS\n"
             "permission dialog is attributed to the process that does the work.")
     computer_use_perms_sub = computer_use_perms.add_subparsers(dest="computer_use_perms_action")

@@ -122,7 +122,7 @@ _OPENVIKING_RESPONDED_FAILURE_PREFIX = "OpenViking server responded"
 # Identity probe states; "modern" and "legacy" are the two identified ones.
 _OPENVIKING_IDENTIFIED_STATES = frozenset({"modern", "legacy"})
 _RETRY_LATER = (
-    "OpenViking memory is temporarily unavailable; Hermes will retry on a later access or when the config changes."
+    "OpenViking memory is temporarily unavailable; Relayhelm will retry on a later access or when the config changes."
 )
 _FIX_ENDPOINT = "OpenViking memory is temporarily unavailable; correct the endpoint and reload the configuration."
 _HTTPX_MISSING = "httpx not installed — OpenViking plugin disabled"
@@ -185,7 +185,7 @@ def _format_openviking_exception(error: Exception) -> str:
 
 
 def _derive_openviking_user_text(content: Any) -> str:
-    """Strip Hermes slash-skill scaffolding before sending content to OpenViking
+    """Strip Relayhelm slash-skill scaffolding before sending content to OpenViking
     (MemoryManager already does this for the fan-out; kept for direct hook callers)."""
     return extract_user_instruction_from_skill_message(content) or ""
 
@@ -640,7 +640,7 @@ def _normalize_openviking_url(url: str) -> str:
         blocked = _openviking_endpoint_is_always_blocked(candidate)
     except Exception as exc:
         logger.debug("OpenViking endpoint safety validation failed", exc_info=True)
-        raise _OpenVikingEndpointError("OpenViking endpoint safety validation failed; Hermes refused the connection.") from exc
+        raise _OpenVikingEndpointError("OpenViking endpoint safety validation failed; Relayhelm refused the connection.") from exc
     if blocked:
         raise _OpenVikingEndpointError(
             f"OpenViking endpoint {_openviking_endpoint_label(candidate)} targets a blocked metadata address."
@@ -905,7 +905,7 @@ def _hermes_home_path() -> Path:
         return get_hermes_home()
     except Exception:
         env_home = os.environ.get("HERMES_HOME")
-        return Path(env_home).expanduser() if env_home else Path.home() / ".hermes"
+        return Path(env_home).expanduser() if env_home else Path.home() / ".relayhelm"
 
 
 def _local_openviking_port_is_open(host: str, port: int) -> bool:
@@ -965,7 +965,7 @@ def _start_local_openviking_server(endpoint: str) -> tuple[str, str]:
     # An occupied port only prevents spawning — it never proves the listener is OpenViking.
     if _local_openviking_port_is_open(host, port):
         return _LOCAL_SERVER_OCCUPIED, (
-            f"Port {host}:{port} is occupied by {_describe_local_port_listener(host, port)}. Hermes did not start "
+            f"Port {host}:{port} is occupied by {_describe_local_port_listener(host, port)}. Relayhelm did not start "
             "openviking-server because the listener has not passed OpenViking's /health check."
         )
     server_cmd = shutil.which("openviking-server")
@@ -974,13 +974,13 @@ def _start_local_openviking_server(endpoint: str) -> tuple[str, str]:
     log_path = _hermes_home_path() / _OPENVIKING_SERVER_LOG_RELATIVE_PATH
     try:
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        # Strip PYTHONPATH: the Desktop backend puts the Hermes venv on it, which
+        # Strip PYTHONPATH: the Desktop backend puts the Relayhelm venv on it, which
         # would shadow openviking-server's own site-packages (and on Windows lock
-        # the Hermes venv's .pyd files, breaking `hermes update`).
+        # the Relayhelm venv's .pyd files, breaking `relayhelm update`).
         # Do not let the server child inherit this process's PYTHONPATH. If inherited, openviking-server
-        # would import aiohttp and friends from the Hermes venv instead of its own (its venv's site-packages
+        # would import aiohttp and friends from the Relayhelm venv instead of its own (its venv's site-packages
         # are shadowed because PYTHONPATH precedes them) — and on Windows the loaded DLLs then lock the
-        # Hermes venv, aborting `hermes update` with access-denied on .pyd files. (#78153)
+        # Relayhelm venv, aborting `relayhelm update` with access-denied on .pyd files. (#78153)
         child_env = os.environ.copy()
         child_env.pop("PYTHONPATH", None)
         with log_path.open("ab") as log_file:
@@ -1234,7 +1234,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         # Guards the (_session_id, _turn_count) pair. sync_turn runs on the MemoryManager's background sync
         # executor while on_session_end / on_session_switch run on the caller's thread, so the
         # snapshot+reset of the turn counter and the session-id rotation must be atomic against a concurrent
-        # increment. See hermes-agent#28296 review.
+        # increment. See relayhelm#28296 review.
         self._inflight_writers: Dict[str, Set[threading.Thread]] = {}
         self._deferred_commit_sids: Set[str] = set()
         self._deferred_commit_threads: Set[threading.Thread] = set()
@@ -1442,7 +1442,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         health-check only when a value changed (hot path: one tuple compare).
 
         ``/reload`` only refreshes ``os.environ`` — the existing provider instance is not re-initialized —
-        so OPENVIKING_* values added to ``~/.hermes/.env`` after startup never reach the live client and
+        so OPENVIKING_* values added to ``~/.relayhelm/.env`` after startup never reach the live client and
         tools keep running against stale auth until the user restarts hermes (#21130).
         """
         if not self._env_refresh_enabled:
@@ -1495,7 +1495,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         self._failed_refresh = (settings_key, time.monotonic())
         if health_state == "responded":
             logger.warning(
-                "%s OpenViking memory is temporarily unavailable; Hermes will retry on a later access (after cooldown) or when the config changes.",
+                "%s OpenViking memory is temporarily unavailable; Relayhelm will retry on a later access (after cooldown) or when the config changes.",
                 health_message,
             )
         else:
@@ -1942,7 +1942,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
 
     @staticmethod
     def _extract_current_turn_messages(messages: Optional[List[Dict[str, Any]]], user_content: str, assistant_content: str) -> List[Dict[str, Any]]:
-        """Slice the completed turn out of Hermes' full canonical transcript: the last
+        """Slice the completed turn out of Relayhelm' full canonical transcript: the last
         assistant message matching assistant_content (else the last assistant message,
         else the transcript end) back to the matching (else nearest) user message."""
         if not messages:
@@ -1962,7 +1962,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
 
     @staticmethod
     def _messages_to_openviking_batch(messages: List[Dict[str, Any]], *, assistant_peer_id: str = "") -> List[Dict[str, Any]]:
-        """Convert Hermes canonical messages into OpenViking batch payloads.
+        """Convert Relayhelm canonical messages into OpenViking batch payloads.
 
         Recall-tool calls/results are dropped (re-ingesting recalled memory would
         re-store it); tool results are grouped into assistant messages; a tool call
@@ -2370,7 +2370,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         session's drain+commit is offloaded so command threads never block.
 
         The new session never accumulates messages, and memory extraction never fires for it. See
-        hermes-agent#28296.
+        relayhelm#28296.
         """
         new_id = str(new_session_id or "").strip()
         if not new_id or not self._ensure_client():
@@ -2595,7 +2595,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
         return json.dumps(result, ensure_ascii=False)
 
     def _tool_remember(self, args: dict) -> str:
-        """Submit content through a dedicated session so it never touches the live Hermes session."""
+        """Submit content through a dedicated session so it never touches the live Relayhelm session."""
         content = args.get("content", "")
         if not content:
             return tool_error("content is required")
@@ -2613,7 +2613,7 @@ class OpenVikingMemoryProvider(MemoryProvider):
                 recovery_note=(
                     "Inspect session_uri before recovery. If history/archive_* exists, do not retry. If messages.jsonl contains "
                     "the fact and no archive exists, run recovery_command with the same OpenViking profile and credentials as "
-                    "Hermes. Otherwise, do not resubmit automatically; report the uncertain state to the user."
+                    "Relayhelm. Otherwise, do not resubmit automatically; report the uncertain state to the user."
                 ),
             )
         try:

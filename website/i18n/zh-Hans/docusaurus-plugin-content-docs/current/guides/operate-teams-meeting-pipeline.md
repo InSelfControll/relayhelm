@@ -52,23 +52,23 @@ hermes teams-pipeline maintain-subscriptions --dry-run
 
 你**必须**按计划运行 `maintain-subscriptions`。从以下三种方式中选择一种：
 
-#### 方式一：Hermes cron（若已运行 Hermes gateway，推荐此方式）
+#### 方式一：Relayhelm cron（若已运行 Relayhelm gateway，推荐此方式）
 
-Hermes 内置 cron 调度器。`--no-agent` 模式以脚本作为任务执行（而非使用 LLM），`--script` 必须指向 `~/.hermes/scripts/` 下的文件。首先创建脚本：
+Relayhelm 内置 cron 调度器。`--no-agent` 模式以脚本作为任务执行（而非使用 LLM），`--script` 必须指向 `~/.relayhelm/scripts/` 下的文件。首先创建脚本：
 
 ```bash
-mkdir -p ~/.hermes/scripts
-cat > ~/.hermes/scripts/maintain-teams-subscriptions.sh <<'EOF'
+mkdir -p ~/.relayhelm/scripts
+cat > ~/.relayhelm/scripts/maintain-teams-subscriptions.sh <<'EOF'
 #!/usr/bin/env bash
 exec hermes teams-pipeline maintain-subscriptions
 EOF
-chmod +x ~/.hermes/scripts/maintain-teams-subscriptions.sh
+chmod +x ~/.relayhelm/scripts/maintain-teams-subscriptions.sh
 ```
 
 然后注册一个每 12 小时运行一次的纯脚本 cron 任务（相对于 72 小时过期窗口有 6 倍余量）：
 
 ```bash
-hermes cron create "0 */12 * * *" \
+relayhelm cron create "0 */12 * * *" \
   --name "teams-pipeline-maintain-subscriptions" \
   --no-agent \
   --script maintain-teams-subscriptions.sh \
@@ -78,8 +78,8 @@ hermes cron create "0 */12 * * *" \
 验证注册情况并查看下次运行时间：
 
 ```bash
-hermes cron list
-hermes cron status        # 调度器状态
+relayhelm cron list
+relayhelm cron status        # 调度器状态
 ```
 
 #### 方式二：systemd timer（推荐用于 Linux 生产部署）
@@ -88,21 +88,21 @@ hermes cron status        # 调度器状态
 
 ```ini
 [Unit]
-Description=Hermes Teams pipeline subscription maintenance
+Description=Relayhelm Teams pipeline subscription maintenance
 After=network-online.target
 
 [Service]
 Type=oneshot
 User=hermes
 EnvironmentFile=/etc/hermes/env
-ExecStart=/usr/local/bin/hermes teams-pipeline maintain-subscriptions
+ExecStart=/usr/local/bin/relayhelm teams-pipeline maintain-subscriptions
 ```
 
 以及 `/etc/systemd/system/hermes-teams-pipeline-maintain.timer`：
 
 ```ini
 [Unit]
-Description=Run Hermes Teams pipeline subscription maintenance every 12 hours
+Description=Run Relayhelm Teams pipeline subscription maintenance every 12 hours
 
 [Timer]
 OnBootSec=5min
@@ -124,10 +124,10 @@ systemctl list-timers hermes-teams-pipeline-maintain.timer
 #### 方式三：普通 crontab
 
 ```cron
-0 */12 * * * /usr/local/bin/hermes teams-pipeline maintain-subscriptions >> /var/log/hermes/teams-pipeline-maintain.log 2>&1
+0 */12 * * * /usr/local/bin/relayhelm teams-pipeline maintain-subscriptions >> /var/log/hermes/teams-pipeline-maintain.log 2>&1
 ```
 
-确保 cron 环境中包含 `MSGRAPH_*` 凭据。最简单的方法：在 crontab 调用的包装脚本顶部 source `~/.hermes/.env`。
+确保 cron 环境中包含 `MSGRAPH_*` 凭据。最简单的方法：在 crontab 调用的包装脚本顶部 source `~/.relayhelm/.env`。
 
 #### 验证续期是否正常工作
 
@@ -239,7 +239,7 @@ hermes teams-pipeline show <job-id>
 - [ ] Notion 和 Linear 接收端仅在实际需要时配置
 - [ ] `hermes teams-pipeline validate` 返回 OK 快照
 - [ ] `hermes teams-pipeline token-health --force-refresh` 执行成功
-- [ ] **`maintain-subscriptions` 已配置计划任务**（Hermes cron、systemd timer 或 crontab——参见[自动化订阅续期](#automating-subscription-renewal-required-for-production)）。若未配置，Graph 订阅将在 72 小时内静默过期。
+- [ ] **`maintain-subscriptions` 已配置计划任务**（Relayhelm cron、systemd timer 或 crontab——参见[自动化订阅续期](#automating-subscription-renewal-required-for-production)）。若未配置，Graph 订阅将在 72 小时内静默过期。
 - [ ] 一个真实的端到端会议事件已生成存储任务
 - [ ] 至少一条摘要已到达预期的投递接收端
 

@@ -25,7 +25,7 @@ try:
     import tools.terminal_tool  # noqa: F401
     _tt_mod = sys.modules["tools.terminal_tool"]
 except ImportError:
-    pytest.skip("hermes-agent tools not importable (missing deps)", allow_module_level=True)
+    pytest.skip("relayhelm tools not importable (missing deps)", allow_module_level=True)
 
 
 # =========================================================================
@@ -76,7 +76,7 @@ class TestCwdHandling:
     def test_home_path_replaced_for_modal(self, monkeypatch):
         """TERMINAL_CWD=/home/user/... should be replaced with /root for modal."""
         monkeypatch.setenv("TERMINAL_ENV", "modal")
-        monkeypatch.setenv("TERMINAL_CWD", "/home/dakota/github/hermes-agent")
+        monkeypatch.setenv("TERMINAL_CWD", "/home/dakota/github/relayhelm")
         config = _tt_mod._get_env_config()
         assert config["cwd"] == "/root", (
             f"Expected /root, got {config['cwd']}. "
@@ -407,7 +407,7 @@ class TestDockerHostBindApproval:
         Same import-time freeze applies to ``_YOLO_MODE_FROZEN``: it reads
         HERMES_YOLO_MODE off the environment when the module is imported at
         collection time, before conftest's per-test env blanking runs. A test
-        run launched from a --yolo Hermes session (or any shell exporting
+        run launched from a --yolo Relayhelm session (or any shell exporting
         HERMES_YOLO_MODE=1) freezes True and every guard auto-approves.
         Reset it explicitly so the tests exercise the guard, not the bypass.
         """

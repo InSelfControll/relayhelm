@@ -93,7 +93,7 @@ def _validate_source(source: SecretSource) -> Optional[str]:
         return f"Ignoring secret source with invalid name {name!r}"
     if source.api_version != SECRET_SOURCE_API_VERSION:
         return (f"Ignoring secret source '{name}': built against secret-source API "
-                f"v{source.api_version}, this Hermes speaks v{SECRET_SOURCE_API_VERSION}")
+                f"v{source.api_version}, this Relayhelm speaks v{SECRET_SOURCE_API_VERSION}")
     if source.shape not in ("mapped", "bulk"):
         return f"Ignoring secret source '{name}': shape must be 'mapped' or 'bulk', got {source.shape!r}"
     return None
@@ -282,7 +282,7 @@ def _ordered_enabled_sources(secrets_cfg: dict, *, scope: Optional[str] = None) 
 
 
 def _active_profile_name(home_path: Optional[Path]) -> str:
-    """Active profile name (``~/.hermes/profiles/<name>``); "" for the default profile."""
+    """Active profile name (``~/.relayhelm/profiles/<name>``); "" for the default profile."""
     if home_path is not None:
         resolved = Path(home_path)
         if resolved.parent.name == "profiles" and resolved.name:

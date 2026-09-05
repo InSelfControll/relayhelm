@@ -40,7 +40,7 @@ def build_approvals_parser(subparsers, *, cmd_approvals: Callable) -> None:
     suggest_parser.add_argument(
         "--limit", type=int, default=20, help="Maximum number of proposals to show (default: 20)")
     suggest_parser.add_argument(
-        "--db", help="Path to an alternate session database (default: ~/.hermes/state.db)")
+        "--db", help="Path to an alternate session database (default: ~/.relayhelm/state.db)")
     suggest_parser.set_defaults(func=cmd_approvals)
 
     test_parser = approvals_subparsers.add_parser(

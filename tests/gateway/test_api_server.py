@@ -719,7 +719,7 @@ class TestHealthDetailedEndpoint:
                 assert resp.status == 200
                 data = await resp.json()
                 assert data["status"] == "ok"
-                assert data["platform"] == "hermes-agent"
+                assert data["platform"] == "relayhelm"
                 assert data["gateway_state"] == "running"
                 assert data["platforms"] == {"telegram": {"state": "connected"}}
                 assert data["active_agents"] == 2
@@ -778,7 +778,7 @@ class TestModelsEndpoint:
             data = await resp.json()
             assert data["object"] == "list"
             assert len(data["data"]) == 1
-            assert data["data"][0]["id"] == "hermes-agent"
+            assert data["data"][0]["id"] == "relayhelm"
             assert data["data"][0]["owned_by"] == "hermes"
 
     @pytest.mark.asyncio
@@ -796,9 +796,9 @@ class TestModelsEndpoint:
 
 
     def test_resolve_model_name_default_profile(self):
-        """Default profile falls back to 'hermes-agent'."""
+        """Default profile falls back to 'relayhelm'."""
         with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
-            assert APIServerAdapter._resolve_model_name("") == "hermes-agent"
+            assert APIServerAdapter._resolve_model_name("") == "relayhelm"
 
 
     @pytest.mark.asyncio
@@ -864,8 +864,8 @@ class TestCapabilitiesEndpoint:
             assert resp.status == 200
             data = await resp.json()
             assert data["object"] == "hermes.api_server.capabilities"
-            assert data["platform"] == "hermes-agent"
-            assert data["model"] == "hermes-agent"
+            assert data["platform"] == "relayhelm"
+            assert data["model"] == "relayhelm"
             assert data["auth"]["type"] == "bearer"
             assert data["auth"]["required"] is False
             assert data["runtime"]["mode"] == "server_agent"
@@ -1354,7 +1354,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "input": "What is the capital of France?",
                     },
                 )
@@ -1408,7 +1408,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "input": "Now add 1 more",
                         "previous_response_id": "resp_prev",
                     },
@@ -1495,7 +1495,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "input": "Read new file",
                         "previous_response_id": "resp_prev",
                     },
@@ -1516,7 +1516,7 @@ class TestResponsesEndpoint:
             resp = await cli.post(
                 "/v1/responses",
                 json={
-                    "model": "hermes-agent",
+                    "model": "relayhelm",
                     "input": "follow up",
                     "previous_response_id": "resp_nonexistent",
                 },
@@ -1539,7 +1539,7 @@ class TestResponsesEndpoint:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "input": "Hello",
                         "store": "false",
                     },
@@ -1562,7 +1562,7 @@ class TestResponsesEndpoint:
                 resp1 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "input": "Hello",
                         "instructions": "Be a pirate",
                     },
@@ -1577,7 +1577,7 @@ class TestResponsesEndpoint:
                 resp2 = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "input": "Tell me more",
                         "previous_response_id": resp_id,
                     },
@@ -1605,7 +1605,7 @@ class TestResponsesEndpoint:
                 )
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hello"},
+                    json={"model": "relayhelm", "input": "Hello"},
                 )
 
             assert resp.status == 200
@@ -1655,7 +1655,7 @@ class TestResponsesStreaming:
                 mock_write_sse.return_value = web.Response(status=200, text="ok")
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "hi", "stream": True},
+                    json={"model": "relayhelm", "input": "hi", "stream": True},
                 )
                 assert resp.status == 200
 
@@ -1715,7 +1715,7 @@ class TestResponsesStreaming:
                 await adapter._write_sse_responses(
                     request=fake_request,
                     response_id=response_id,
-                    model="hermes-agent",
+                    model="relayhelm",
                     created_at=int(time.time()),
                     stream_q=stream_q,
                     agent_task=agent_task,
@@ -1785,7 +1785,7 @@ class TestResponsesStreaming:
             await adapter._write_sse_responses(
                 request=fake_request,
                 response_id=response_id,
-                model="hermes-agent",
+                model="relayhelm",
                 created_at=int(time.time()),
                 stream_q=stream_q,
                 agent_task=agent_task,
@@ -1870,7 +1870,7 @@ class TestMultipleSystemMessages:
                 resp = await cli.post(
                     "/v1/chat/completions",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "messages": [
                             {"role": "system", "content": "You are helpful."},
                             {"role": "system", "content": "Be concise."},
@@ -1943,7 +1943,7 @@ class TestGetResponse:
                 mock_run.return_value = (mock_result, {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15})
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hi"},
+                    json={"model": "relayhelm", "input": "Hi"},
                 )
 
             assert resp.status == 200
@@ -1976,7 +1976,7 @@ class TestDeleteResponse:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hi"},
+                    json={"model": "relayhelm", "input": "Hi"},
                 )
 
             data = await resp.json()
@@ -2039,7 +2039,7 @@ class TestToolCallsInOutput:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "What is 6*7?"},
+                    json={"model": "relayhelm", "input": "What is 6*7?"},
                 )
 
             assert resp.status == 200
@@ -2083,7 +2083,7 @@ class TestUsageCounting:
                 mock_run.return_value = (mock_result, usage)
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "Hi"},
+                    json={"model": "relayhelm", "input": "Hi"},
                 )
 
             assert resp.status == 200
@@ -2134,7 +2134,7 @@ class TestTruncation:
                 resp = await cli.post(
                     "/v1/responses",
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "input": "follow up",
                         "previous_response_id": "resp_summary_mid",
                         "truncation": "auto",
@@ -2179,7 +2179,7 @@ class TestChatCompletionsAgentIncomplete:
                 mock_run.return_value = (mock_result, {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
                 resp = await cli.post(
                     "/v1/chat/completions",
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hello"}]},
+                    json={"model": "relayhelm", "messages": [{"role": "user", "content": "hello"}]},
                 )
 
             assert resp.status == 502
@@ -2343,7 +2343,7 @@ class TestSessionIdHeader:
                     resp = await cli.post(
                         "/v1/chat/completions",
                         headers={"X-Hermes-Session-Id": bad, "Authorization": "Bearer sk-secret"},
-                        json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                        json={"model": "relayhelm", "messages": [{"role": "user", "content": "hi"}]},
                     )
                     assert resp.status == 400, f"{bad!r} should be rejected"
                 # The agent is never invoked for a rejected ID.
@@ -2370,7 +2370,7 @@ class TestSessionIdHeader:
                     headers={"X-Hermes-Session-Id": "existing-session", "Authorization": "Bearer sk-secret"},
                     # Request body has different history — should be ignored
                     json={
-                        "model": "hermes-agent",
+                        "model": "relayhelm",
                         "messages": [
                             {"role": "user", "content": "old msg from client"},
                             {"role": "assistant", "content": "old reply from client"},
@@ -2423,7 +2423,7 @@ class TestSessionKeyHeader:
                         "X-Hermes-Session-Key": "agent:main:webui:dm:user-7",
                         "Authorization": "Bearer sk-secret",
                     },
-                    json={"model": "hermes-agent", "messages": [{"role": "user", "content": "hi"}]},
+                    json={"model": "relayhelm", "messages": [{"role": "user", "content": "hi"}]},
                 )
             assert resp.status == 200
             # _create_agent must be called with gateway_session_key threaded through
@@ -2443,7 +2443,7 @@ class TestSessionKeyHeader:
                         "X-Hermes-Session-Key": "webui:chan-1",
                         "Authorization": "Bearer sk-secret",
                     },
-                    json={"model": "hermes-agent", "input": "hello", "store": False},
+                    json={"model": "relayhelm", "input": "hello", "store": False},
                 )
             assert resp.status == 200
             assert resp.headers.get("X-Hermes-Session-Key") == "webui:chan-1"
@@ -2613,9 +2613,9 @@ class TestModelRoutesAgentCreation:
 
 class TestStoredSessionModelFilter:
     """A session row that persisted the advertised virtual model must read as
-    "no stored model" — replaying "hermes-agent" upstream 400s. Found live
+    "no stored model" — replaying "relayhelm" upstream 400s. Found live
     (Aug 2026): the first cross-gateway `hermes peer dm` against a fresh
-    api_server failed every turn with "hermes-agent is not a valid model ID".
+    api_server failed every turn with "relayhelm is not a valid model ID".
     """
 
     def test_virtual_model_is_filtered(self):
@@ -2667,7 +2667,7 @@ class TestSessionDbOffEventLoop:
     @pytest.mark.asyncio
     async def test_create_session_without_model_does_not_persist_virtual_alias(self, auth_adapter):
         """A session created with no ``model`` field must not persist the
-        virtual model alias (self._model_name, e.g. "hermes-agent") as if it
+        virtual model alias (self._model_name, e.g. "relayhelm") as if it
         were a real provider model id.
 
         Regression: _handle_create_session previously did
@@ -2676,7 +2676,7 @@ class TestSessionDbOffEventLoop:
         the session row. _handle_session_chat later reads it back as a raw
         session_model override (since it's not a model_routes alias) and
         sends it to the provider literally — Bedrock/OpenAI then reject
-        "hermes-agent" as an invalid model identifier on every turn.
+        "relayhelm" as an invalid model identifier on every turn.
         """
         app = _create_app(auth_adapter)
         app.router.add_post("/api/sessions", auth_adapter._handle_create_session)
@@ -2694,7 +2694,7 @@ class TestSessionDbOffEventLoop:
 
     @pytest.mark.asyncio
     async def test_create_session_with_explicit_virtual_alias_does_not_persist_it(self, auth_adapter):
-        """Sending ``model: "hermes-agent"`` explicitly (the virtual alias
+        """Sending ``model: "relayhelm"`` explicitly (the virtual alias
         itself, e.g. a client that just echoes /v1/models' advertised id)
         must be treated the same as omitting model entirely."""
         app = _create_app(auth_adapter)
@@ -2735,7 +2735,7 @@ class TestSessionDbOffEventLoop:
         Regression: _handle_create_session used to re-derive its own `model`
         straight from the raw request body, bypassing the provider-prefix
         split that _session_runtime_request_from_body performs — so
-        "openrouter::hermes-agent" never matched self._model_name and leaked
+        "openrouter::relayhelm" never matched self._model_name and leaked
         through as a literal session override.
         """
         app = _create_app(auth_adapter)
@@ -2931,7 +2931,7 @@ class TestCreateAgentModelRecovery:
     def test_create_agent_defaults_to_provider_catalog_model_when_empty(self, monkeypatch):
         """api_server.py had no equivalent of run.py's provider-catalog
         default when model resolves empty but a provider did resolve (e.g.
-        `hermes auth add openai-codex` without `hermes model`) —
+        `relayhelm auth add openai-codex` without `relayhelm model`) —
         AIAgent(model="") 400s every call."""
         captured = {}
 
@@ -2996,7 +2996,7 @@ class TestCreateAgentModelRecovery:
     # ── Recovery-net alias guards (PR for #79101) ──────────────────────
 
     def test_create_agent_does_not_cache_virtual_alias(self, monkeypatch):
-        """Write-side guard: the advertised virtual model (``hermes-agent``)
+        """Write-side guard: the advertised virtual model (``relayhelm``)
         must never enter ``_last_resolved_model``, even when a prior turn
         (or the session-row bug) dispatched it."""
         captured = []

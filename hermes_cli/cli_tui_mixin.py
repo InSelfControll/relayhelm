@@ -424,7 +424,7 @@ class CLITuiMixin:
         multi_select = state.get("multi_select", False)
         selected_indices = state.get("selected_indices", set()) if multi_select else set()
         freetext = self._clarify_freetext
-        title = "Hermes needs your input"
+        title = "Relayhelm needs your input"
         header = f"{len(questions_list)} questions"
 
         def _status_rows(width):
@@ -504,7 +504,7 @@ class CLITuiMixin:
         multi_select = state.get("multi_select", False)
         selected_indices = state.get("selected_indices", set()) if multi_select else set()
         freetext = self._clarify_freetext
-        title = "Hermes needs your input"
+        title = "Relayhelm needs your input"
         other_idx = len(choices)
 
         def _label(i, text):
@@ -1064,7 +1064,7 @@ class CLITuiMixin:
         import signal as _sig
         from prompt_toolkit.application import run_in_terminal
         from hermes_cli.skin_engine import get_active_skin
-        agent_name = get_active_skin().get_branding("agent_name", "Hermes Agent")
+        agent_name = get_active_skin().get_branding("agent_name", "Relayhelm")
         msg = f"\n{agent_name} has been suspended. Run `fg` to bring {agent_name} back."
 
         def _suspend():
@@ -1567,7 +1567,7 @@ class CLITuiMixin:
         event.app.invalidate()
 
     def _tui_collapse_paste(self, text: str, line_count: int, *, fallback: bool) -> str:
-        """Save a large paste under ~/.hermes/pastes and return the placeholder for the buffer."""
+        """Save a large paste under ~/.relayhelm/pastes and return the placeholder for the buffer."""
         from cli import _hermes_home, datetime, logger
         self._tui_paste_counter += 1
         paste_dir = _hermes_home / "pastes"

@@ -13,7 +13,7 @@ import pytest
 @pytest.fixture
 def hermes_home(tmp_path, monkeypatch):
     """Set up an isolated HERMES_HOME with minimal logs."""
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
 
@@ -171,7 +171,7 @@ class TestMissingLogNote:
         snap = _capture_log_snapshot("desktop", tail_lines=10)
         assert snap.full_text is None
         assert "not on this host" in snap.tail_text
-        assert "Hermes Desktop" in snap.tail_text
+        assert "Relayhelm Desktop" in snap.tail_text
         # The reader needs the path to collect by hand on the client machine.
         assert str(hermes_home / "logs" / "desktop.log") in snap.tail_text
 
@@ -220,7 +220,7 @@ class TestCaptureLogSnapshotRedaction:
     @pytest.fixture
     def hermes_home_with_secret(self, tmp_path, monkeypatch):
         """Isolated HERMES_HOME whose agent.log contains a vendor-prefixed token."""
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".relayhelm"
         home.mkdir()
         monkeypatch.setenv("HERMES_HOME", str(home))
         # Baseline fixture: no explicit env-var opinion. With the post-#17691
@@ -452,7 +452,7 @@ class TestRunDebugShareRedaction:
     @pytest.fixture
     def hermes_home_with_secret(self, tmp_path, monkeypatch):
         """Isolated HERMES_HOME whose agent.log contains a vendor-prefixed token."""
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".relayhelm"
         home.mkdir()
         monkeypatch.setenv("HERMES_HOME", str(home))
         monkeypatch.delenv("HERMES_REDACT_SECRETS", raising=False)
@@ -640,7 +640,7 @@ class TestScheduleAutoDelete:
     were observed in production.
 
     The new implementation is stateless: it records pending deletions to
-    ``~/.hermes/pastes/pending.json`` and lets ``_sweep_expired_pastes``
+    ``~/.relayhelm/pastes/pending.json`` and lets ``_sweep_expired_pastes``
     handle the DELETE requests synchronously on the next ``hermes debug``
     invocation.
     """

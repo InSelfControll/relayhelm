@@ -309,7 +309,7 @@ describe('the mention middleware', () => {
 
   it('teaches no shellout and forbids forwarding the user’s text verbatim', async () => {
     // The class behind #91397 / #91304 / #91339: the renderer used to compose
-    // a `hermes -p …` handoff, giving the model a second send path and a way
+    // a `relayhelm -p …` handoff, giving the model a second send path and a way
     // to relay the raw draft.
     const { handler } = await contributions({ focused: 'research', profiles: [{ name: 'research' }, { name: 'ops' }] })
     const result = await handler({ text: 'ask @ops to summarize' })

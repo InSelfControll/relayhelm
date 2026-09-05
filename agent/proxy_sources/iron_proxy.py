@@ -75,7 +75,7 @@ _BEARER_PROVIDERS: Dict[str, Tuple[str, ...]] = {
 # ``secrets.replace.match_headers`` targets arbitrary header names (case-insensitive; confirmed by the
 # iron-proxy author on PR #30179 and verified in the pinned v0.39.0 source — ``swapHeaders`` +
 # ``parseHeaderMatchers``), so these are first-class swapped providers, not "uncovered". ``aliases`` are
-# interchangeable env-var names for the SAME upstream credential (Hermes' auth.py keys Google on both
+# interchangeable env-var names for the SAME upstream credential (Relayhelm' auth.py keys Google on both
 # GEMINI_API_KEY and GOOGLE_API_KEY). The sandbox receives the minted token under the canonical name AND
 # every alias so SDKs reading either work.
 _HEADER_AUTH_PROVIDERS: Dict[str, Dict[str, Tuple[str, ...]]] = {
@@ -244,7 +244,7 @@ def _release_asset(name: str, dest: Path) -> None:
     """Download one pinned-release asset to ``dest``; RuntimeError on any URL error."""
     url = f"{_IRON_PROXY_RELEASE_BASE}/{name}"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "hermes-agent"})
+        req = urllib.request.Request(url, headers={"User-Agent": "relayhelm"})
         with urllib.request.urlopen(req, timeout=_DOWNLOAD_TIMEOUT) as resp, open(dest, "wb") as f:  # noqa: S310
             shutil.copyfileobj(resp, f)
     except urllib.error.URLError as exc:
@@ -396,7 +396,7 @@ def ensure_management_token(*, force: bool = False) -> str:
 
 
 def _yaml():
-    """PyYAML module or None (it is a Hermes dep, but never a hard requirement here)."""
+    """PyYAML module or None (it is a Relayhelm dep, but never a hard requirement here)."""
     try:
         import yaml
         return yaml

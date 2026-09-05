@@ -1,7 +1,7 @@
 #!/bin/bash
 # posix.sh -- repo-owned macOS/Linux Desktop update hand-off.
 #
-# The whole job: wait for the Desktop to exit, run `hermes update`, tell the
+# The whole job: wait for the Desktop to exit, run `relayhelm update`, tell the
 # shim how it went, reopen the app. The Desktop spawns this detached and
 # quits; because it lives in the checkout, every update refreshes the code
 # that drives the next one. Replaces the in-app updater
@@ -10,7 +10,7 @@
 #
 # CONTRACT (keep in sync with apps/desktop/electron/main.ts):
 #   bash scripts/desktop-update/posix.sh
-#     --install-root <path>    repo checkout (HERMES_HOME/hermes-agent)
+#     --install-root <path>    repo checkout (HERMES_HOME/relayhelm)
 #     --branch <ref>           branch to update against
 #     --desktop-pid <pid>      the Electron main process to wait out
 #     [--relaunch-target <p>]  mac: running .app to swap+reopen;
@@ -130,20 +130,20 @@ notify_fallback() { # status message — renderer-free recovery surface.
   # boot surfaces it in a dialog (handoff-result.ts + main.ts).
   case "$1" in manual|error) ;; *) return 0 ;; esac
   if [ "$(uname)" = "Darwin" ]; then
-    /usr/bin/osascript -e "display notification \"$(printf '%s' "$2" | sed 's/"/\\"/g')\" with title \"Hermes update\"" 2>/dev/null && return 0
+    /usr/bin/osascript -e "display notification \"$(printf '%s' "$2" | sed 's/"/\\"/g')\" with title \"Relayhelm update\"" 2>/dev/null && return 0
   else
     if command -v notify-send >/dev/null 2>&1; then
-      notify-send -u critical "Hermes update" "$2" 2>/dev/null && return 0
+      notify-send -u critical "Relayhelm update" "$2" 2>/dev/null && return 0
     fi
     local p
     if command -v zenity >/dev/null 2>&1; then
-      zenity --warning --title="Hermes update" --text="$2" 2>/dev/null &
+      zenity --warning --title="Relayhelm update" --text="$2" 2>/dev/null &
       p=$!; sleep 1
       kill -0 "$p" 2>/dev/null && return 0
       wait "$p" 2>/dev/null
     fi
     if command -v kdialog >/dev/null 2>&1; then
-      kdialog --title "Hermes update" --sorry "$2" 2>/dev/null &
+      kdialog --title "Relayhelm update" --sorry "$2" 2>/dev/null &
       p=$!; sleep 1
       kill -0 "$p" 2>/dev/null && return 0
       wait "$p" 2>/dev/null
@@ -176,7 +176,7 @@ find_browser() {
   # No Microsoft Edge and no Brave, on purpose. Edge's OS-level
   # Microsoft-account integration signs a fresh throwaway profile into the
   # user's MSA and renders its own "syncing your data" notification — MSA
-  # email included — inside this window that is titled "Hermes" (#88410).
+  # email included — inside this window that is titled "Relayhelm" (#88410).
   # Brave paints its own P3A privacy-notice bar over the progress page in
   # the same window — cramped to unreadability at the shim's small size
   # (#88682). The throwaway --user-data-dir below cannot block either; the
@@ -253,7 +253,7 @@ start_ui() {
   # HTTP 200).  The Python wrapper immediately execs the real process, so $!
   # remains the PID that stop_ui can terminate.
   # TERM/HUP stay IGNORED in the server (SIG_IGN survives execv): a stray
-  # teardown TERM killed the shim ~1s into `hermes update` (2026-08-14 16:44,
+  # teardown TERM killed the shim ~1s into `relayhelm update` (2026-08-14 16:44,
   # window showed ERR_CONNECTION_REFUSED for the whole run; upstream #66753).
   # stop_ui ends the server with SIGKILL instead — it is stateless HTTP.
   "$py" -c 'import os, signal, sys; os.setsid(); signal.signal(signal.SIGTERM, signal.SIG_IGN); signal.signal(signal.SIGHUP, signal.SIG_IGN); os.execv(sys.argv[1], sys.argv[1:])' \
@@ -329,13 +329,13 @@ linux_gate() {
     [ "$arg" = "--no-sandbox" ] && { GATE=relaunch; return; }
   done
 
-  GATE=manual GATE_MSG="Update complete, but the rebuilt app can't relaunch itself (its sandbox helper needs root ownership). Reopen Hermes to finish."
+  GATE=manual GATE_MSG="Update complete, but the rebuilt app can't relaunch itself (its sandbox helper needs root ownership). Reopen Relayhelm to finish."
 }
 
 mac_swap() {
   local rebuilt="" c
-  for c in "$INSTALL_ROOT/apps/desktop/release/mac-arm64/Hermes.app" \
-           "$INSTALL_ROOT/apps/desktop/release/mac/Hermes.app"; do
+  for c in "$INSTALL_ROOT/apps/desktop/release/mac-arm64/Relayhelm.app" \
+           "$INSTALL_ROOT/apps/desktop/release/mac/Relayhelm.app"; do
     [ -d "$c" ] && { rebuilt="$c"; break; }
   done
 
@@ -359,7 +359,7 @@ mac_swap() {
         DONE_NOTE="Update complete, but the new app could not be installed; the previous version was restored. Run the update again."
         log "WARNING: bundle install failed; rolled back to the previous app"
       else
-        FINAL_CODE=7 FINAL_MSG="The update finished but installing the new app failed and the previous app could not be restored. Reinstall Hermes (the rebuilt app is at $rebuilt)."
+        FINAL_CODE=7 FINAL_MSG="The update finished but installing the new app failed and the previous app could not be restored. Reinstall Relayhelm (the rebuilt app is at $rebuilt)."
         log "ERROR: bundle install failed AND rollback failed"
       fi
     else
@@ -454,7 +454,7 @@ finish() {
       if ! launch_app; then
         # Even the kept bundle didn't come back: the durable message must
         # carry BOTH facts (update ok, previous app not reopened).
-        FINAL_MSG="$DONE_NOTE Hermes also could not reopen itself - open it manually."
+        FINAL_MSG="$DONE_NOTE Relayhelm also could not reopen itself - open it manually."
         write_result
       fi
     fi
@@ -464,7 +464,7 @@ finish() {
   else
     # Launch was due and did not land. Downgrade: truthful result for the
     # next boot, manual state held on screen now.
-    FINAL_MSG="Update complete. Reopen Hermes to finish (it could not restart itself)."
+    FINAL_MSG="Update complete. Reopen Relayhelm to finish (it could not restart itself)."
     MANUAL=1
     write_result
     publish "manual" "$FINAL_MSG"; stop_ui leave-window
@@ -478,7 +478,7 @@ trap finish EXIT
 # a real-file `venv/bin/python` copy plus a `.tcc-anchor-source` marker, and
 # `python3`/`python3.N` aliases that die at interpreter init ("No module
 # named 'encodings'"). On those installs EVERY normal CLI entrypoint is dead
-# (`venv/bin/hermes` has a `python3` shebang), so no Python-side heal —
+# (`venv/bin/relayhelm` has a `python3` shebang), so no Python-side heal —
 # doctor OR in-update — can ever run. This shell is the last surface that
 # still executes, so the heal lives here (recovery design after @aeonsong's
 # #96231; heal-point observation by @ahrazzle / @tokenfires on #95759).
@@ -487,7 +487,7 @@ trap finish EXIT
 # (hermes_cli/macos_tcc_anchor.ensure_tcc_anchor, which re-anchors whenever
 # `venv/bin/python` is a uv-managed symlink): this heal is gated on the
 # interpreter FAILING its boot probe, so a healthy anchored install is never
-# touched; and when it does restore symlinks, the very `hermes update` run it
+# touched; and when it does restore symlinks, the very `relayhelm update` run it
 # unblocks re-installs a boot-gated healthy anchor — a one-shot convergence,
 # not a loop.
 
@@ -641,13 +641,13 @@ fi
 # Electron's macOS quit teardown sends SIGTERM to its still-parented updater
 # child on this machine. `detached + unref` gives the child a process group but
 # does not re-parent it before `before-quit` runs, so the hand-off consistently
-# died two seconds after starting `hermes update`. Re-exec through a one-shot
+# died two seconds after starting `relayhelm update`. Re-exec through a one-shot
 # setsid child and let this direct Electron child exit first. The real
 # orchestrator is then owned by launchd (PPID 1) and is outside Electron's quit
 # teardown, while retaining the same marker/result protocol.
 if [ "$HANDOFF_DAEMONIZED" -ne 1 ]; then
   # This launcher is disposable. In particular it must not run finish() on
-  # EXIT: that would publish a false failure and relaunch Hermes while the
+  # EXIT: that would publish a false failure and relaunch Relayhelm while the
   # re-parented orchestrator is only just starting.
   trap - EXIT HUP INT QUIT TERM
   # --daemonized must precede ORIGINAL_ARGS, not follow it: ORIGINAL_ARGS may
@@ -667,7 +667,7 @@ fi
 
 # Electron terminates the entire detached updater process group during quit,
 # including the loopback status server.  Arm TERM immunity before `start_ui`
-# so the shim server and the later `hermes update` subprocess both inherit
+# so the shim server and the later `relayhelm update` subprocess both inherit
 # SIG_IGN.  The orchestrator restores its normal TERM handler after the update
 # command has returned; the already-running server keeps the inherited setting
 # until normal cleanup closes it.
@@ -676,7 +676,7 @@ log "hand-off start: root=$INSTALL_ROOT branch=$BRANCH desktopPid=$DESKTOP_PID p
 rm -f "$RESULT" 2>/dev/null || true
 
 # Marker claim: same cross-process lock contract as windows.ps1 /
-# update_lock.py (the `hermes update` child adopts it via process ancestry).
+# update_lock.py (the `relayhelm update` child adopts it via process ancestry).
 # The Desktop supplies one acquisition time for the whole ownership chain.
 NOW="$(date +%s)"
 STARTED_AT="${HERMES_UPDATE_STARTED_AT:-$NOW}"
@@ -699,7 +699,7 @@ fi
 if [ "$DESKTOP_PID" -gt 0 ] 2>/dev/null; then
   for _ in $(seq 1 100); do kill -0 "$DESKTOP_PID" 2>/dev/null || break; sleep 0.3; done
   if kill -0 "$DESKTOP_PID" 2>/dev/null; then
-    FINAL_CODE=4 FINAL_MSG="Update aborted: the Hermes window (pid $DESKTOP_PID) did not exit within 30s. Nothing was changed. Close Hermes fully and try again."
+    FINAL_CODE=4 FINAL_MSG="Update aborted: the Relayhelm window (pid $DESKTOP_PID) did not exit within 30s. Nothing was changed. Close Relayhelm fully and try again."
     log "$FINAL_MSG"; exit "$FINAL_CODE"
   fi
 fi
@@ -711,11 +711,11 @@ fi
 sleep 1
 start_ui
 
-HERMES_BIN="$INSTALL_ROOT/venv/bin/hermes"
-[ -x "$HERMES_BIN" ] || { FINAL_CODE=3 FINAL_MSG="Update aborted: $HERMES_BIN is missing. The install needs repair (run the Hermes installer or hermes doctor)."; log "$FINAL_MSG"; exit 3; }
+HERMES_BIN="$INSTALL_ROOT/venv/bin/relayhelm"
+[ -x "$HERMES_BIN" ] || { FINAL_CODE=3 FINAL_MSG="Update aborted: $HERMES_BIN is missing. The install needs repair (run the Relayhelm installer or relayhelm doctor)."; log "$FINAL_MSG"; exit 3; }
 
 # Heal a venv the reverted TCC anchor left bricked BEFORE invoking the CLI:
-# venv/bin/hermes execs venv/bin/python3, so a dead alias kills every attempt
+# venv/bin/relayhelm execs venv/bin/python3, so a dead alias kills every attempt
 # and its retry identically (#95759). macOS-only artifact; probe is cheap.
 if [ "$(uname)" = "Darwin" ]; then
   if tcc_anchor_heal "$INSTALL_ROOT/venv/bin"; then
@@ -731,7 +731,7 @@ if [ "${UPDATE_INVOKE[0]}" != "$HERMES_BIN" ]; then
   log "venv/bin/python3 still unbootable; invoking the update via ${UPDATE_INVOKE[*]}"
 fi
 
-# Run FROM the install root: `hermes update` resolves the tree it mutates
+# Run FROM the install root: `relayhelm update` resolves the tree it mutates
 # from the working directory, and we inherit the Desktop's cwd (which can be
 # an unrelated repo — updating THAT instead of the install is the failure
 # the sandbox repro caught). FAIL CLOSED: set -u without set -e means a
@@ -745,7 +745,7 @@ export PYTHONUNBUFFERED=1
 # --keep-stash: never re-apply local source edits after the update (they stay
 # parked in git stash). Probe --help first: older installed backends don't
 # know the flag and argparse would abort with exit 2, which collides with the
-# "close all Hermes windows" sentinel.
+# "close all Relayhelm windows" sentinel.
 KEEP_STASH=""
 if "${UPDATE_INVOKE[@]}" update --help 2>/dev/null | grep -q -- '--keep-stash'; then
   KEEP_STASH="--keep-stash"
@@ -756,11 +756,11 @@ log "running: ${UPDATE_INVOKE[*]} update --yes --gateway $KEEP_STASH --branch $B
 publish_stage "Updating code and dependencies"
 OUT="$("${UPDATE_INVOKE[@]}" update --yes --gateway $KEEP_STASH --branch "$BRANCH" 2>&1)"; CODE=$?
 printf '%s\n' "$OUT" >> "$LOG" 2>/dev/null
-log "hermes update exit code: $CODE"
+log "relayhelm update exit code: $CODE"
 
 if [ "$CODE" -ne 0 ] && [ "$CODE" -ne 2 ]; then
   # Retry once: update-boundary class (fresh code on disk, stale in memory).
-  # Exit 2 ("close all Hermes windows") is not retryable.
+  # Exit 2 ("close all Relayhelm windows") is not retryable.
   #
   # A parked-branch SKIP (checkout on a feature branch with unmerged
   # commits) is also deterministic — the retry would hit the exact same
@@ -769,7 +769,7 @@ if [ "$CODE" -ne 0 ] && [ "$CODE" -ne 2 ]; then
   # dedicated exit code (8) so callers can distinguish "skipped" from a
   # real failure.
   if printf '%s' "$OUT" | grep -q "CODE UPDATE SKIPPED"; then
-    log "hermes update skipped (checkout parked on a non-target branch); not retrying"
+    log "relayhelm update skipped (checkout parked on a non-target branch); not retrying"
     FINAL_CODE=8
     FINAL_MSG="Update skipped: the git checkout is on a branch that isn't fully merged into $BRANCH. Switch to the target branch and update again (see the terminal output for the exact commands)."
     exit 8
@@ -782,11 +782,11 @@ if [ "$CODE" -ne 0 ] && [ "$CODE" -ne 2 ]; then
 fi
 trap 'on_signal TERM' TERM
 
-# Truthful completion: `hermes update` calls a GUI build failure non-fatal
+# Truthful completion: `relayhelm update` calls a GUI build failure non-fatal
 # (exit 0). For a Desktop-driven update that would relaunch the OLD build
 # and call it success -- retry the build once, propagate honestly.
 if [ "$CODE" -eq 0 ] && printf '%s' "$OUT" | grep -q "Desktop build failed"; then
-  log "desktop build failed inside hermes update; retrying build"
+  log "desktop build failed inside relayhelm update; retrying build"
   publish_stage "Rebuilding Desktop"
   "${UPDATE_INVOKE[@]}" desktop --force-build --build-only >> "$LOG" 2>&1 || {
     FINAL_CODE=6 FINAL_MSG="Code and dependencies updated, but the Desktop app rebuild failed - you are running the previous build. Run hermes desktop --force-build from a terminal to retry."
@@ -802,7 +802,7 @@ else
   # succeed — tell the user what is actually wrong (#95759).
   if ! tcc_probe_python "$INSTALL_ROOT/venv/bin/python3" \
       && ! tcc_probe_python "$INSTALL_ROOT/venv/bin/python"; then
-    FINAL_MSG="Update failed: the Python interpreter inside $INSTALL_ROOT/venv cannot start (heal state: $TCC_HEAL_STATE). Reinstall the runtime with the Hermes installer, or run hermes doctor --fix from a terminal if any hermes command still works."
+    FINAL_MSG="Update failed: the Python interpreter inside $INSTALL_ROOT/venv cannot start (heal state: $TCC_HEAL_STATE). Reinstall the runtime with the Relayhelm installer, or run relayhelm doctor --fix from a terminal if any hermes command still works."
   fi
 fi
 exit "$FINAL_CODE"

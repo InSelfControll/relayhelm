@@ -522,12 +522,12 @@ def test_xai_image_field_expands_user_home(tmp_path, monkeypatch):
 
 
 class TestXAIImageFieldReadGuard:
-    """#57698: local image inputs must not read Hermes credential stores."""
+    """#57698: local image inputs must not read Relayhelm credential stores."""
 
     def test_xai_image_field_blocks_credential_store(self, tmp_path, monkeypatch):
         from plugins.image_gen.xai import _xai_image_field
 
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         auth_json = hermes_home / "auth.json"
         auth_json.write_text('{"api_key":"sk-secret"}', encoding="utf-8")

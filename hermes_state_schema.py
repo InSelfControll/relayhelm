@@ -460,7 +460,7 @@ class SessionSchemaMixin:
                     "state.db FTS repair remains blocked after %d deferrals "
                     "by holder(s) %s. Stop the listed processes, then run "
                     "`hermes sessions optimize-storage` with the gateway stopped. "
-                    "`hermes doctor` reports this degraded state.", attempts, foreign_holders,
+                    "`relayhelm doctor` reports this degraded state.", attempts, foreign_holders,
                 )
         if not foreign_holders:
             return False

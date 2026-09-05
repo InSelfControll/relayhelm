@@ -251,7 +251,7 @@ class WhatsAppCloudAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
     async def connect(self, *, is_reconnect: bool = False) -> bool:
         for ok, code, message in (
             (check_whatsapp_cloud_requirements(), "whatsapp_cloud_deps_missing",
-             "aiohttp and httpx are required for whatsapp_cloud — reinstall hermes-agent."),
+             "aiohttp and httpx are required for whatsapp_cloud — reinstall relayhelm."),
             (self._phone_number_id and self._access_token, "whatsapp_cloud_unconfigured",
              "WHATSAPP_CLOUD_PHONE_NUMBER_ID and WHATSAPP_CLOUD_ACCESS_TOKEN are required."),
         ):
@@ -577,7 +577,7 @@ class WhatsAppCloudAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
 
     async def send_voice(self, chat_id: str, audio_path: str, caption: Optional[str] = None, reply_to: Optional[str] = None, **kwargs) -> SendResult:
         """Voice message: ``audio/ogg; codecs=opus`` renders as a voice bubble, so a
-        local MP3 (Hermes TTS output) is converted via ffmpeg first; other audio is sent as-is."""
+        local MP3 (Relayhelm TTS output) is converted via ffmpeg first; other audio is sent as-is."""
         mime_type: Optional[str] = None
         if not audio_path.startswith(_HTTP_PREFIXES) and audio_path.lower().endswith(".mp3") and os.path.exists(audio_path):
             opus_path = await self._convert_to_opus(audio_path)

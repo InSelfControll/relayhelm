@@ -116,7 +116,7 @@ class TestTelegramYamlConfigLoading:
     """Tests for reply_to_mode loaded from config.yaml telegram section."""
 
     def _write_config(self, tmp_path, content: str):
-        hermes_home = tmp_path / ".hermes"
+        hermes_home = tmp_path / ".relayhelm"
         hermes_home.mkdir()
         (hermes_home / "config.yaml").write_text(content, encoding="utf-8")
         return hermes_home
@@ -152,7 +152,7 @@ class TestTelegramYamlConfigLoading:
 class TestDMTopicFallbackReplyToMode:
     """Tests for reply_to_mode enforcement on DM topic fallback paths.
 
-    Regression tests for https://github.com/NousResearch/hermes-agent/issues/23994:
+    Regression tests for https://github.com/InSelfControll/relayhelm/issues/23994:
     reply_to_mode 'off' was ignored when sending via Hermes-created DM topic
     lanes (telegram_dm_topic_reply_fallback metadata), causing quote bubbles
     despite the user setting reply_to_mode: 'off'.
@@ -211,13 +211,13 @@ class TestDMTopicFallbackReplyToMode:
 class TestDMTopicSyntheticSendRouting:
     """Anchor-less synthetic sends must stay in the active DM topic lane.
 
-    Regression tests for https://github.com/NousResearch/hermes-agent/issues/87051:
+    Regression tests for https://github.com/InSelfControll/relayhelm/issues/87051:
     after a gateway restart, /loop wakeups and background-process notifications
     are injected as synthetic events with no reply anchor. The DM-topic
     fallback's no-anchor branch routed them via Telegram's native
     ``direct_messages_topic_id`` (or dropped the thread entirely), landing the
-    response in a different chat lane than the Hermes topic the session runs
-    in. The no-anchor branch must prefer the Hermes topic's
+    response in a different chat lane than the Relayhelm topic the session runs
+    in. The no-anchor branch must prefer the Relayhelm topic's
     ``message_thread_id`` whenever it resolves.
     """
 

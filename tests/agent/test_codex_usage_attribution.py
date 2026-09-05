@@ -54,7 +54,7 @@ def _set_legacy_attribution(profile, enabled):
 
 @pytest.fixture
 def wire(profile, monkeypatch):
-    """Replace only HTTP transports; use Hermes routing and the real SDK."""
+    """Replace only HTTP transports; use Relayhelm routing and the real SDK."""
     from agent import auxiliary_client
     from run_agent import AIAgent
 
@@ -108,7 +108,7 @@ def wire(profile, monkeypatch):
 
 
 def _assert_identity(request, account_id="acct-attribution-test"):
-    assert request.headers["originator"] == "hermes-agent"
+    assert request.headers["originator"] == "relayhelm"
     assert request.headers["user-agent"] == f"HermesAgent/{__version__}"
     assert request.headers["chatgpt-account-id"] == account_id
     assert "extra_headers" not in json.loads(request.content)
@@ -121,7 +121,7 @@ def test_required_identity_preserves_account_id(profile, legacy_enabled):
     _set_legacy_attribution(profile, legacy_enabled)
     headers = _codex_cloudflare_headers(_jwt())
 
-    assert headers["originator"] == "hermes-agent"
+    assert headers["originator"] == "relayhelm"
     assert headers["User-Agent"] == f"HermesAgent/{__version__}"
     assert headers["ChatGPT-Account-ID"] == "acct-attribution-test"
     assert "ChatGPT-Account-ID" not in _codex_cloudflare_headers("not-a-jwt")
@@ -150,10 +150,10 @@ def test_new_identity_is_limited_to_the_official_endpoint(base_url, attributed):
 
     headers = _codex_cloudflare_headers(_jwt(), base_url=base_url)
 
-    assert headers["originator"] == ("hermes-agent" if attributed else "codex_cli_rs")
+    assert headers["originator"] == ("relayhelm" if attributed else "codex_cli_rs")
     assert headers["User-Agent"] == (
         f"HermesAgent/{__version__}"
-        if attributed else "codex_cli_rs/0.0.0 (Hermes Agent)"
+        if attributed else "codex_cli_rs/0.0.0 (Relayhelm)"
     )
 
 
@@ -262,7 +262,7 @@ def test_credential_pool_custom_endpoint_keeps_existing_identity(
         )
         assert wire[-1].url.host == "proxy.example"
         assert wire[-1].headers["originator"] == "codex_cli_rs"
-        assert wire[-1].headers["user-agent"] == "codex_cli_rs/0.0.0 (Hermes Agent)"
+        assert wire[-1].headers["user-agent"] == "codex_cli_rs/0.0.0 (Relayhelm)"
         assert wire[-1].headers["chatgpt-account-id"] == "acct-attribution-test"
     finally:
         client.close()

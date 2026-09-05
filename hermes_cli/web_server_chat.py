@@ -23,7 +23,7 @@ from hermes_cli.pty_session import PtySessionRegistry
 _log = logging.getLogger("hermes_cli.web_server")
 
 
-# /api/pty spawns ``hermes --tui`` behind a pseudo-terminal and forwards bytes +
+# /api/pty spawns ``relayhelm --tui`` behind a pseudo-terminal and forwards bytes +
 # resize escapes to xterm.js.  POSIX uses pty_bridge (fcntl/termios); native
 # Windows uses win_pty_bridge (pywinpty/ConPTY); same surface, no handler guards.
 try:
@@ -199,8 +199,8 @@ def _ws_request_is_allowed(ws: "WebSocket") -> bool:
     return _ws_host_origin_is_allowed(ws) and _ws_client_is_allowed(ws)
 
 
-_GATEWAY_WS_PROTOCOL = "hermes-gateway-v1"
-_GATEWAY_WS_TICKET_PROTOCOL_PREFIX = "hermes-gateway-ticket."
+_GATEWAY_WS_PROTOCOL = "relayhelm-gateway-v1"
+_GATEWAY_WS_TICKET_PROTOCOL_PREFIX = "relayhelm-gateway-ticket."
 
 
 def _gateway_ws_ticket_from_subprotocol(ws: "WebSocket") -> tuple[str, str]:
@@ -298,7 +298,7 @@ def _ws_auth_ok(ws: "WebSocket") -> bool:
 def _resolve_chat_argv(
     resume: Optional[str] = None, sidecar_url: Optional[str] = None, profile: Optional[str] = None,
     active_session_file: Optional[str] = None) -> tuple[list[str], Optional[str], Optional[dict]]:
-    """Resolve the argv + cwd + env for the chat PTY (what ``hermes --tui`` runs).
+    """Resolve the argv + cwd + env for the chat PTY (what ``relayhelm --tui`` runs).
 
     Tests monkeypatch this with a tiny fake command.  Env contract: resume goes
     through ``HERMES_TUI_RESUME`` (``ui-tui`` does not parse argv), resolved to
@@ -306,7 +306,7 @@ def _resolve_chat_argv(
     in-memory gateway but is SKIPPED for profile-scoped chats (that gateway runs
     under the dashboard's own profile, so a scoped chat spawns its own);
     ``profile`` scopes the ENTIRE chat by pointing ``HERMES_HOME`` at the profile
-    dir, the same propagation ``hermes -p <name>`` performs.
+    dir, the same propagation ``relayhelm -p <name>`` performs.
     """
     from hermes_cli.web_server_profiles import _config_profile_scope, _resolve_profile_dir
     from hermes_cli.web_server_sessions import _open_session_db_for_profile, _session_latest_descendant

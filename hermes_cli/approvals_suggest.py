@@ -1,6 +1,6 @@
 """``hermes approvals suggest`` — mine approval history into allowlist proposals.
 
-Hermes has no dedicated approval-decision ledger: ``always`` answers land in ``command_allowlist``
+Relayhelm has no dedicated approval-decision ledger: ``always`` answers land in ``command_allowlist``
 (config.yaml) via :func:`tools.approval.save_permanent_allowlist`, while ``once``/``session``
 approvals are in-memory only. So this module mines *implied approvals*: a command that matches a
 dangerous-command class (the same :func:`tools.approval.detect_dangerous_command` classifier that
@@ -297,7 +297,7 @@ def _render_text(proposals: list[Proposal], days: int) -> None:
     print(
         "\nNothing has been changed. Apply selected entries with:\n"
         "  hermes approvals suggest --apply 1,3\n"
-        "Entries are merged into command_allowlist in ~/.hermes/config.yaml."
+        "Entries are merged into command_allowlist in ~/.relayhelm/config.yaml."
     )
 
 
@@ -332,7 +332,7 @@ def suggest_command(args) -> int:
             print("Added to command_allowlist:")
             for pattern in applied:
                 print(f"  + {pattern}")
-            print(f"\ncommand_allowlist now has {len(merged)} entries (~/.hermes/config.yaml).")
+            print(f"\ncommand_allowlist now has {len(merged)} entries (~/.relayhelm/config.yaml).")
         return 0
 
     if as_json:

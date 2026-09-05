@@ -1,10 +1,10 @@
-"""Live Fireworks smoke test — exercises the Hermes runtime, not a raw SDK client.
+"""Live Fireworks smoke test — exercises the Relayhelm runtime, not a raw SDK client.
 
 Opt-in only:
     HERMES_LIVE_TESTS=1 FIREWORKS_API_KEY=fw_... \\
         pytest tests/run_agent/test_fireworks_live.py -q
 
-Unlike a bare OpenAI() client pointed at the endpoint, this drives Hermes'
+Unlike a bare OpenAI() client pointed at the endpoint, this drives Relayhelm'
 own provider resolution — ``resolve_provider_client('fireworks')`` — so it
 verifies the auth/config/base-URL/aux-model wiring that the
 bundled provider actually ships, then makes a real call through that client.
@@ -27,11 +27,11 @@ pytestmark = [
 
 
 def _resolve_runtime_client(provider="fireworks"):
-    """Build the Fireworks client the way the Hermes runtime does."""
+    """Build the Fireworks client the way the Relayhelm runtime does."""
     from agent.auxiliary_client import resolve_provider_client
 
     client, model = resolve_provider_client(provider)
-    assert client is not None, "Hermes failed to build a Fireworks client"
+    assert client is not None, "Relayhelm failed to build a Fireworks client"
     return client, model
 
 

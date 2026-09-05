@@ -21,7 +21,7 @@ export function hasWindowsPathPrefix(exePath: string, venvScriptsDir: string): b
  * True when a process is a Hermes-owned venv daemon: its exe lives under
  * `<venv>\Scripts\` (ordinal case-insensitive prefix) AND its cmdline
  * references `hindsight_api.main` (the memory daemon the memory plugin
- * spawns DETACHED — it outlives Hermes and holds venv shims mapped).
+ * spawns DETACHED — it outlives Relayhelm and holds venv shims mapped).
  */
 export function isHermesOwnedVenvDaemon(
   exePath: string | null | undefined,

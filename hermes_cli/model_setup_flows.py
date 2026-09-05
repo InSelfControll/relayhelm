@@ -1,4 +1,4 @@
-"""Per-provider model-selection wizard flows for ``hermes setup`` / ``hermes model``.
+"""Per-provider model-selection wizard flows for ``relayhelm setup`` / ``relayhelm model``.
 
 main / config / auth / models helpers are imported lazily inside bodies: avoids the main.py import
 cycle and lets tests patch ``hermes_cli.config.load_config`` etc. at call time. The shared skeleton
@@ -349,7 +349,7 @@ def _model_flow_openai_codex(config, current_model=""):
         PROVIDER_REGISTRY["openai-codex"], recheck=lambda: get_codex_auth_status().get("logged_in")):
         return
 
-    # Prefer the credential pool (where `hermes auth` stores device_code tokens),
+    # Prefer the credential pool (where `relayhelm auth` stores device_code tokens),
     # fall back to legacy provider state.
     _codex_token = None
     with contextlib.suppress(Exception):
@@ -381,7 +381,7 @@ def _model_flow_xai_oauth(_config, current_model="", *, args=None):
         return
 
     # ``resolve_xai_oauth_runtime_credentials`` only reads the auth.json singleton, but
-    # credentials may live only in the pool (``hermes auth add xai-oauth``) — fall back to
+    # credentials may live only in the pool (``relayhelm auth add xai-oauth``) — fall back to
     # the default base URL so the picker still completes.
     base_url = DEFAULT_XAI_OAUTH_BASE_URL
     with contextlib.suppress(Exception):
@@ -590,9 +590,9 @@ def _model_flow_copilot_acp(config, current_model=""):
     resolved_command = status.get("resolved_command") or status.get("command") or "copilot"
     effective_base = status.get("base_url") or pconfig.inference_base_url
 
-    _say("  GitHub Copilot ACP delegates Hermes turns to `copilot --acp`.",
-         "  Hermes currently starts its own ACP subprocess for each request.",
-         "  Hermes uses your selected model as a hint for the Copilot ACP session.",
+    _say("  GitHub Copilot ACP delegates Relayhelm turns to `copilot --acp`.",
+         "  Relayhelm currently starts its own ACP subprocess for each request.",
+         "  Relayhelm uses your selected model as a hint for the Copilot ACP session.",
          f"  Command: {resolved_command}", f"  Backend marker: {effective_base}", "")
     try:
         creds = resolve_external_process_provider_credentials(provider_id)
@@ -720,7 +720,7 @@ def _model_flow_vertex(config, current_model=""):
         _say("  Vertex credentials: Application Default Credentials (ADC)",
              "    Vertex uses OAuth2, not a static API key. Either:",
              "      • run 'gcloud auth application-default login', or",
-             "      • set VERTEX_CREDENTIALS_PATH in ~/.hermes/.env to a service account JSON")
+             "      • set VERTEX_CREDENTIALS_PATH in ~/.relayhelm/.env to a service account JSON")
     print()
 
     vertex_cfg = load_config().get("vertex")
@@ -787,10 +787,10 @@ def _select_zai_endpoint(current_base: str) -> str:
 
 _GEMINI_FREE_TIER_NOTICE = (
     "", "❌ This Google API key is on the free tier (<= 250 requests/day for gemini-2.5-flash).",
-    "   Hermes typically makes 3-10 API calls per user turn (tool iterations + auxiliary tasks),",
+    "   Relayhelm typically makes 3-10 API calls per user turn (tool iterations + auxiliary tasks),",
     "   so the free tier is exhausted after a handful of messages and cannot sustain",
     "   an agent session.", "",
-    "   To use Gemini with Hermes, enable billing on your Google Cloud project and regenerate",
+    "   To use Gemini with Relayhelm, enable billing on your Google Cloud project and regenerate",
     "   the key in a billing-enabled project: https://aistudio.google.com/apikey", "",
     "   Alternatives with workable free usage: DeepSeek, OpenRouter (free models), Groq, Nous.", "",
     "Not saving Gemini as the default provider.")

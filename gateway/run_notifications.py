@@ -45,7 +45,7 @@ class GatewayNotificationsMixin:
 
     @dataclasses.dataclass
     class _UpdatePaths:
-        """Marker files ``hermes update --gateway`` and its watcher exchange under HERMES_HOME."""
+        """Marker files ``relayhelm update --gateway`` and its watcher exchange under HERMES_HOME."""
 
         pending: Path
         claimed: Path
@@ -461,7 +461,7 @@ class GatewayNotificationsMixin:
     async def _watch_update_progress(
         self, poll_interval: float = 2.0, stream_interval: float = 4.0, timeout: float = 1800.0
     ) -> None:
-        """Watch ``hermes update --gateway``, streaming output + forwarding prompts.
+        """Watch ``relayhelm update --gateway``, streaming output + forwarding prompts.
 
         Polls ``.update_output.txt`` for new content and sends chunks to the user periodically;
         detects ``.update_prompt.json`` (written when the update process needs input) and forwards it.
@@ -499,8 +499,8 @@ class GatewayNotificationsMixin:
                 with _log_suppressed(logging.WARNING, "Update final notification failed: %s"):
                     exit_code = self._update_exit_code(paths)
                     await target.send(
-                        "✅ Hermes update finished." if exit_code == 0
-                        else "❌ Hermes update failed (exit code {}).".format(exit_code)
+                        "✅ Relayhelm update finished." if exit_code == 0
+                        else "❌ Relayhelm update failed (exit code {}).".format(exit_code)
                     )
                     logger.info("Update finished (exit=%s), notified %s", exit_code, session_key)
                 self._clear_update_markers(paths, session_key)
@@ -527,7 +527,7 @@ class GatewayNotificationsMixin:
             paths.exit_code.write_text("124", encoding="utf-8")
             await _flush_buffer()
             with suppress(Exception):
-                await target.send("❌ Hermes update timed out after 30 minutes.")
+                await target.send("❌ Relayhelm update timed out after 30 minutes.")
             self._clear_update_markers(paths, session_key)
 
     async def _send_update_notification(self) -> bool:
@@ -579,12 +579,12 @@ class GatewayNotificationsMixin:
                 if output:
                     if len(output) > 3500:
                         output = "…" + output[-3500:]
-                    status = "✅ Hermes update finished." if exit_code == 0 else "❌ Hermes update failed."
+                    status = "✅ Relayhelm update finished." if exit_code == 0 else "❌ Relayhelm update failed."
                     msg = f"{status}\n\n```\n{output}\n```"
                 else:
                     msg = (
-                        "✅ Hermes update finished successfully." if exit_code == 0 else
-                        "❌ Hermes update failed. Check the gateway logs or run `hermes update` manually for details."
+                        "✅ Relayhelm update finished successfully." if exit_code == 0 else
+                        "❌ Relayhelm update failed. Check the gateway logs or run `relayhelm update` manually for details."
                     )
                 await adapter.send(chat_id, msg, metadata=_non_conversational_metadata(metadata, platform=platform))
                 logger.info("Sent post-update notification to %s:%s (exit=%s)", platform_str, chat_id, exit_code)
@@ -692,7 +692,7 @@ class GatewayNotificationsMixin:
         """
         delivered: set[tuple[str, str, Optional[str]]] = set()
         skipped = skip_targets or set()
-        message = "♻️ Gateway online — Hermes is back and ready."
+        message = "♻️ Gateway online — Relayhelm is back and ready."
         for platform, platform_cfg, home, transport in self._home_channel_transports():
             if not platform_cfg.gateway_restart_notification:
                 logger.info(
@@ -724,12 +724,12 @@ class GatewayNotificationsMixin:
             return
         from hermes_state import _default_db_path, classify_persistence_error, format_session_db_unavailable
         if classify_persistence_error(error) == "corrupt":
-            # Copy-pasteable, so name the real store (profiles / HERMES_HOME do not live under ~/.hermes).
+            # Copy-pasteable, so name the real store (profiles / HERMES_HOME do not live under ~/.relayhelm).
             db_path = _default_db_path()
             message = (
                 "⚠️ Session database corruption detected. Messages may not be "
                 "persisted. Recovery options:\n"
-                "1. Run `hermes doctor --fix`\n"
+                "1. Run `relayhelm doctor --fix`\n"
                 "2. Stop the gateway, then recover with:\n"
                 f"   hermes sessions recover --source {db_path} "
                 "--inspect-only\n"
@@ -738,13 +738,13 @@ class GatewayNotificationsMixin:
                 "   — recovery snapshots the damaged file first; do NOT run "
                 "`sqlite3 ... \".recover\"` against the live state.db, a "
                 "vulnerable sqlite3 CLI can corrupt it further\n"
-                "3. Restore from a backup in ~/.hermes/backups/\n"
-                "Run `hermes doctor` for sanitized diagnostics."
+                "3. Restore from a backup in ~/.relayhelm/backups/\n"
+                "Run `relayhelm doctor` for sanitized diagnostics."
             )
         else:
             message = (
                 f"⚠️ Session database unavailable — messages may not be persisted. "
-                f"{format_session_db_unavailable()}\nRun `hermes doctor` for diagnostics."
+                f"{format_session_db_unavailable()}\nRun `relayhelm doctor` for diagnostics."
             )
         logger.warning("Broadcasting state.db failure warning to home channels: %s", error)
         for platform, _platform_cfg, home, transport in self._home_channel_transports():

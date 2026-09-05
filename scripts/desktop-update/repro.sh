@@ -1,9 +1,9 @@
 #!/bin/bash
 # repro.sh -- reproduce desktop-update paths against a sandboxed HERMES_HOME.
 #
-# Nothing here touches your real ~/.hermes or checkout. Each mode builds (or
+# Nothing here touches your real ~/.relayhelm or checkout. Each mode builds (or
 # reuses) a disposable install under /tmp and drives the REAL code path --
-# the actual installer, the actual orchestrator, the actual `hermes update`.
+# the actual installer, the actual orchestrator, the actual `relayhelm update`.
 #
 #   repro.sh shim          shim UI only: success event after 6s
 #   repro.sh shim-fail     shim UI only: error event after 6s
@@ -32,12 +32,12 @@ MODE="${1:-help}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SANDBOX="${HERMES_UPDATE_REPRO_HOME:-/tmp/hermes-update-repro}"
-SANDBOX_ROOT="$SANDBOX/hermes-agent"
+SANDBOX_ROOT="$SANDBOX/relayhelm"
 
 say() { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
 
 ensure_sandbox_install() {
-  if [ -x "$SANDBOX_ROOT/venv/bin/hermes" ]; then
+  if [ -x "$SANDBOX_ROOT/venv/bin/relayhelm" ]; then
     say "reusing sandbox install at $SANDBOX_ROOT"
     return
   fi
@@ -62,7 +62,7 @@ case "$MODE" in
   fresh)
     rm -rf "$SANDBOX"
     ensure_sandbox_install
-    say "fresh install OK: $("$SANDBOX_ROOT/venv/bin/hermes" --version 2>/dev/null || echo '?')"
+    say "fresh install OK: $("$SANDBOX_ROOT/venv/bin/relayhelm" --version 2>/dev/null || echo '?')"
     ;;
   behind)
     N="${2:-25}"
@@ -96,7 +96,7 @@ case "$MODE" in
     # checkout layout under /tmp; --self-test-gate prints the decision and
     # exits without running an update.
     G="/tmp/hermes-gate-test.$$"
-    UNPACKED="$G/hermes-agent/apps/desktop/release/linux-unpacked"
+    UNPACKED="$G/relayhelm/apps/desktop/release/linux-unpacked"
     mkdir -p "$UNPACKED"
     touch "$UNPACKED/hermes" && chmod +x "$UNPACKED/hermes"
 
@@ -105,9 +105,9 @@ case "$MODE" in
       if [ "$2" = "$3" ]; then printf 'ok   %s -> %s\n' "$1" "$3"
       else printf 'FAIL %s -> %s (want %s)\n' "$1" "$3" "$2"; fails=$((fails+1)); fi
     }
-    decide() { bash "$SCRIPT_DIR/posix.sh" --self-test-gate --install-root "$G/hermes-agent" "$@" | cut -d: -f1; }
+    decide() { bash "$SCRIPT_DIR/posix.sh" --self-test-gate --install-root "$G/relayhelm" "$@" | cut -d: -f1; }
 
-    expect "appimage (not under unpacked)"      skew     "$(decide --relaunch-target /opt/Hermes/hermes)"
+    expect "appimage (not under unpacked)"      skew     "$(decide --relaunch-target /opt/Relayhelm/hermes)"
     expect "sibling-prefix dir not fooled"      skew     "$(decide --relaunch-target "$UNPACKED-evil/hermes")"
     expect "no chrome-sandbox (namespace)"      relaunch "$(decide --relaunch-target "$UNPACKED/hermes")"
 
@@ -119,9 +119,9 @@ case "$MODE" in
 
     # Result JSON must survive hostile strings (git allows `"` in branch
     # names; messages carry arbitrary text) -- parse it back with python.
-    QHOME="$G/qhome"; mkdir -p "$QHOME/hermes-agent"
+    QHOME="$G/qhome"; mkdir -p "$QHOME/relayhelm"
     bash "$SCRIPT_DIR/posix.sh" --no-ui --no-marker-cleanup --desktop-pid 0 \
-      --install-root "$QHOME/hermes-agent" --branch 'evil"branch\n$(x)' >/dev/null 2>&1 || true
+      --install-root "$QHOME/relayhelm" --branch 'evil"branch\n$(x)' >/dev/null 2>&1 || true
     if python3 -c "import json,sys; d=json.load(open('$QHOME/.hermes-update-result.json')); sys.exit(0 if d['branch']=='evil\"branch\\\\n\$(x)' and d['ok']==False else 1)"; then
       printf 'ok   result JSON escapes hostile branch/message\n'
     else
@@ -145,34 +145,34 @@ case "$MODE" in
         printf 'FAIL %s -> %s\n' "$1" "$(cat "$L/.hermes-update-result.json" 2>/dev/null)"; fails=$((fails+1))
       fi
     }
-    stub_install() { # creates a fake install whose hermes update succeeds
-      rm -rf "$L"; mkdir -p "$L/hermes-agent/venv/bin"
-      printf '#!/bin/sh\nexit 0\n' > "$L/hermes-agent/venv/bin/hermes"
-      chmod +x "$L/hermes-agent/venv/bin/hermes"
+    stub_install() { # creates a fake install whose relayhelm update succeeds
+      rm -rf "$L"; mkdir -p "$L/relayhelm/venv/bin"
+      printf '#!/bin/sh\nexit 0\n' > "$L/relayhelm/venv/bin/relayhelm"
+      chmod +x "$L/relayhelm/venv/bin/relayhelm"
     }
 
     # 1. linux relaunch target dies instantly -> manual downgrade in result
     stub_install
-    UNPACKED="$L/hermes-agent/apps/desktop/release/linux-unpacked"
+    UNPACKED="$L/relayhelm/apps/desktop/release/linux-unpacked"
     mkdir -p "$UNPACKED"
     printf '#!/bin/sh\nexit 1\n' > "$UNPACKED/hermes"; chmod +x "$UNPACKED/hermes"
     if [ "$(uname)" != "Darwin" ]; then
-      bash "$SCRIPT_DIR/posix.sh" --no-ui --desktop-pid 0 --install-root "$L/hermes-agent" \
+      bash "$SCRIPT_DIR/posix.sh" --no-ui --desktop-pid 0 --install-root "$L/relayhelm" \
         --relaunch-target "$UNPACKED/hermes" >/dev/null 2>&1 || true
-      expect_msg "instant-exit relaunch downgrades to manual" "d['ok']==True and d['manual']==True and 'Reopen Hermes' in d['message']"
+      expect_msg "instant-exit relaunch downgrades to manual" "d['ok']==True and d['manual']==True and 'Reopen Relayhelm' in d['message']"
     else
       # mac: a SUPPLIED target that is missing is a REJECTED launch and
       # must downgrade to manual — never a clean "Update complete."
-      bash "$SCRIPT_DIR/posix.sh" --no-ui --desktop-pid 0 --install-root "$L/hermes-agent" \
+      bash "$SCRIPT_DIR/posix.sh" --no-ui --desktop-pid 0 --install-root "$L/relayhelm" \
         --relaunch-target "$L/NoSuch.app" >/dev/null 2>&1 || true
-      expect_msg "missing bundle downgrades to manual" "d['ok']==True and d['manual']==True and 'Reopen Hermes' in d['message']"
+      expect_msg "missing bundle downgrades to manual" "d['ok']==True and d['manual']==True and 'Reopen Relayhelm' in d['message']"
     fi
 
     # 2. gated skew: success result carries the skew message (the manual
     #    event's payload), never a bare "Update complete."
     stub_install
-    bash "$SCRIPT_DIR/posix.sh" --no-ui --desktop-pid 0 --install-root "$L/hermes-agent" \
-      --relaunch-target /opt/Hermes/hermes >/dev/null 2>&1 || true
+    bash "$SCRIPT_DIR/posix.sh" --no-ui --desktop-pid 0 --install-root "$L/relayhelm" \
+      --relaunch-target /opt/Relayhelm/hermes >/dev/null 2>&1 || true
     if [ "$(uname)" != "Darwin" ]; then
       expect_msg "skew outcome surfaces in result message" "d['ok']==True and d['manual']==True and 'was not changed' in d['message']"
     fi

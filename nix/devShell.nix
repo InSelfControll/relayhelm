@@ -23,9 +23,9 @@
     {
       devShells.default = pkgs.mkShell {
         packages = with pkgs; [
-          (pkgs.runCommand "hermes" { } ''
+          (pkgs.runCommand "relayhelm" { } ''
             mkdir -p $out/bin
-            install -Dm755 ${../hermes} $out/bin/hermes
+            install -Dm755 ${../hermes} $out/bin/relayhelm
           '')
           self'.packages.sandbox
           uv
@@ -56,7 +56,7 @@
           # environment instead of creating an empty project .venv.
           export VIRTUAL_ENV="$(dirname "$(dirname "$(readlink -f "$(command -v python)")")")"
 
-          echo "Hermes Agent dev shell in $HERMES_PYTHON_SRC_ROOT"
+          echo "Relayhelm dev shell in $HERMES_PYTHON_SRC_ROOT"
           echo "Ready. Run 'hermes' or 'sandbox hermes' to start."
         '';
       };

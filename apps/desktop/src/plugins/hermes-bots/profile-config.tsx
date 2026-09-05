@@ -185,7 +185,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
   if (unsupported) {
     return (
       <div className="px-2 py-3 text-center text-xs text-(--ui-text-tertiary)">
-        Full configuration needs a newer gateway (restart it after updating Hermes).
+        Full configuration needs a newer gateway (restart it after updating Relayhelm).
       </div>
     )
   }
@@ -249,7 +249,7 @@ export function AdvancedProfileConfig({ bot, state, setState }: AdvancedProfileC
   const mcpList = state.mcp || []
 
   // Newer desktop builds export the WHOLE core Capabilities surface
-  // (hermes-agent#87317): Skills (installed list + one-click hub installs +
+  // (relayhelm#87317): Skills (installed list + one-click hub installs +
   // full-skill detail), Tools (per-toolset config), and MCP — pinned to this
   // bot via fixedProfile, tab state kept out of the page router via embedded.
   // Render THAT instead of the checkbox stand-ins; writes go straight to the

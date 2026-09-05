@@ -17,7 +17,7 @@ Drive the desktop background-first; escalate on signal.
 | Source | Bundled (installed by default) |
 | Path | `skills/autonomous-ai-agents\computer-use` |
 | Version | `2.0.0` |
-| Author | Francesco Bonacci (f-trycua), Hermes Agent |
+| Author | Francesco Bonacci (f-trycua), Relayhelm |
 | License | MIT |
 | Platforms | macos, windows, linux |
 | Tags | `computer-use`, `desktop`, `automation`, `gui`, `cross-platform` |
@@ -25,7 +25,7 @@ Drive the desktop background-first; escalate on signal.
 ## Reference: full SKILL.md
 
 :::info
-The following is the complete skill definition that Hermes loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
+The following is the complete skill definition that Relayhelm loads when this skill is triggered. This is what the agent sees as instructions when the skill is active.
 :::
 
 # Computer Use (universal, any-model, cross-platform)
@@ -40,12 +40,12 @@ Everything here works with any tool-capable model — Claude, GPT, Gemini,
 or an open model on a local OpenAI-compatible endpoint. There is no
 Anthropic-native schema to learn.
 
-Hermes drives [cua-driver](https://github.com/trycua/cua) under the hood.
-This wrapper skill teaches the Hermes `computer_use` workflow and action
+Relayhelm drives [cua-driver](https://github.com/trycua/cua) under the hood.
+This wrapper skill teaches the Relayhelm `computer_use` workflow and action
 vocabulary. Call the actions documented below instead of raw cua-driver MCP
 tools. For driver internals and platform-specific behavior, follow the Cua
-skill installed by `cua-driver skills install`. Hermes autodetection is a
-planned cua-driver follow-up, so currently point Hermes at the resulting
+skill installed by `cua-driver skills install`. Relayhelm autodetection is a
+planned cua-driver follow-up, so currently point Relayhelm at the resulting
 `~/.cua-driver/skills/cua-driver` directory or symlink it into your skill space.
 
 ## The canonical workflow
@@ -295,7 +295,7 @@ in your conversation context.
 
 | Symptom | Likely cause + remedy |
 |---|---|
-| `cua-driver not installed` | Run `hermes computer-use install`, or `hermes tools` and enable Computer Use |
+| `cua-driver not installed` | Run `hermes computer-use install`, or `relayhelm tools` and enable Computer Use |
 | Captures consistently return empty / "no on-screen window" | On Linux: DISPLAY may not be set (X11) or you're on pure Wayland — ask the user to run `hermes computer-use doctor`. On Windows: you may be in Session 0 (SSH session) instead of the interactive desktop — see the cua-driver `WINDOWS.md` deep-dive |
 | Element index stale ("Element N not in cache") | SOM indices are only valid until the next `capture`. Re-capture before clicking. The wrapper carries opaque `element_token`s for stale-detection; you'll see an explicit error rather than a wrong click |
 | Click had no effect | Read the structured verdict. `effect:"unverifiable"` → fresh capture/state before retry, even with an escalation hint. `effect:"suspected_noop"` or a structured refusal → climb the recommended ladder: coordinate (px), then foreground. Browser chrome/native prompts remain native; page content is a separate toolset. Don't conclude the app is undrivable |
@@ -318,7 +318,7 @@ in your conversation context.
 
 ## Going deeper — read the cua-driver skill pack
 
-Hermes intentionally keeps THIS skill focused on the Hermes-side
+Relayhelm intentionally keeps THIS skill focused on the Hermes-side
 `computer_use` action vocabulary. The platform-specific deep dives
 (macOS no-foreground contract, Windows UIA + Session 0, Linux AT-SPI +
 X11/Wayland nuances, recording trajectory + video, browser-page
@@ -350,6 +350,6 @@ These are platform deep dives, not duplicates — when the user reports
 `WINDOWS.md` for the UIA / UWP context that explains why and what to
 do differently.
 
-Hermes autodetection is a planned follow-up in trycua/cua. For now, the command
-installs the pack under `~/.cua-driver/skills/cua-driver`; point Hermes at that
+Relayhelm autodetection is a planned follow-up in trycua/cua. For now, the command
+installs the pack under `~/.cua-driver/skills/cua-driver`; point Relayhelm at that
 directory or symlink it into the user's skill space.

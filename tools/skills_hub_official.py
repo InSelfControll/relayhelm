@@ -1,4 +1,4 @@
-"""Skills Hub official sources: repo-shipped optional skills and the centralized Hermes index."""
+"""Skills Hub official sources: repo-shipped optional skills and the centralized Relayhelm index."""
 
 import logging
 from pathlib import Path, PurePosixPath
@@ -28,12 +28,12 @@ def _clean_rel_parts(path: str) -> Optional[List[str]]:
 
 class OptionalSkillSource(SkillSource):
     """Skills from the repo's ``optional-skills/`` directory: official (Nous-maintained) but not
-    activated by default — absent from the system prompt and not copied to ~/.hermes/skills/ at
+    activated by default — absent from the system prompt and not copied to ~/.relayhelm/skills/ at
     setup. Discoverable via the Skills Hub as source "official" with "builtin" trust."""
 
     SOURCE_ID = "official"
     TRUST_LEVEL = "builtin"
-    OFFICIAL_REPO = "NousResearch/hermes-agent"
+    OFFICIAL_REPO = "InSelfControll/relayhelm"
     OPTIONAL_SKILLS_PREFIX = "optional-skills"
 
     _parse_frontmatter = staticmethod(_parse_frontmatter)
@@ -150,7 +150,7 @@ class OptionalSkillSource(SkillSource):
 
     def _fetch_from_live_repo(self, rel: str) -> Optional[SkillBundle]:
         """Fetch an optional skill straight from the live default branch. Local installs lag
-        ``main``; rather than demanding ``hermes update`` first, resolve against the live repo.
+        ``main``; rather than demanding ``relayhelm update`` first, resolve against the live repo.
         ``rel`` is ``category/skill`` (used verbatim) or a bare skill name (located via the repo tree)."""
         parts = _clean_rel_parts(rel.strip("/"))
         if parts is None:
@@ -275,7 +275,7 @@ class OptionalSkillSource(SkillSource):
 
 
 class HermesIndexSource(SkillSource):
-    """Skill source backed by the centralized Hermes Skills Index: a JSON catalog on the docs site,
+    """Skill source backed by the centralized Relayhelm Skills Index: a JSON catalog on the docs site,
     rebuilt daily by CI, with metadata + resolved GitHub paths for every skill — search and path
     discovery cost zero GitHub API calls. When unavailable every method returns empty/None so
     downstream sources take over transparently."""

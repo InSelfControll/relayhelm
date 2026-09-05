@@ -1,4 +1,4 @@
-"""``hermes plugins`` CLI subcommand — install, update, remove, and list plugins."""
+"""``relayhelm plugins`` CLI subcommand — install, update, remove, and list plugins."""
 
 from __future__ import annotations
 
@@ -268,8 +268,9 @@ def _native_manifest_file(plugin_dir: Path) -> Optional[Path]:
 
 def _has_portable_manifest(plugin_dir: Path) -> bool:
     """True when ``plugin.json`` exists (or is a symlink, even dangling) under *plugin_dir*."""
-    portable_file = plugin_dir / "plugin.json"
-    return portable_file.exists() or portable_file.is_symlink()
+    from hermes_cli.host_plugin_compat import MANIFESTS
+    return any((plugin_dir / name).exists() or (plugin_dir / name).is_symlink()
+               for name in ("plugin.json", *MANIFESTS))
 
 
 def _load_yaml_manifest(manifest_file: Path):
@@ -287,7 +288,9 @@ def _read_manifest(plugin_dir: Path) -> dict:
             return {}
         try:
             from hermes_cli.agent_plugins import read_agent_plugin_manifest
-            return read_agent_plugin_manifest(plugin_dir)[0]
+            from hermes_cli.host_plugin_compat import manifest_path, read_manifest
+            return (read_manifest(plugin_dir) if manifest_path(plugin_dir) is not None
+                    else read_agent_plugin_manifest(plugin_dir)[0])
         except Exception as e:
             logger.warning("Failed to read plugin.json in %s: %s", plugin_dir, e)
             return {}
@@ -302,7 +305,7 @@ def _looks_like_plugin_dir(target: Path) -> bool:
     """True when *target* has a native/portable manifest or a package ``__init__.py``."""
     return (
         _native_manifest_file(target) is not None
-        or (target / "plugin.json").exists()
+        or _has_portable_manifest(target)
         or (target / "__init__.py").exists())
 
 
@@ -323,7 +326,7 @@ def _copy_example_files(plugin_dir: Path, console) -> None:
 
 def _missing_env_specs(manifest: dict) -> list[dict]:
     """``requires_env`` entries (plain names or ``{name, description, url, secret}`` dicts,
-    normalised to dicts; nameless entries dropped) whose variable is unset in ``~/.hermes/.env``."""
+    normalised to dicts; nameless entries dropped) whose variable is unset in ``~/.relayhelm/.env``."""
     env_specs = [
         {"name": entry} if isinstance(entry, str) else entry
         for entry in manifest.get("requires_env") or []
@@ -336,7 +339,7 @@ def _missing_env_specs(manifest: dict) -> list[dict]:
 
 
 def _print_python_dependencies(manifest: dict, console) -> None:
-    """Print declared ``python_dependencies`` with an install hint — Hermes never auto-installs
+    """Print declared ``python_dependencies`` with an install hint — Relayhelm never auto-installs
     plugin pip dependencies.
 
     See #64165.
@@ -536,7 +539,7 @@ def _check_manifest_version(manifest: dict, plugin_name: str) -> None:
         raise PluginOperationError(
             f"Plugin '{plugin_name}' requires manifest_version {mv}, "
             f"but this installer only supports up to {_SUPPORTED_MANIFEST_VERSION}. "
-            f"Run {recommended_update_command()} to update Hermes.",
+            f"Run {recommended_update_command()} to update Relayhelm.",
         ) from None
 
 
@@ -568,7 +571,11 @@ def _read_manifest_for_install(plugin_dir: Path) -> dict:
         return _read_manifest(plugin_dir)
     try:
         from hermes_cli.agent_plugins import read_agent_plugin_manifest
-        manifest, diagnostics = read_agent_plugin_manifest(plugin_dir)
+        from hermes_cli.host_plugin_compat import manifest_path, read_manifest
+        if manifest_path(plugin_dir) is not None:
+            manifest, diagnostics = read_manifest(plugin_dir), ()
+        else:
+            manifest, diagnostics = read_agent_plugin_manifest(plugin_dir)
     except Exception as exc:
         raise PluginOperationError(f"Portable plugin manifest validation failed: {exc}") from exc
     for diagnostic in diagnostics:
@@ -640,7 +647,7 @@ def _install_plugin_core(
         if target.exists() and not force:
             raise PluginOperationError(
                 f"Plugin '{plugin_name}' already exists. Use force reinstall "
-                f"or run `hermes plugins update {plugin_name}`.")
+                f"or run `relayhelm plugins update {plugin_name}`.")
         prior = old_metadata.get(plugin_name)
         if target.exists() and requested_revision is None and isinstance(prior, dict) and prior.get("pinned") is True:
             raise PluginOperationError(
@@ -681,7 +688,7 @@ def _resolve_index_name(identifier: str, console) -> tuple[str, Optional[str]]:
             _fail(console, "Re-run with the exact name or the owner/repo identifier.")
         _fail(console, (
             f"[red]Error:[/red] Plugin '{identifier}' was not found in the "
-            f"community index ({source}). Use `hermes plugins search <term>` to "
+            f"community index ({source}). Use `relayhelm plugins search <term>` to "
             "browse, or install directly with an owner/repo identifier."))
 
     pinned_ref: Optional[str] = None
@@ -743,7 +750,7 @@ def cmd_install(
     if not _looks_like_plugin_dir(target):
         console.print(
             f"[yellow]Warning:[/yellow] {installed_name} doesn't contain plugin.yaml, "
-            f"plugin.json, or __init__.py. It may not be a valid Hermes plugin.")
+            f"plugin.json, or __init__.py. It may not be a valid Relayhelm plugin.")
     _prompt_plugin_env_vars(installed_manifest, console)
     _print_python_dependencies(installed_manifest, console)
     _display_after_install(target, identifier)
@@ -756,14 +763,14 @@ def cmd_install(
     else:
         console.print(
             f"[dim]Plugin installed but not enabled. "
-            f"Run `hermes plugins enable {installed_name}` to activate.[/dim]")
+            f"Run `relayhelm plugins enable {installed_name}` to activate.[/dim]")
 
     # Non-interactive installs and declines leave declared capabilities ungranted (fail closed).
     declared_caps = _declared_capabilities_from_manifest(installed_manifest, installed_name)
     if declared_caps:
         _run_capability_consent(console, installed_name, declared_caps, context="install")
     console.print("[dim]Restart the gateway for the plugin to take effect:[/dim]")
-    console.print("[dim]  hermes gateway restart[/dim]")
+    console.print("[dim]  relayhelm gateway restart[/dim]")
     console.print()
 
 
@@ -801,7 +808,7 @@ def cmd_update(name: str) -> None:
             target,
             lambda rec: (
                 f"Plugin '{name}' is pinned to {rec.get('revision')}. To move it, run "
-                f"`hermes plugins install {escape(str(rec.get('source', '<source>')))} --force "
+                f"`relayhelm plugins install {escape(str(rec.get('source', '<source>')))} --force "
                 "--ref <40-character commit SHA>`."),
             lambda: f"Plugin '{name}' was not installed from git (no .git directory). Cannot update.",
             before_pull=lambda: console.print(f"[dim]Updating {name}...[/dim]"))
@@ -847,7 +854,7 @@ def _rescan_after_update(target: Path, name: str, console) -> None:
             _set_plugin_enabled(name, enable=False)
         console.print(
             f"[red]Plugin '{name}' has been disabled.[/red] Review the "
-            f"findings, then re-enable with `hermes plugins enable {name}` "
+            f"findings, then re-enable with `relayhelm plugins enable {name}` "
             f"if you trust them.")
 
 
@@ -922,7 +929,7 @@ _BASIC_AUTH_PLUGIN_KEYS = frozenset({"basic", "dashboard_auth/basic"})
 def ensure_basic_auth_plugin_enabled_in_config(cfg: dict) -> bool:
     """Drop the bundled basic dashboard-auth plugin from ``plugins.disabled`` in *cfg*.
 
-    ``hermes setup`` / ``hermes plugins disable basic`` can park it there while
+    ``relayhelm setup`` / ``relayhelm plugins disable basic`` can park it there while
     ``dashboard.basic_auth`` is configured, and password auth then silently fails.
     Returns True when modified.
     """
@@ -997,7 +1004,7 @@ def cmd_enable(name: str, allow_tool_override: Optional[bool] = None) -> None:
         if plugin in LEGACY_RELAY_PLUGIN_KEYS:
             _fail(console, (
                 f"[red]Plugin '{plugin}' was removed.[/red] Relay lifecycle is owned "
-                f"by Hermes core; configure {RELAY_PLUGINS_CONFIG_ENV} instead."))
+                f"by Relayhelm core; configure {RELAY_PLUGINS_CONFIG_ENV} instead."))
 
     _refuse_legacy_relay(name)
     resolved = _resolve_plugin_key_and_source(name)
@@ -1093,8 +1100,8 @@ def _run_capability_consent(console, plugin_id: str, declared: list, *, context:
         console.print(
             "  [yellow]Non-interactive session: capabilities NOT granted "
             "(fail closed).[/yellow] Run "
-            f"`hermes plugins capabilities {plugin_id}` to review and "
-            f"`hermes plugins enable {plugin_id}` to grant interactively.")
+            f"`relayhelm plugins capabilities {plugin_id}` to review and "
+            f"`relayhelm plugins enable {plugin_id}` to grant interactively.")
         return False
 
     if _ask_yes("  Grant these capabilities? [y/N] ", console.input):
@@ -1107,12 +1114,12 @@ def _run_capability_consent(console, plugin_id: str, declared: list, *, context:
     console.print(
         f"  [dim]Declined. {plugin_id} stays enabled with these capabilities "
         "off; it should degrade gracefully (ctx.has_capability()). Re-run "
-        f"`hermes plugins enable {plugin_id}` to grant later.[/dim]")
+        f"`relayhelm plugins enable {plugin_id}` to grant later.[/dim]")
     return False
 
 
 def cmd_capabilities(name: Optional[str] = None) -> None:
-    """``hermes plugins capabilities [<id>]`` — declared vs granted."""
+    """``relayhelm plugins capabilities [<id>]`` — declared vs granted."""
     from hermes_cli.plugin_capabilities import (
         CAPABILITY_REGISTRY,
         granted_capabilities,
@@ -1175,7 +1182,7 @@ def _resolve_tool_override_grant(console, key: str, allow_tool_override: Optiona
     else:
         console.print(
             f"[dim]{key} may not override built-in tools. Re-run "
-            f"`hermes plugins enable {key} --allow-tool-override` to grant "
+            f"`relayhelm plugins enable {key} --allow-tool-override` to grant "
             "this later.[/dim]")
 
 
@@ -1206,7 +1213,9 @@ def _read_manifest_info(d: Path, prefix: str):
             return None
         try:
             from hermes_cli.agent_plugins import read_agent_plugin_manifest
-            manifest = read_agent_plugin_manifest(d)[0]
+            from hermes_cli.host_plugin_compat import manifest_path, read_manifest
+            manifest = (read_manifest(d) if manifest_path(d) is not None
+                        else read_agent_plugin_manifest(d)[0])
             name = manifest["name"]
         except Exception:
             return None
@@ -1294,7 +1303,7 @@ def _plugin_status(name: str, enabled: set, disabled: set, key: str = "") -> str
 
 
 def _filter_plugin_entries(entries: list, args: Any, enabled: set, disabled: set) -> list:
-    """Apply ``hermes plugins list`` CLI filters."""
+    """Apply ``relayhelm plugins list`` CLI filters."""
     filtered = entries
     if getattr(args, "no_bundled", False) or getattr(args, "user", False):
         filtered = [entry for entry in filtered if entry[3] != "bundled"]
@@ -1315,7 +1324,7 @@ def cmd_list(args: Any | None = None) -> None:
     entries = _discover_all_plugins()
     if not entries:
         console.print("[dim]No plugins installed.[/dim]")
-        console.print("[dim]Install with:[/dim] hermes plugins install owner/repo")
+        console.print("[dim]Install with:[/dim] relayhelm plugins install owner/repo")
         return
 
     enabled = _get_enabled_set()
@@ -1349,9 +1358,9 @@ def cmd_list(args: Any | None = None) -> None:
     console.print()
     console.print(table)
     console.print()
-    console.print("[dim]Compact view:[/dim] hermes plugins list --plain --no-bundled")
-    console.print("[dim]Interactive toggle:[/dim] hermes plugins")
-    console.print("[dim]Enable/disable:[/dim] hermes plugins enable/disable <name>")
+    console.print("[dim]Compact view:[/dim] relayhelm plugins list --plain --no-bundled")
+    console.print("[dim]Interactive toggle:[/dim] relayhelm plugins")
+    console.print("[dim]Enable/disable:[/dim] relayhelm plugins enable/disable <name>")
     console.print("[dim]Plugins are opt-in by default — only 'enabled' plugins load.[/dim]")
 
 
@@ -1440,7 +1449,7 @@ def cmd_show(name: str) -> None:
     match = _find_plugin_entry(name)
     if match is None:
         console.print(f"[red]Plugin '{name}' not found.[/red]")
-        _fail(console, "[dim]List installed plugins:[/dim] hermes plugins list")
+        _fail(console, "[dim]List installed plugins:[/dim] relayhelm plugins list")
 
     pname, version, description, source, dir_path, key = match
     manifest = _read_manifest(Path(dir_path)) if dir_path else {}
@@ -1789,7 +1798,7 @@ def dashboard_set_agent_plugin_enabled(name: str, *, enabled: bool) -> dict[str,
 
 
 def _user_installed_plugin_dir(name: str) -> Optional[Path]:
-    """Resolved path under ``~/.hermes/plugins/<name>`` if it exists."""
+    """Resolved path under ``~/.relayhelm/plugins/<name>`` if it exists."""
     try:
         target = _sanitize_plugin_name(name, _plugins_dir(), allow_subdir=True)
     except ValueError:
@@ -1798,7 +1807,7 @@ def _user_installed_plugin_dir(name: str) -> Optional[Path]:
 
 
 def dashboard_update_user_plugin(name: str) -> dict[str, Any]:
-    """``git pull`` inside ``~/.hermes/plugins/<name>``."""
+    """``git pull`` inside ``~/.relayhelm/plugins/<name>``."""
     target = _user_installed_plugin_dir(name)
     if target is None:
         return {"ok": False, "error": f"Plugin '{name}' was not found under {_plugins_dir()}."}
@@ -1807,7 +1816,7 @@ def dashboard_update_user_plugin(name: str) -> dict[str, Any]:
             target,
             lambda rec: (
                 f"Plugin '{name}' is pinned to {rec.get('revision')}; "
-                f"run `hermes plugins install {rec.get('source', '<source>')} --force "
+                f"run `relayhelm plugins install {rec.get('source', '<source>')} --force "
                 "--ref <40-character commit SHA>` to move it."),
             lambda: f"Plugin '{name}' is not a git checkout; cannot pull updates.")
     except PluginOperationError as exc:
@@ -1931,7 +1940,7 @@ def _git_pull_plugin_dir(target: Path) -> tuple[bool, str]:
 
 
 def dashboard_remove_user_plugin(name: str) -> dict[str, Any]:
-    """Delete a plugin tree under ``~/.hermes/plugins/`` only."""
+    """Delete a plugin tree under ``~/.relayhelm/plugins/`` only."""
     plugins_dir = _plugins_dir()
     if any(n == name and src == "bundled" for n, _ver, _d, src, _path, _key in _discover_all_plugins()):
         return {"ok": False, "error": "Bundled plugins cannot be removed from the dashboard."}
@@ -1983,7 +1992,7 @@ def cmd_search(
         desc = e.description if len(e.description) <= 70 else e.description[:67] + "..."
         table.add_row(e.name, desc, e.author, ", ".join(e.tags))
     console.print(table)
-    console.print(f"[dim]Index source: {source}. Install: hermes plugins install <name>[/dim]")
+    console.print(f"[dim]Index source: {source}. Install: relayhelm plugins install <name>[/dim]")
     console.print(f"[dim]{SECURITY_FOOTER}[/dim]")
 
 
@@ -1998,7 +2007,7 @@ def _action_pack(args):
 
 
 def cmd_compat(args: Any | None = None) -> None:
-    """``hermes plugins compat`` — which installed plugins import paths scheduled for removal, and where."""
+    """``relayhelm plugins compat`` — which installed plugins import paths scheduled for removal, and where."""
     import sys
     from pathlib import Path
     from hermes_cli.plugin_compat import (
@@ -2066,7 +2075,7 @@ _PLUGIN_ACTIONS = {
 
 
 def plugins_command(args) -> None:
-    """Dispatch hermes plugins subcommands."""
+    """Dispatch relayhelm plugins subcommands."""
     action = getattr(args, "plugins_action", None)
     handler = _PLUGIN_ACTIONS.get(action)
     if handler is None:

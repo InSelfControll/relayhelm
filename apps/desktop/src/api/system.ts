@@ -91,7 +91,7 @@ export function getMemoryProviderOAuthStatus(
 }
 
 // ---------------------------------------------------------------------------
-// Memory data + curator (parity with `hermes memory` / `hermes curator`).
+// Memory data + curator (parity with `relayhelm memory` / `hermes curator`).
 // ---------------------------------------------------------------------------
 
 export function getMemoryStatus(): Promise<MemoryStatusResponse> {
@@ -235,8 +235,8 @@ export function getGhAuthStatus(refresh = false): Promise<{ available: boolean; 
 }
 
 // ---------------------------------------------------------------------------
-// Maintenance operations (parity with `hermes doctor` / `hermes security
-// audit` / `hermes backup` / `hermes debug share` and the dashboard System
+// Maintenance operations (parity with `relayhelm doctor` / `hermes security
+// audit` / `relayhelm backup` / `hermes debug share` and the dashboard System
 // page). All except debug share are spawn-based background actions tailed via
 // getActionStatus().
 // ---------------------------------------------------------------------------

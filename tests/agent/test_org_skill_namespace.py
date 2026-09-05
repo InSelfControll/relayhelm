@@ -297,7 +297,7 @@ class TestSkillSyncIsOneCommand:
     def test_propose_is_not_under_skills(self):
         skills_src = self._src("hermes_cli", "subcommands", "skills.py")
         assert '"propose"' not in skills_src, (
-            "`propose` must NOT remain under `hermes skills` — Skill Sync is "
+            "`propose` must NOT remain under `relayhelm skills` — Skill Sync is "
             "one command for launch."
         )
 

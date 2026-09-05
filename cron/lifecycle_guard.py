@@ -1,7 +1,7 @@
 """Gateway lifecycle guard for cron job creation.
 
-A cron job that restarts/stops the gateway from inside the gateway (``hermes gateway restart``,
-``launchctl kickstart ai.hermes.gateway``, ``systemctl restart hermes-gateway``) kills the process,
+A cron job that restarts/stops the gateway from inside the gateway (``relayhelm gateway restart``,
+``launchctl kickstart io.github.inselfcontroll.relayhelm.gateway``, ``systemctl restart relayhelm-gateway``) kills the process,
 the supervisor revives it, auto-resume re-runs the turn: a SIGTERM-respawn loop.
 ``cron.jobs.create_job`` rejects such specs on every creation path. Patterns are command-shaped —
 anchored on concrete command identifiers — so they cannot fire on prose. Defence-in-depth layer.
@@ -28,20 +28,20 @@ class GatewayLifecycleBlocked(ValueError):
 # concrete command identifier so it fires only on command-shaped strings, never prose.
 _GATEWAY_LIFECYCLE_PATTERN = re.compile(
     r"(?i)"
-    # Branch A: destructive `hermes gateway` ops. `start` is excluded: starting from inside a
+    # Branch A: destructive `relayhelm gateway` ops. `start` is excluded: starting from inside a
     # gateway is benign and a job may legitimately start a sibling profile. The lookbehind keeps
     # `hermes` from being a path component or word tail (`/docs/hermes gateway restart-notes.md`)
     # while every real command position (text start, whitespace, `;`/`&`/`|`, `$(`, backtick,
     # U+FFFD) still matches.
     # See #77173.
     r"(?:(?<![/\w.\-])hermes\s+gateway\s+(?:restart|stop|uninstall)\b)"
-    # Branch B: launchctl ops anchored on a hermes-gateway label so unrelated hermes services stay
+    # Branch B: launchctl ops anchored on a relayhelm-gateway label so unrelated hermes services stay
     # unblocked. `submit`/`bootstrap` register a NEW keepalive job wrapping an arbitrary helper (a
     # laundered restart); neutral-label submissions are caught by
     # `contains_launchctl_submit_command`. `bootout`/`remove`/`disable` are the
     # modern/legacy/durable forms of `unload`.
     # `submit` and `bootstrap` are included alongside the direct verbs (kickstart/etc.): `launchctl submit
-    # -l ai.hermes.gateway-<suffix> -- <helper-script>` (or `launchctl bootstrap gui/<uid> <plist>`) creates
+    # -l io.github.inselfcontroll.relayhelm.gateway-<suffix> -- <helper-script>` (or `launchctl bootstrap gui/<uid> <plist>`) creates
     # a NEW keepalive job wrapping an arbitrary helper, which is how a blocked direct restart/kill gets
     # laundered into a persistent restart loop instead (#62891) — same foot-gun, indirect shape.
     # Neutral-label submissions that dodge this text anchor are caught separately by
@@ -52,7 +52,7 @@ _GATEWAY_LIFECYCLE_PATTERN = re.compile(
     # (tools/approval.py, skipped on force=True) as the only cover, while this hard block — documented as
     # "force=True cannot help here" — let them through (#80260).
     r"|(?:launchctl\s+(?:kickstart|unload|load|stop|restart|submit|bootstrap|bootout|remove|disable)\b[^\n]*\bhermes[.\-]?gateway)"
-    # Branch C: systemctl ops on a hermes-gateway unit.
+    # Branch C: systemctl ops on a relayhelm-gateway unit.
     r"|(?:systemctl\s+(?:-\S+\s+)*(?:restart|stop|start)\b[^\n]*\bhermes[.\-]?gateway)"
     # Branch D: pkill/kill of the gateway process, both token orders. Leading \b keeps "skill" from
     # matching as "kill".
@@ -65,7 +65,7 @@ _GATEWAY_LIFECYCLE_PATTERN = re.compile(
 # does) rather than loosening `[^\n]*`.
 # Every branch above uses `[^\n]*` between its verb and the gateway identifier so the match can't span
 # unrelated lines of a longer cron prompt/script, but that also means a real multi-line shell invocation
-# split across continuation lines (e.g. `launchctl submit \` / `  -l ai.hermes.gateway-... \` / `  -- ...`,
+# split across continuation lines (e.g. `launchctl submit \` / `  -l io.github.inselfcontroll.relayhelm.gateway-... \` / `  -- ...`,
 # the exact reported shape in #62891) would otherwise slip past. Collapse continuations to a single space
 # before matching, mirroring what the shell itself does, rather than loosening `[^\n]*` and risking false
 # positives across genuinely separate lines.
@@ -76,12 +76,12 @@ _SHELL_LINE_CONTINUATION = re.compile(r"\\\r?\n[ \t]*")
 # See #68289.
 _ARGV_LIST_PUNCTUATION = re.compile(r"[\[\],]+")
 
-# Branch A2: `hermes -p <profile> gateway restart|stop` (also `--profile <name>` /
+# Branch A2: `relayhelm -p <profile> gateway restart|stop` (also `--profile <name>` /
 # `--profile=<name>`). The selector breaks Branch A's adjacency. A sibling-profile restart is a
 # legitimate fleet operation, so the profile name is captured and blocked only when it equals the
 # profile running the guard. `start` stays excluded as in Branch A.
 # Unlike Branch A this form is NOT unconditionally self-targeting: issued from inside gateway `zeus`,
-# `hermes -p venus gateway restart` operates on a sibling profile's gateway and is a legitimate fleet
+# `relayhelm -p venus gateway restart` operates on a sibling profile's gateway and is a legitimate fleet
 # operation. The pattern captures the named profile so `contains_gateway_lifecycle_command` can block only
 # the self-targeting shape (named profile == the profile running the guard). See #78028.
 _PROFILE_FLAG_LIFECYCLE_PATTERN = re.compile(
@@ -98,7 +98,7 @@ _PROFILE_FLAG_LIFECYCLE_PATTERN = re.compile(
 
 # Branch B needs the label AFTER the verb in one `[^\n]*` span; a loop that builds the label in an
 # EARLIER `;`-segment (`label=${item%%:*}; launchctl bootout "gui/$uid/$label"`) leaves only
-# `$label` next to the verb. These verbs act on an EXISTING job, so the hermes-gateway label anchor
+# `$label` next to the verb. These verbs act on an EXISTING job, so the relayhelm-gateway label anchor
 # stays correct, but the check is "verb anywhere AND label anywhere".
 # No profile identity available: cannot prove self-targeting, so do not block — sibling restarts must stay
 # allowed (#78028).
@@ -262,7 +262,7 @@ def contains_gateway_lifecycle_command(text: str) -> bool:
     # are documentation, not commands. The stripper fails open on ANY ambiguity (unquoted delimiter,
     # shell consumer, unterminated body), so executable heredocs are still scanned.
     # Heredoc bodies that are provably inert data (quoted delimiter, data-sink consumer like `cat > file
-    # <<'EOF'`) are masked before scanning (#88336): a runbook line "a human can run: hermes gateway
+    # <<'EOF'`) are masked before scanning (#88336): a runbook line "a human can run: relayhelm gateway
     # restart" inside such a body is documentation, not a command this shell will execute.
     from tools.shell_heredoc import strip_inert_heredoc_bodies
 
@@ -271,7 +271,7 @@ def contains_gateway_lifecycle_command(text: str) -> bool:
     if _GATEWAY_LIFECYCLE_PATTERN.search(normalized):
         return True
     # Profile-flag form: blocked only when the named profile IS the one running the guard.
-    # Profile-flag form (#78028): `hermes -p <profile> gateway restart|stop` bypasses Branch A because the
+    # Profile-flag form (#78028): `relayhelm -p <profile> gateway restart|stop` bypasses Branch A because the
     # selector sits between `hermes` and `gateway`. It is only the same foot-gun when the named profile IS
     # the profile running the guard — sibling-profile restarts are legitimate fleet operations and stay
     # allowed.
@@ -875,7 +875,7 @@ def _read_script_for_scanning(script_path: str) -> str:
         return ""
     script_text, unsafe = _read_referenced_script(resolved)
     if unsafe:
-        return "hermes gateway restart"
+        return "relayhelm gateway restart"
     return script_text or ""
 
 
@@ -991,7 +991,7 @@ def check_gateway_lifecycle(prompt: Optional[str], script: Optional[str] = None)
                 "evicted FileProvider placeholder can hang the guard's "
                 "preflight scan indefinitely, so it is refused without "
                 "being read. Move the script to a local, non-cloud path "
-                "(e.g. ~/.hermes/scripts/) and recreate the job."
+                "(e.g. ~/.relayhelm/scripts/) and recreate the job."
             )
         python_script = resolved_script is not None and resolved_script.suffix == ".py"
         script_text = _read_script_for_scanning(script)
@@ -1003,7 +1003,7 @@ def check_gateway_lifecycle(prompt: Optional[str], script: Optional[str] = None)
         # false-positive generator on Python sources (pathlib "/" resolves to the filesystem root).
         # The regex still scans the full text; non-regular/oversized files fail closed (sentinel).
         # The data-exemption masker tokenizes with shlex, so it is charged against the walk budget.
-        # The direct command regex below still scans the full text, so a literal `hermes gateway restart`
+        # The direct command regex below still scans the full text, so a literal `relayhelm gateway restart`
         # embedded in a .py script is still blocked. See #77131, #78398.
         if not _LifecycleScanBudget().charge_text(combined):
             unsafe = _budget_exhausted("text", 0)
@@ -1018,6 +1018,6 @@ def check_gateway_lifecycle(prompt: Optional[str], script: Optional[str] = None)
             "Blocked: cron job contains a gateway lifecycle command or persistent "
             "launchctl submit operation. This is blocked to prevent agent-driven "
             "SIGTERM-respawn loops under launchd/systemd supervision "
-            "(#30719). Run `hermes gateway restart` from a shell outside "
+            "(#30719). Run `relayhelm gateway restart` from a shell outside "
             "the running gateway instead."
         )

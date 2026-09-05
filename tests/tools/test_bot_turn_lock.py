@@ -146,8 +146,8 @@ def test_turn_wait_seconds_reads_config(monkeypatch):
 
 
 def test_run_delivery_holds_profile_lock_during_turn(root, tmp_path, monkeypatch):
-    """The local `hermes -p <profile>` turn runs UNDER the profile lock."""
-    home = root / ".hermes"
+    """The local `relayhelm -p <profile>` turn runs UNDER the profile lock."""
+    home = root / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
     dm = tmp_path / "dm.txt"
@@ -181,7 +181,7 @@ def test_run_delivery_holds_profile_lock_during_turn(root, tmp_path, monkeypatch
 
 def test_delivery_main_reports_target_busy_json(root, tmp_path, monkeypatch, capsys):
     """A queued delivery that exceeds its budget surfaces the structured error."""
-    home = root / ".hermes"
+    home = root / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(bot_relay, "turn_wait_seconds", lambda: 0.2)
@@ -211,7 +211,7 @@ def test_delivery_main_reports_target_busy_json(root, tmp_path, monkeypatch, cap
 
 def test_peer_stdin_delivery_skips_local_lock(root, tmp_path, monkeypatch):
     """Peer transports run their turn on the remote gateway — no local lock."""
-    home = root / ".hermes"
+    home = root / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
     dm = tmp_path / "dm.txt"

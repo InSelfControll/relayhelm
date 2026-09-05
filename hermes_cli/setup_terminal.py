@@ -100,7 +100,7 @@ def _existing_secret_keeps(env_var: str, label: str, question: str) -> bool:
 
 
 def _pip_install_vercel(package):
-    """uv when Hermes has one ($HERMES_HOME/bin is never on PATH, so which() misses it and
+    """uv when Relayhelm has one ($HERMES_HOME/bin is never on PATH, so which() misses it and
     bootstrapping mid-wizard is fine), else pip — a `uv venv` venv may not even have pip."""
     import subprocess
     from hermes_cli.managed_uv import ensure_uv
@@ -139,7 +139,7 @@ def _report_binary(found: str | None, missing: str, install_hint: str, found_pre
 def _setup_backend_local(config: dict) -> None:
     _setup.print_success("Terminal backend: Local")
     _setup.print_info("Commands run directly on this machine.")
-    # Gateway cwd defaults to home; sudo stays off. Both configurable via `hermes setup terminal`.
+    # Gateway cwd defaults to home; sudo stays off. Both configurable via `relayhelm setup terminal`.
     config["terminal"].setdefault("cwd", str(Path.home()))
 
 
@@ -147,7 +147,7 @@ def _setup_backend_docker(config: dict) -> None:
     _setup.print_success("Terminal backend: Docker")
     _report_binary(shutil.which("docker"), "Docker not found in PATH!",
                    "Install Docker: https://docs.docker.com/get-docker/", "Docker found: ")
-    # Image and resource limits use defaults; tune via `hermes setup terminal`.
+    # Image and resource limits use defaults; tune via `relayhelm setup terminal`.
     config["terminal"].setdefault("docker_image", _SANDBOX_IMAGE)
     _setup._info(None, "Docker sandboxes can be protected with the egress credential firewall.",
                  "It routes sandbox traffic through iron-proxy so containers receive "
@@ -223,8 +223,8 @@ def _setup_backend_daytona(config: dict) -> None:
 def _setup_backend_vercel(config: dict) -> None:
     _setup.print_success("Terminal backend: Vercel Sandbox")
     _setup._info("Cloud microVM sandboxes with snapshot-backed filesystem persistence.",
-                 "Requires the optional SDK: pip install 'hermes-agent[vercel]'")
-    _ensure_sdk("vercel", "pip install 'hermes-agent[vercel]'", show_stderr=True, install=_pip_install_vercel)
+                 "Requires the optional SDK: pip install 'relayhelm[vercel]'")
+    _ensure_sdk("vercel", "pip install 'relayhelm[vercel]'", show_stderr=True, install=_pip_install_vercel)
     _prompt_vercel_sandbox_settings(config)
 
 
@@ -289,14 +289,14 @@ def setup_terminal_backend(config: dict):
     """Configure the terminal execution backend."""
     import platform as _platform
     _setup.print_header("Terminal Backend")
-    _setup._info("Choose where Hermes runs shell commands and code.",
+    _setup._info("Choose where Relayhelm runs shell commands and code.",
                  "This affects tool execution, file access, and isolation.",
                  f"   Guide: {_setup._DOCS_BASE}/user-guide/configuration#terminal-backend-configuration", None)
     current_backend = _setup.cfg_get(config, "terminal", "backend", default="local")
     backends = list(_BUILTIN_TERMINAL_BACKENDS)
     if _platform.system() == "Linux":
         backends.append(("singularity", "Singularity/Apptainer - HPC-friendly container"))
-    # Plugin-registered backends (~/.hermes/plugins/). Fail-soft: a broken plugin must not take
+    # Plugin-registered backends (~/.relayhelm/plugins/). Fail-soft: a broken plugin must not take
     # the wizard down.
     plugin_backend_names = []
     try:

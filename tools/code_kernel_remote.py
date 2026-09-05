@@ -40,7 +40,7 @@ _CELL_POLL_INTERVAL = 0.5
 # persistent namespace, writes response files. Pure files + stdlib only (transport-agnostic);
 # cells and tool-RPC share the kernel dir under distinct prefixes.
 REMOTE_KERNEL_RUNNER_SOURCE = '''\
-"""Auto-generated Hermes REMOTE session-kernel runner (file cell protocol)."""
+"""Auto-generated Relayhelm REMOTE session-kernel runner (file cell protocol)."""
 import contextlib
 import io
 import json
@@ -116,7 +116,7 @@ class RemoteKernel:
     cell_seq: int = 0
     # Cells currently running on this kernel. Reap/evict skip attached
     # kernels: killing one mid-cell tears the runner out from under a live
-    # poll loop (same guard as tools.code_kernel, hermes-agent#101861).
+    # poll loop (same guard as tools.code_kernel, relayhelm#101861).
     attached: int = 0
 
     def sh(self, cmd: str, timeout: int = 15) -> str:

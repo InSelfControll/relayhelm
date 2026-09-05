@@ -75,7 +75,7 @@ def test_archive_and_prune_registered():
     import argparse
     import hermes_cli.curator as curator_cli
 
-    parser = argparse.ArgumentParser(prog="hermes curator")
+    parser = argparse.ArgumentParser(prog="relayhelm curator")
     curator_cli.register_cli(parser)
 
     args = parser.parse_args(["archive", "my-skill"])

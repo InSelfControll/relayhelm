@@ -120,7 +120,7 @@ def _format_changed_paths(paths: list[str]) -> str:
 
 def _workspace_has_runnable_recipe(root: Any) -> bool:
     """Whether ``hermes verify`` has a runtime recipe here: a saved
-    ``.hermes/environment.json`` or a statically detected recipe with a start
+    ``.relayhelm/environment.json`` or a statically detected recipe with a start
     command. Fail-silent and cheap — it only decorates the nudge text."""
     if not root:
         return False

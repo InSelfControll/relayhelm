@@ -14,13 +14,13 @@ from typing import Optional
 
 
 def _constants_path(getter_name: str) -> Path:
-    """Call ``hermes_constants.<getter_name>()`` (local import avoids cycles); ``~/.hermes`` on any failure."""
+    """Call ``hermes_constants.<getter_name>()`` (local import avoids cycles); ``~/.relayhelm`` on any failure."""
     try:
         import hermes_constants
 
         return getattr(hermes_constants, getter_name)()
     except Exception:
-        return Path(os.path.expanduser("~/.hermes"))
+        return Path(os.path.expanduser("~/.relayhelm"))
 
 
 def _hermes_home_path() -> Path:
@@ -29,7 +29,7 @@ def _hermes_home_path() -> Path:
 
 
 def _hermes_root_path() -> Path:
-    """Hermes root dir (parent of any profile, never per-profile)."""
+    """Relayhelm root dir (parent of any profile, never per-profile)."""
     return _constants_path("get_default_hermes_root")
 
 
@@ -206,16 +206,16 @@ _CREDENTIAL_FILE_NAMES = (
 # of the user's Cookies / Login Data — the same credential class as auth.json.
 _READ_DENIED_DIRS = (
     ("mcp-tokens",
-     "is the Hermes MCP token directory and cannot be read directly.",
-     "is a Hermes MCP token file and cannot be read directly."),
+     "is the Relayhelm MCP token directory and cannot be read directly.",
+     "is a Relayhelm MCP token file and cannot be read directly."),
     ("browser-profile",
-     "is the Hermes real-profile browser snapshot directory (copied cookies/logins) and cannot be read directly.",
-     "is inside the Hermes real-profile browser snapshot (copied cookies/logins) and cannot be read directly."),
+     "is the Relayhelm real-profile browser snapshot directory (copied cookies/logins) and cannot be read directly.",
+     "is inside the Relayhelm real-profile browser snapshot (copied cookies/logins) and cannot be read directly."),
 )
 
 
 def get_read_block_error(path: str) -> Optional[str]:
-    """Return an error message when a read targets a denied Hermes path.
+    """Return an error message when a read targets a denied Relayhelm path.
 
     Blocked: internal skill-hub caches (prompt-injection carriers), credential
     stores under HERMES_HOME and the global root (exact files, plus anything
@@ -231,12 +231,12 @@ def get_read_block_error(path: str) -> Optional[str]:
     reason = None
     if any(_is_under(resolved, hd / "skills" / ".hub") for hd in hermes_dirs):
         reason = (
-            "is an internal Hermes cache file and cannot be read directly to prevent "
+            "is an internal Relayhelm cache file and cannot be read directly to prevent "
             "prompt injection. Use the skills_list or skill_view tools instead."
         )
     elif any(resolved in _resolve_each(hd / name for hd in hermes_dirs) for name in _CREDENTIAL_FILE_NAMES):
         reason = (
-            "is a Hermes credential store and cannot be read directly. Provider tools "
+            "is a Relayhelm credential store and cannot be read directly. Provider tools "
             "consume these credentials through internal channels." + _DID_SUFFIX
         )
     else:
@@ -256,7 +256,7 @@ def get_read_block_error(path: str) -> Optional[str]:
 
 
 def raise_if_read_blocked(path: str) -> None:
-    """Raise ``ValueError`` if ``path`` is a denied Hermes read (see ``get_read_block_error``).
+    """Raise ``ValueError`` if ``path`` is a denied Relayhelm read (see ``get_read_block_error``).
 
     Shared chokepoint for provider input-loading sites (e.g. image-gen local
     paths). Best-effort: unexpected internal errors no-op rather than break
@@ -271,8 +271,8 @@ def raise_if_read_blocked(path: str) -> None:
 
 
 def _resolve_active_profile_name() -> str:
-    """Active profile name from HERMES_HOME: ``~/.hermes`` -> ``"default"``,
-    ``~/.hermes/profiles/X`` -> ``"X"``; ``"default"`` on any resolution failure."""
+    """Active profile name from HERMES_HOME: ``~/.relayhelm`` -> ``"default"``,
+    ``~/.relayhelm/profiles/X`` -> ``"X"``; ``"default"`` on any resolution failure."""
     try:
         parts = _hermes_home_path().resolve().relative_to(_hermes_root_path().resolve() / "profiles").parts
     except (OSError, RuntimeError, ValueError):
@@ -282,7 +282,7 @@ def _resolve_active_profile_name() -> str:
 
 # --- Sandbox-mirror write guard ---
 # Non-local terminal backends bind a sandbox-local dir to the container's $HOME:
-#   <HERMES_HOME>/profiles/<name>/sandboxes/<backend>/<task>/home/.hermes/...
+#   <HERMES_HOME>/profiles/<name>/sandboxes/<backend>/<task>/home/.relayhelm/...
 # A host-side write there lands on a mirror the host never reads: silent success,
 # divergent copies. Path-shape-only detection, independent of the active profile;
 # the inner-container case (bind mount strips the prefix) is classify_container_mirror_target.
@@ -302,15 +302,15 @@ def _mirror_info(target: Path, mirror_root: Path, inner_path: str) -> dict:
 
 
 def classify_sandbox_mirror_target(path: str) -> Optional[dict]:
-    """Classify a write target as a sandbox-mirror of authoritative Hermes state: ``None``
+    """Classify a write target as a sandbox-mirror of authoritative Relayhelm state: ``None``
     for non-mirror paths, else ``target_path`` (resolved), ``mirror_root`` (the
-    ``…/home/.hermes`` prefix) and ``inner_path`` (what the agent meant on the host)."""
+    ``…/home/.relayhelm`` prefix) and ``inner_path`` (what the agent meant on the host)."""
     target = _resolve_target(path)
     parts = target.parts if target is not None else ()
-    # Need at least: sandboxes / <backend> / <task> / home / .hermes / <thing>; inner_idx = the .hermes part.
+    # Need at least: sandboxes / <backend> / <task> / home / .relayhelm / <thing>; inner_idx = the .relayhelm part.
     inner_idx = next(
         (i + 4 for i, part in enumerate(parts)
-         if part == "sandboxes" and i + 5 < len(parts) and parts[i + 3] == "home" and parts[i + 4] == ".hermes"),
+         if part == "sandboxes" and i + 5 < len(parts) and parts[i + 3] == "home" and parts[i + 4] == ".relayhelm"),
         None,
     )
     if inner_idx is None:
@@ -332,7 +332,7 @@ def get_sandbox_mirror_warning(path: str) -> Optional[str]:
     return _mirror_warning(
         classify_sandbox_mirror_target(path),
         "a per-task mirror created by a non-local terminal backend (docker/daytona/etc.). "
-        "Writes here land on a copy that the host Hermes process never reads — the "
+        "Writes here land on a copy that the host Relayhelm process never reads — the "
         "authoritative file is likely {inner_path!r} under the real HERMES_HOME.",
         "this guard after explicit user direction, retry the call",
     )
@@ -340,7 +340,7 @@ def get_sandbox_mirror_warning(path: str) -> Optional[str]:
 
 def classify_container_mirror_target(path: str, mirror_prefix: str | None = None) -> Optional[dict]:
     """Classify a write target as a container-side sandbox mirror. Inside the container
-    the bind mount strips the ``sandboxes/`` prefix (the agent sees plain ``/root/.hermes/…``),
+    the bind mount strips the ``sandboxes/`` prefix (the agent sees plain ``/root/.relayhelm/…``),
     so the caller supplies ``mirror_prefix`` once it knows file tools run in a docker sandbox.
     ``None`` without a prefix or outside it, else ``target_path``/``mirror_root``/``inner_path``."""
     target, mirror = _resolve_target(path), _resolve_target(mirror_prefix) if mirror_prefix else None
@@ -353,7 +353,7 @@ def get_container_mirror_warning(path: str, mirror_prefix: str | None = None) ->
     """Model-facing soft-guard warning when ``path`` lands in the container's mirror, else ``None``."""
     return _mirror_warning(
         classify_container_mirror_target(path, mirror_prefix),
-        "the container's bind-mounted home — a per-task mirror that the host Hermes "
+        "the container's bind-mounted home — a per-task mirror that the host Relayhelm "
         "process never reads. The authoritative file is {inner_path!r} under "
         "the real HERMES_HOME.",
         "after explicit user direction, retry",
@@ -371,7 +371,7 @@ def classify_cross_profile_target(path: str) -> Optional[dict]:
     """Classify a write target as cross-profile if it lands in another
     profile's scoped area (skills/plugins/cron/memories).
 
-    Returns ``None`` when the target is outside Hermes scope, or is inside
+    Returns ``None`` when the target is outside Relayhelm scope, or is inside
     the ACTIVE profile, or doesn't hit a profile-scoped area. Otherwise
     returns a dict with:
 

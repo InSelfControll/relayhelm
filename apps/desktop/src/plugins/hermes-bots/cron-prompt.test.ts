@@ -2,7 +2,7 @@
  * What a routine actually runs.
  *
  * A job scheduled for the ACTIVE bot profile runs its instruction directly. A
- * job for a different profile keeps the `hermes -p <bot> chat` delegation
+ * job for a different profile keeps the `relayhelm -p <bot> chat` delegation
  * wrapper so the run lands in that bot's own history — and that wrapper is a
  * shell command line, which is why every operand is single-quoted rather than
  * interpolated. The pre-hardening prompts were built by interpolation, so a

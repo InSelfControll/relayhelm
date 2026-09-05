@@ -54,7 +54,7 @@ def _print_banner(title: str) -> None:
     """Print the magenta boxed banner shared by the claw subcommands."""
     print()
     rule = "─" * 57
-    for line in (f"┌{rule}┐", f"│          ⚕ Hermes — {title:<35s}│", f"└{rule}┘"):
+    for line in (f"┌{rule}┐", f"│          ⚕ Relayhelm — {title:<35s}│", f"└{rule}┘"):
         print(color(line, Colors.MAGENTA))
 
 
@@ -145,7 +145,7 @@ def _warn_if_openclaw_running(auto_yes: bool) -> None:
         auto_yes, "OpenClaw appears to be running:", running,
         ("Messaging platforms (Telegram, Discord, Slack) only allow one "
          "active session per bot token. If you continue, both OpenClaw and "
-         "Hermes may try to use the same token, causing disconnects.",
+         "Relayhelm may try to use the same token, causing disconnects.",
          "Recommendation: stop OpenClaw before migrating."),
         "Continue anyway?", declined="Migration cancelled. Stop OpenClaw and try again.",
         non_tty=("Non-interactive session — continuing to preview only.",),
@@ -154,17 +154,17 @@ def _warn_if_openclaw_running(auto_yes: bool) -> None:
 
 
 def _warn_if_gateway_running(auto_yes: bool) -> None:
-    """Warn if a Hermes gateway has connected platforms (token conflicts, e.g. Telegram 409)."""
+    """Warn if a Relayhelm gateway has connected platforms (token conflicts, e.g. Telegram 409)."""
     from gateway.status import get_running_pid, read_runtime_status
     platforms = ((read_runtime_status() or {}).get("platforms") or {}) if get_running_pid() else {}
     connected = [name for name, info in platforms.items()
                  if isinstance(info, dict) and info.get("state") == "connected"]
     if connected and _warn_running(
-        auto_yes, "Hermes gateway is running with active connections: " + ", ".join(connected), [],
+        auto_yes, "Relayhelm gateway is running with active connections: " + ", ".join(connected), [],
         ("Migrating bot tokens while the gateway is active will cause "
          "conflicts (Telegram, Discord, and Slack only allow one active "
          "session per token).",
-         "Recommendation: stop the gateway first with 'hermes gateway stop'."),
+         "Recommendation: stop the gateway first with 'relayhelm gateway stop'."),
         "Continue anyway?", declined="Migration cancelled. Stop the gateway and try again.",
     ) is False:
         sys.exit(0)
@@ -229,13 +229,13 @@ def claw_command(args):
         _cmd_cleanup(args)
     else:
         print("Usage: hermes claw <command> [options]\n\nCommands:\n"
-              "  migrate          Migrate settings from OpenClaw to Hermes\n"
+              "  migrate          Migrate settings from OpenClaw to Relayhelm\n"
               "  cleanup          Archive leftover OpenClaw directories after migration\n\n"
               "Run 'hermes claw <command> --help' for options.")
 
 
 def _cmd_migrate(args):
-    """Run the OpenClaw → Hermes migration: preflight, preview, confirm, back up, apply."""
+    """Run the OpenClaw → Relayhelm migration: preflight, preview, confirm, back up, apply."""
     opts = SimpleNamespace(**{k: getattr(args, k, d) for k, d in _MIGRATE_ARG_DEFAULTS})
     # Explicit --source, else first existing of current + legacy names; default to ~/.openclaw.
     opts.source_dir = (Path(opts.source) if opts.source
@@ -325,7 +325,7 @@ def _preview_migration(run_migrator: Callable[[bool], dict], opts: SimpleNamespa
     if conflicts > 0 and not opts.overwrite:
         _error_block(
             f"Plan has {conflicts} conflict(s). Refusing to apply.",
-            "Each conflict is an item whose target already exists in ~/.hermes/. "
+            "Each conflict is an item whose target already exists in ~/.relayhelm/. "
             "Re-run with --overwrite to replace conflicting targets (item-level "
             "backups are written to the migration report directory).",
             "Or re-run with --dry-run to review the full plan.")
@@ -336,7 +336,7 @@ def _preview_migration(run_migrator: Callable[[bool], dict], opts: SimpleNamespa
 def _apply_migration(run_migrator: Callable[[bool], dict], opts: SimpleNamespace) -> None:
     """Take a pre-migration backup (unless --no-backup), execute, and print the report. The backup
     shares the pre-update backup's implementation (exclusions, SQLite safe-copy, zip) so it is
-    restorable with `hermes import`: one restore point before any mutation, pruned to the last 5."""
+    restorable with `relayhelm import`: one restore point before any mutation, pruned to the last 5."""
     backup_archive: Optional[Path] = None
     if not opts.no_backup:
         try:
@@ -347,11 +347,11 @@ def _apply_migration(run_migrator: Callable[[bool], dict], opts: SimpleNamespace
                 print()
                 print_success(f"Pre-migration backup: {backup_archive} "
                               f"({_format_size(backup_archive.stat().st_size)})")
-                print_info(f"Restore with: hermes import {backup_archive.name}")
+                print_info(f"Restore with: relayhelm import {backup_archive.name}")
         except Exception as e:
             return _error_block(
                 f"Could not create pre-migration backup: {e}",
-                "Re-run with --no-backup to skip, or free up disk space under the Hermes home.",
+                "Re-run with --no-backup to skip, or free up disk space under the Relayhelm home.",
                 debug="Pre-migration backup error")
     try:
         report = run_migrator(True)
@@ -359,7 +359,7 @@ def _apply_migration(run_migrator: Callable[[bool], dict], opts: SimpleNamespace
         _error_block(f"Migration failed: {e}", debug="OpenClaw migration error")
         if backup_archive:
             _info(f"A pre-migration backup is available at: {backup_archive}",
-                  f"Restore with: hermes import {backup_archive.name}")
+                  f"Restore with: relayhelm import {backup_archive.name}")
         return
     _print_migration_report(report, dry_run=False)
 
@@ -492,4 +492,4 @@ def _print_migration_report(report: dict, dry_run: bool):
                 print(color(line, Colors.YELLOW))
             _info("", "To migrate API keys, re-run with:",
                   "  hermes claw migrate --migrate-secrets", "", "Or add your key manually:",
-                  "  hermes config set OPENROUTER_API_KEY sk-or-v1-...")
+                  "  relayhelm config set OPENROUTER_API_KEY sk-or-v1-...")

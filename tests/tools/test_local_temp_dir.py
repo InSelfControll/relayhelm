@@ -1,6 +1,6 @@
 """Tests for ``LocalEnvironment.get_temp_dir`` temp-dir redirect.
 
-Hermes exposes ``terminal.temp_dir`` (mirrored to ``TERMINAL_TEMP_DIR``) so
+Relayhelm exposes ``terminal.temp_dir`` (mirrored to ``TERMINAL_TEMP_DIR``) so
 users on RAM-based tmpfs ``/tmp`` can point session temp files (background
 logs/pid/exit files, code-execution sandboxes) at real storage.
 """
@@ -63,10 +63,10 @@ def test_default_is_hermes_cache_not_tmp(tmp_path, monkeypatch):
 
     for var in ("TERMINAL_TEMP_DIR", "TMPDIR", "TMP", "TEMP"):
         monkeypatch.delenv(var, raising=False)
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".relayhelm"))
     env = _make_local_env({})
     result = env.get_temp_dir()
-    assert result == str(tmp_path / ".hermes" / "cache" / "terminal")
+    assert result == str(tmp_path / ".relayhelm" / "cache" / "terminal")
     assert os.path.isdir(result)
 
 

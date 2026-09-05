@@ -43,7 +43,7 @@ Pick `realtime` only when the user actually wants the agent to speak. It costs r
 Easiest path — run the built-in installer:
 
 ```bash
-hermes plugins enable google_meet
+relayhelm plugins enable google_meet
 hermes meet install                 # pip deps + Chromium (transcribe only)
 hermes meet install --realtime      # + pulseaudio-utils / brew blackhole+ffmpeg
 hermes meet auth                    # optional; skips guest-lobby wait
@@ -63,14 +63,14 @@ pip install playwright websockets && python -m playwright install chromium
 #   Linux:  sudo apt install pulseaudio-utils
 #   macOS:  brew install blackhole-2ch ffmpeg
 #           → System Settings → Sound → Input → BlackHole 2ch
-#   Then set OPENAI_API_KEY or HERMES_MEET_REALTIME_KEY in ~/.hermes/.env
+#   Then set OPENAI_API_KEY or HERMES_MEET_REALTIME_KEY in ~/.relayhelm/.env
 ```
 
 For a remote node:
 ```bash
 # on the user's Mac (where Chrome is signed in):
 pip install playwright websockets && python -m playwright install chromium
-hermes plugins enable google_meet
+relayhelm plugins enable google_meet
 hermes meet node run --display-name my-mac    # persistent server
 # copy the printed token
 
@@ -84,7 +84,7 @@ Run `hermes meet setup` to preflight local prereqs.
 ## Flow
 
 1. **Join** — call `meet_join(url=..., mode=..., node=...)`. Returns immediately.
-2. **Announce yourself** — no auto-consent. Say (in whatever channel the user is watching): "A Hermes agent bot is in this call taking notes."
+2. **Announce yourself** — no auto-consent. Say (in whatever channel the user is watching): "A Relayhelm agent bot is in this call taking notes."
 3. **Poll** — `meet_status()` for liveness, `meet_transcript(last=20)` for recent captions. Don't re-read the whole transcript every turn.
 4. **Speak (realtime only)** — `meet_say(text="...")` queues text for TTS. The speech lags by ~2s. Don't spam it.
 5. **Leave** — `meet_leave()` when done, or set `duration="30m"` on `meet_join` for auto-leave.

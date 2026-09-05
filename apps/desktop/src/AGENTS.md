@@ -3,16 +3,16 @@
 Applies on top of `apps/desktop/AGENTS.md` (the judgment guide) and the root `AGENTS.md`.
 Root TypeScript style rules apply.
 
-## The desktop is its own chat surface on a `hermes serve` backend
+## The desktop is its own chat surface on a `relayhelm serve` backend
 
 Electron + React + nanostores (`@assistant-ui/react`) talking to a `tui_gateway` backend over
 JSON-RPC (`requestGateway(method, params)`); transport lives in the framework-agnostic `apps/shared`
 (`@hermes/shared`: `JsonRpcGatewayClient` + WS URL helpers), which the web dashboard also consumes.
 The desktop has **no build/runtime dependency on the dashboard frontend**: it spawns a headless
-`hermes serve` (`headless_backend=True` → `cmd_dashboard` skips `_build_web_ui` and exports
+`relayhelm serve` (`headless_backend=True` → `cmd_dashboard` skips `_build_web_ui` and exports
 `HERMES_SERVE_HEADLESS=1` so `mount_spa()` disables the SPA even if a stray `web_dist/` exists).
 `dashboard` and `serve` share `cmd_dashboard`/`start_server` but neither launches the other. It does
-NOT embed `hermes --tui` — own composer, transcript, slash pipeline.
+NOT embed `relayhelm --tui` — own composer, transcript, slash pipeline.
 
 **One backward-compat fallback:** `serve` is newer, so the spawn (`electron/backend-command.ts` +
 `backendSupportsServe()` in `electron/main.ts`) checks whether the resolved runtime registers `serve`
@@ -48,7 +48,7 @@ user-activated extensions. If you tighten `desktop-slash-commands.ts`, keep
 
 ## Bot Mode (`src/plugins/hermes-bots/`) — one bot = ONE canonical forever-chat, identified by NAME
 
-Each bot is a Hermes **profile** with a persistent identity. This invariant regressed repeatedly,
+Each bot is a Relayhelm **profile** with a persistent identity. This invariant regressed repeatedly,
 cost users conversation history each time, and is not open for re-litigation in a routine PR.
 
 The chat's only identity is **(profile, session titled exactly "Bot Chat")**; the state DB's

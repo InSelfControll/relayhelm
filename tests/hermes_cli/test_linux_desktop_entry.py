@@ -19,14 +19,14 @@ def xdg_home(tmp_path, monkeypatch) -> Path:
     data_home = tmp_path / "xdg-data"
     monkeypatch.setenv("XDG_DATA_HOME", str(data_home))
     # Isolate the known-wrapper probe too: tests must never see the real
-    # ~/.local/bin/hermes on the dev machine.
+    # ~/.local/bin/relayhelm on the dev machine.
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr(lde.sys, "platform", "linux")
     return data_home
 
 
 def _make_project(tmp_path: Path) -> Path:
-    root = tmp_path / "hermes-agent"
+    root = tmp_path / "relayhelm"
     icon = root / "apps" / "desktop" / "assets" / "icon.png"
     icon.parent.mkdir(parents=True)
     icon.write_bytes(b"\x89PNG fake")
@@ -147,14 +147,14 @@ def test_install_icon_copy_failure_falls_back_to_absolute(
     assert values["Icon"] == str(lde.icon_path(root))
 
     assert values["Type"] == "Application"
-    assert values["Name"] == "Hermes"
+    assert values["Name"] == "Relayhelm"
     assert values["Terminal"] == "false"
 
 
 def test_installed_entry_is_executable(tmp_path, xdg_home, monkeypatch):
     root = _make_project(tmp_path)
     monkeypatch.setattr(
-        "hermes_cli.relaunch.resolve_hermes_bin", lambda: "/usr/bin/hermes"
+        "hermes_cli.relaunch.resolve_hermes_bin", lambda: "/usr/bin/relayhelm"
     )
     monkeypatch.setattr(lde, "refresh_desktop_databases", lambda _dir: [])
 
@@ -426,7 +426,7 @@ def test_exec_rejects_known_wrapper_from_another_checkout(
 ):
     """A known-location wrapper that targets a DIFFERENT checkout is skipped.
 
-    On machines with multiple installs over time, ~/.local/bin/hermes may
+    On machines with multiple installs over time, ~/.local/bin/relayhelm may
     belong to another checkout. Persisting it would make the entry stable
     but silently point at that other installation — the failure class the
     aidiyet check exists to prevent. The runnable module fallback must win
@@ -477,25 +477,25 @@ def test_exec_rejects_known_wrapper_from_another_checkout(
         pytest.param(
             "user",
             {},
-            "HOME-SET-BY-TEST/.local/bin/hermes",
+            "HOME-SET-BY-TEST/.local/bin/relayhelm",
             id="user-layout",
         ),
         pytest.param(
             "termux",
             {"PREFIX": "PREFIX-SET-BY-TEST"},
-            "PREFIX-SET-BY-TEST/bin/hermes",
+            "PREFIX-SET-BY-TEST/bin/relayhelm",
             id="termux-prefix-first",
         ),
         pytest.param(
             "root-fhs",
             {"__EUID0__": "1"},
-            "/usr/local/bin/hermes",
+            "/usr/local/bin/relayhelm",
             id="root-fhs",
         ),
         pytest.param(
             "non-root-no-fhs",
             {"__EUID0__": "0"},
-            "HOME-SET-BY-TEST/.local/bin/hermes",
+            "HOME-SET-BY-TEST/.local/bin/relayhelm",
             id="non-root-excludes-fhs",
         ),
     ],
@@ -529,18 +529,18 @@ def test_known_wrapper_candidates_cover_installer_layouts(
         assert candidates[0] == expected_resolved
     if layout == "root-fhs":
         # Root FHS outranks the user layout.
-        assert candidates.index("/usr/local/bin/hermes") < candidates.index(
-            f"{sentinel_home}/.local/bin/hermes"
+        assert candidates.index("/usr/local/bin/relayhelm") < candidates.index(
+            f"{sentinel_home}/.local/bin/relayhelm"
         )
     if layout == "non-root-no-fhs":
         # Non-root euid: /usr/local/bin must be excluded outright.
-        assert "/usr/local/bin/hermes" not in candidates
+        assert "/usr/local/bin/relayhelm" not in candidates
 
 
 def test_install_is_idempotent_and_skips_cache_refresh(tmp_path, xdg_home, monkeypatch):
     root = _make_project(tmp_path)
     monkeypatch.setattr(
-        "hermes_cli.relaunch.resolve_hermes_bin", lambda: "/usr/bin/hermes"
+        "hermes_cli.relaunch.resolve_hermes_bin", lambda: "/usr/bin/relayhelm"
     )
     calls: list[Path] = []
     monkeypatch.setattr(
@@ -556,17 +556,17 @@ def test_install_is_idempotent_and_skips_cache_refresh(tmp_path, xdg_home, monke
 
 
 def test_install_without_source_icon_uses_themed_name(tmp_path, xdg_home, monkeypatch):
-    root = tmp_path / "hermes-agent"
+    root = tmp_path / "relayhelm"
     root.mkdir()
     monkeypatch.setattr(
-        "hermes_cli.relaunch.resolve_hermes_bin", lambda: "/usr/bin/hermes"
+        "hermes_cli.relaunch.resolve_hermes_bin", lambda: "/usr/bin/relayhelm"
     )
     monkeypatch.setattr(lde, "refresh_desktop_databases", lambda _dir: [])
 
     entry = lde.install_desktop_entry(root)
 
     # A broken absolute path renders as no icon. The themed name resolves
-    # when Hermes is installed some other way.
+    # when Relayhelm is installed some other way.
     assert _parse(entry.read_text(encoding="utf-8"))["Icon"] == "hermes"
 
 
@@ -776,7 +776,7 @@ def test_wrapper_ownership_rejects_sibling_extensions(suffix, tmp_path):
     must reject them (stable-but-wrong entry pointing at the renamed
     old install).
     """
-    checkout = tmp_path / "hermes-agent"
+    checkout = tmp_path / "relayhelm"
     checkout.mkdir()
     evil = tmp_path / "evil-shim"
     evil.write_text(
@@ -802,8 +802,8 @@ def test_wrapper_ownership_accepts_shim_via_symlinked_home(tmp_path, monkeypatch
     home_real = tmp_path / "home-real"
     home_real.mkdir()
     home_link.symlink_to(home_real)
-    lexical_checkout = home_link / "hermes-agent"
-    (home_real / "hermes-agent").mkdir()
+    lexical_checkout = home_link / "relayhelm"
+    (home_real / "relayhelm").mkdir()
 
     shim = home_link / ".local" / "bin" / "hermes"
     shim.parent.mkdir(parents=True)

@@ -16,7 +16,7 @@ from hermes_cli import kanban_db_dispatch as kbd
 
 @pytest.fixture
 def worker_setup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, kb.Task]:
-    root = tmp_path / ".hermes"
+    root = tmp_path / ".relayhelm"
     profile = root / "profiles" / "coder"
     profile.mkdir(parents=True)
     root.joinpath("config.yaml").write_text("{}\n", encoding="utf-8")
@@ -176,4 +176,4 @@ def test_real_user_systemd_scope_preserves_worker_context(
     assert payload["task"] == task.id
     assert payload["run"] == "23"
     assert ".scope" in payload["cgroup"]
-    assert "hermes-gateway.service" not in payload["cgroup"]
+    assert "relayhelm-gateway.service" not in payload["cgroup"]

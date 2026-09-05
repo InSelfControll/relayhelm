@@ -1,7 +1,7 @@
-"""Tests for hermes_cli.agent_import — ``hermes import-agent``.
+"""Tests for hermes_cli.agent_import — ``relayhelm import-agent``.
 
 Covers: source detection, Claude Code and Codex parsing, mapping into the
-real Hermes stores (memories/MEMORY.md, config.yaml command_allowlist /
+real Relayhelm stores (memories/MEMORY.md, config.yaml command_allowlist /
 approvals.deny / mcp_servers, skills/), dry-run write-nothing guarantees,
 malformed-input skip reports, and the never-import-secrets rule.
 
@@ -36,7 +36,7 @@ from hermes_cli.agent_import import (
 def profile_env(tmp_path, monkeypatch):
     """Isolated environment: Path.home() -> tmp_path, HERMES_HOME -> tmp/.hermes."""
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    default_home = tmp_path / ".hermes"
+    default_home = tmp_path / ".relayhelm"
     default_home.mkdir(exist_ok=True)
     monkeypatch.setenv("HERMES_HOME", str(default_home))
     return tmp_path
@@ -44,7 +44,7 @@ def profile_env(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def hermes_home(profile_env):
-    return profile_env / ".hermes"
+    return profile_env / ".relayhelm"
 
 
 # ---------------------------------------------------------------------------
@@ -541,7 +541,7 @@ class TestExistingConfigPreserved:
             assert str(config_path) in reason
             assert "not valid YAML" in reason
             # Points the user at a way out.
-            assert "hermes config edit" in reason
+            assert "relayhelm config edit" in reason
 
     def test_unreadable_config_is_left_byte_identical(
             self, claude_tree, hermes_home, config_path):

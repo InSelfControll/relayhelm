@@ -35,7 +35,7 @@ const REPORT = {
   },
   lines: [
     '2 plugins use import paths that stop working on 2026-09-14 (10 days): alpha (1), beta (2)',
-    'Details: hermes plugins compat'
+    'Details: relayhelm plugins compat'
   ]
 }
 

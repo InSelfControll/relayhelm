@@ -136,6 +136,73 @@ def shutdown_mcp_servers(*, scope: Optional[str] = None):
     _loop._stop_mcp_loop(only_if_idle=scope is not None)
 
 
+def shutdown_mcp_server(server_name: str, *, scope: Optional[str] = None, timeout: float = 15) -> dict:
+    """Disable one runtime transport without stopping other servers or the shared loop.
+
+    The caller owns persistent config changes. A failed or concurrent shutdown is
+    reported as failed, never as a completed disable. Lazy-start configuration is
+    removed before teardown so old cached tools cannot revive this server.
+    """
+    def failed(reason):
+        return {"status": "failed", "completed": False, "server": server_name,
+                "failure_reason": reason}
+
+    if not isinstance(server_name, str) or not server_name:
+        return failed("server_name must be a non-empty string")
+    effective_scope = _core._mcp_registry_scope() if scope is None else scope
+    with _core._lock:
+        owner = _core._server_scope_keys.get(server_name, effective_scope)
+        if owner != effective_scope:
+            return failed("MCP server belongs to another profile")
+        if server_name in _core._server_connecting:
+            return failed("MCP server connection is in progress; retry disable after it settles")
+        server = _core._servers.get(server_name)
+        loop = _core._mcp_loop
+        _core._lazy_server_configs.pop(server_name, None)
+        _core._lazy_server_fingerprints.pop(server_name, None)
+        lazy_tools = _core._lazy_server_tool_names.pop(server_name, [])
+    from tools.registry import registry
+    from tools.mcp_tool_registration import _forget_mcp_tool_server
+    for tool_name in lazy_tools:
+        registry.deregister(tool_name, scope=effective_scope)
+        _forget_mcp_tool_server(tool_name)
+    if server is not None:
+        if loop is None or not loop.is_running():
+            return failed("MCP loop is unavailable; active transport shutdown could not be verified")
+        try:
+            if asyncio.get_running_loop() is loop:
+                return failed("synchronous shutdown cannot run on the MCP loop thread")
+        except RuntimeError:
+            pass
+
+        async def close():
+            await server.shutdown()
+            with _core._lock:
+                # A concurrent replacement owns its own transport and must survive.
+                if _core._servers.get(server_name) is server:
+                    _core._servers.pop(server_name, None)
+                    _core._server_scope_keys.pop(server_name, None)
+
+        coroutine = close()
+        try:
+            future = asyncio.run_coroutine_threadsafe(coroutine, loop)
+        except Exception as exc:
+            coroutine.close()
+            return failed(f"MCP shutdown could not be scheduled: {exc}")
+        try:
+            future.result(timeout=timeout)
+        except Exception as exc:
+            future.cancel()
+            return failed(f"MCP shutdown failed: {type(exc).__name__}: {exc}")
+    with _core._lock:
+        if server_name in _core._servers or server_name in _core._server_connecting:
+            return failed("MCP server was replaced or reconnected during shutdown")
+        _core._server_connect_retry_after.pop(server_name, None)
+        _core._server_connect_failures.pop(server_name, None)
+        _core._server_connect_errors.pop(server_name, None)
+    return {"status": "disabled", "completed": True, "server": server_name}
+
+
 def _take_reapable_pids(include_active: bool, server_name: Optional[str]) -> tuple[Dict[int, str], Dict[int, int]]:
     """Pop the PIDs to reap (and their spawn-time pgids) out of the ledgers under the lock, so
     a future spawn can't collide with stale state. Returns ``(pid -> owner, pid -> pgid)``."""

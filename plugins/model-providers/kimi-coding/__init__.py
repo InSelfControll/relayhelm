@@ -11,7 +11,7 @@ from providers.base import OMIT_TEMPERATURE, ProviderProfile
 
 _HEADERS = {
     "HTTP-Referer": "https://hermes-agent.nousresearch.com",
-    "X-Title": "Hermes Agent",
+    "X-Title": "Relayhelm",
     "User-Agent": f"HermesAgent/{_HERMES_VERSION}",
 }
 

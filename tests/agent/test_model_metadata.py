@@ -1767,7 +1767,7 @@ class TestMoAContextLength:
             yaml.safe_dump(payload, f)
 
     def test_moa_resolves_from_aggregator(self, tmp_path, monkeypatch):
-        home = str(tmp_path / ".hermes")
+        home = str(tmp_path / ".relayhelm")
         monkeypatch.setenv("HERMES_HOME", home)
         self._write_moa_config(home, {"provider": "openrouter", "model": "anthropic/claude-opus-4.8"})
 
@@ -1788,7 +1788,7 @@ class TestMoAContextLength:
         from agent.context_compressor import ContextCompressor
 
         configured_context = 600_000
-        home = str(tmp_path / ".hermes")
+        home = str(tmp_path / ".relayhelm")
         monkeypatch.setenv("HERMES_HOME", home)
         self._write_moa_config(
             home,

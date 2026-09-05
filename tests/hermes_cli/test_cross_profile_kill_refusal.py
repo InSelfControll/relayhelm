@@ -59,7 +59,7 @@ def _pid_record(proc: subprocess.Popen, script: Path, owner_home: Path) -> dict:
 
     return {
         "pid": proc.pid,
-        "kind": "hermes-gateway",
+        "kind": "relayhelm-gateway",
         "argv": [str(script), "gateway", "run"],
         "start_time": get_process_start_time(proc.pid),
         "hermes_home": str(owner_home),

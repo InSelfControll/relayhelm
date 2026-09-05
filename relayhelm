@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+"""Relayhelm command-line launcher."""
+from hermes_cli.main import main
+
+if __name__ == "__main__":
+    main()

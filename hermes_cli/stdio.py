@@ -108,10 +108,10 @@ def _augment_path_with_known_tools() -> None:
     # dir hosts hermes.exe + pip console scripts; WinGet\Links is where ``winget install`` drops
     # CLI shims (ripgrep lands there as rg.exe).
     candidate_dirs = [
-        os.path.join(local_appdata, "hermes", "git", "cmd"),
-        os.path.join(local_appdata, "hermes", "git", "bin"),
-        os.path.join(local_appdata, "hermes", "git", "usr", "bin"),
-        os.path.join(local_appdata, "hermes", "hermes-agent", "venv", "Scripts"),
+        os.path.join(local_appdata, "relayhelm", "git", "cmd"),
+        os.path.join(local_appdata, "relayhelm", "git", "bin"),
+        os.path.join(local_appdata, "relayhelm", "git", "usr", "bin"),
+        os.path.join(local_appdata, "relayhelm", "relayhelm", "venv", "Scripts"),
         os.path.join(local_appdata, "Microsoft", "WinGet", "Links")]
     existing = os.environ.get("PATH", "")
     existing_lower = {p.lower() for p in existing.split(os.pathsep) if p}

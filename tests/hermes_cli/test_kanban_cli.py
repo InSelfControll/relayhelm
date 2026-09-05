@@ -17,7 +17,7 @@ from hermes_cli import kanban_db_connect as kbc
 
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".relayhelm"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
@@ -76,7 +76,7 @@ def test_board_override_is_isolated_per_concurrent_call(kanban_home, monkeypatch
     kb.create_board("alpha")
     kb.create_board("beta")
 
-    parser = argparse.ArgumentParser(prog="hermes", add_help=False)
+    parser = argparse.ArgumentParser(prog="relayhelm", add_help=False)
     sub = parser.add_subparsers(dest="command")
     kc.build_parser(sub)
 

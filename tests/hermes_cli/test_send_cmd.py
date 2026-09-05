@@ -24,7 +24,7 @@ def _parse(argv):
     """Build the top-level parser and return the parsed args for ``argv``."""
     import argparse
 
-    parser = argparse.ArgumentParser(prog="hermes")
+    parser = argparse.ArgumentParser(prog="relayhelm")
     subparsers = parser.add_subparsers(dest="command")
     send_cmd.register_send_subparser(subparsers)
     return parser.parse_args(["send", *argv])
@@ -205,13 +205,13 @@ def test_load_hermes_env_bridges_config_yaml_scalars(tmp_path, monkeypatch):
 
     This mirrors the gateway/run.py bootstrap behavior: without this, running
     ``hermes send`` from a fresh shell cannot resolve the home channel
-    because ``TELEGRAM_HOME_CHANNEL`` (saved by ``hermes config set``) lives
+    because ``TELEGRAM_HOME_CHANNEL`` (saved by ``relayhelm config set``) lives
     in config.yaml, not in .env — and the gateway's config loader reads via
     ``os.getenv(...)``.
     """
     import os
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     (hermes_home / ".env").write_text("SOME_TOKEN=abc123\n")
     (hermes_home / "config.yaml").write_text(
@@ -244,7 +244,7 @@ def test_load_hermes_env_utf8_bom_preserves_first_key(tmp_path, monkeypatch):
     """
     import os
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     (hermes_home / ".env").write_bytes(
         b"\xef\xbb\xbfSEND_BOM_BOT_TOKEN=tok-first\nSEND_BOM_SECOND=two\n"
@@ -268,7 +268,7 @@ def test_load_hermes_env_bomless_utf8_still_loads(tmp_path, monkeypatch):
     """BOM-less UTF-8 .env files must keep loading after the utf-8-sig switch."""
     import os
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     (hermes_home / ".env").write_bytes(b"SEND_PLAIN_TOKEN=plain-val\n")
 
@@ -289,7 +289,7 @@ def test_load_hermes_env_latin1_fallback_still_loads(tmp_path, monkeypatch):
     first key keeps its canonical name."""
     import os
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     # BOM + valid first key + latin-1 é (0xE9, invalid UTF-8 alone) in a
     # later value — forces the UnicodeDecodeError → latin-1 stream path.
@@ -316,7 +316,7 @@ def test_load_hermes_env_latin1_fallback_overrides_shell(tmp_path, monkeypatch):
     the .env value wins over a stale shell export, same as the primary path."""
     import os
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     # 0xE9 forces the UnicodeDecodeError \u2192 latin-1 stream fallback.
     (hermes_home / ".env").write_bytes(b"SEND_OVR_TOKEN=caf\xe9-file\n")
@@ -337,7 +337,7 @@ def test_load_hermes_env_fallback_read_error_is_swallowed(tmp_path, monkeypatch)
     path is best-effort by design and must never crash on a broken .env."""
     from pathlib import Path
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     # Invalid UTF-8 so the fallback (and its read_bytes call) is reached.
     (hermes_home / ".env").write_bytes(b"SEND_ERR_TOKEN=caf\xe9\n")
@@ -360,7 +360,7 @@ def test_load_hermes_env_bom_only_env_is_noop(tmp_path, monkeypatch):
     """A .env containing only a BOM must load zero vars without error."""
     import os
 
-    hermes_home = tmp_path / ".hermes"
+    hermes_home = tmp_path / ".relayhelm"
     hermes_home.mkdir()
     (hermes_home / ".env").write_bytes(b"\xef\xbb\xbf")
 

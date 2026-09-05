@@ -2,7 +2,7 @@
 
 Snapshots a working directory before file-mutating tool calls (once per directory per turn)
 and restores any previous checkpoint.  Not a model tool; controlled by the ``checkpoints``
-config / ``--checkpoints`` flag.  One store under ``~/.hermes/checkpoints/`` so git dedupes
+config / ``--checkpoints`` flag.  One store under ``~/.relayhelm/checkpoints/`` so git dedupes
 blobs across projects (pre-v2 one-repo-per-workdir re-stored ~40 MB each): ``store/`` bare
 repo with per-project ``refs/hermes/<hash16>``, ``indexes/<hash16>``, ``projects/<hash16>.json``
 (workdir, timestamps, parent identity), ``ledgers/<hash16>.json`` (agent-write ledger), shared
@@ -41,7 +41,7 @@ DEFAULT_EXCLUDES = [
     "__pycache__/", "*.pyc", "*.pyo", ".cache/", ".pytest_cache/", ".mypy_cache/",  # caches
     ".ruff_cache/", "coverage/", ".coverage",
     ".venv/", "venv/", "env/",  # virtualenvs
-    ".git/", ".hg/", ".svn/", ".worktrees/",  # VCS + worktrees (Hermes convention — don't snapshot siblings)
+    ".git/", ".hg/", ".svn/", ".worktrees/",  # VCS + worktrees (Relayhelm convention — don't snapshot siblings)
     "*.so", "*.dylib", "*.dll", "*.o", "*.a", "*.jar", "*.class", "*.exe", "*.obj",  # compiled binaries
     "*.mp4", "*.mov", "*.mkv", "*.webm", "*.zip", "*.tar", "*.tar.gz", "*.tgz",  # media / large binaries
     "*.7z", "*.rar", "*.iso",
@@ -56,7 +56,7 @@ _MB = 1024 * 1024
 # Inherited GIT_* vars that would redirect the shadow store's git calls.
 _GIT_LEAK_VARS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_NAMESPACE", "GIT_ALTERNATE_OBJECT_DIRECTORIES")
 # Per-store config: isolated by env vars already, but belt-and-suspenders.
-_STORE_GIT_CONFIG = (("user.email", "hermes@local"), ("user.name", "Hermes Checkpoint"),
+_STORE_GIT_CONFIG = (("user.email", "hermes@local"), ("user.name", "Relayhelm Checkpoint"),
                      ("commit.gpgsign", "false"), ("tag.gpgSign", "false"), ("gc.auto", "0"))
 _PROJECT_MARKERS = {".git", "pyproject.toml", "package.json", "Cargo.toml", "go.mod", "Makefile", "pom.xml", ".hg", "Gemfile"}
 
@@ -161,7 +161,7 @@ def _hash_file(path: Path) -> Optional[str]:
 
 def _load_ledger(store: Path, dir_hash: str) -> Dict[str, Dict]:
     """Agent-write ledger ``{abs_path: {"sha256", "ts"}}``: hash of every file the last
-    ``write_file``/``patch`` produced, so restores can tell Hermes' writes from later user edits."""
+    ``write_file``/``patch`` produced, so restores can tell Relayhelm' writes from later user edits."""
     return _read_json_dict(_ledger_path(store, dir_hash)) or {}
 
 
@@ -574,7 +574,7 @@ class CheckpointManager:
     # --- public API ---
 
     def record_agent_write(self, file_path: str) -> None:
-        """Record the content hash of a file Hermes just wrote (agent-write ledger), so safe-mode
+        """Record the content hash of a file Relayhelm just wrote (agent-write ledger), so safe-mode
         :meth:`restore` can skip files the user hand-edited afterwards.  Never raises."""
         if not self.enabled:
             return
@@ -589,9 +589,9 @@ class CheckpointManager:
             logger.debug("record_agent_write failed for %s: %s", file_path, exc)
 
     def safe_restore_plan(self, working_dir: str, commit_hash: str) -> Dict:
-        """Classify files changed since ``commit_hash``: ``restore`` = still matching what Hermes
+        """Classify files changed since ``commit_hash``: ``restore`` = still matching what Relayhelm
         last wrote (or deleted since); ``skipped`` = user-edited afterwards or never written by
-        Hermes.  ``ledger_empty`` => no ledger, callers fall back to a full restore."""
+        Relayhelm.  ``ledger_empty`` => no ledger, callers fall back to a full restore."""
         p, err = _locate(working_dir, commit_hash)
         if err:
             return err
@@ -708,7 +708,7 @@ class CheckpointManager:
     def restore(self, working_dir: str, commit_hash: str, file_path: str = None,
                 safe: bool = False) -> Dict:
         """Restore files to a checkpoint state.  ``safe=True`` (full-directory only) leaves files
-        the user hand-edited after Hermes' last write untouched (agent-write ledger); the result
+        the user hand-edited after Relayhelm' last write untouched (agent-write ledger); the result
         then gains ``skipped_user_edits``, ``skipped_oversize`` (size cap kept them out of every
         checkpoint) and, only when a delete failed, ``failed_deletes``."""
         p, err = _locate(working_dir, commit_hash, file_path)

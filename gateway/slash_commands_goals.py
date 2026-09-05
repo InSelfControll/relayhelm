@@ -136,7 +136,7 @@ class GatewayGoalCommandsMixin:
         if gate_lower.startswith("add "):
             # SECURITY: a gate is persisted and later executed with shell=True at every goal turn
             # boundary (run_gate), with no approval prompt. Letting an allowed but non-admin sender
-            # choose that string is authenticated RCE under the Hermes process account — and with
+            # choose that string is authenticated RCE under the Relayhelm process account — and with
             # no admin list configured (the default) every allowed sender is unrestricted. Gate ONLY
             # this shell-creating operation behind a real, explicitly-configured admin (the same
             # fail-closed check that guards cross-origin /resume); list/remove/clear stay open so
@@ -266,7 +266,7 @@ class GatewayGoalCommandsMixin:
         return (
             f"♥ Heartbeat set (every {format_interval(state.interval_seconds)}): {state.prompt}\n"
             "Fires as a normal turn whenever this session is idle and the interval has "
-            "elapsed. Lives while the gateway runs — use `hermes cron` for durable schedules."
+            "elapsed. Lives while the gateway runs — use `relayhelm cron` for durable schedules."
         )
 
     def _idle_cached_agent_or_error(self, event: MessageEvent, verb: str):

@@ -1,4 +1,4 @@
-"""SQLite-backed fact store with entity resolution and trust scoring (single-user Hermes memory plugin)."""
+"""SQLite-backed fact store with entity resolution and trust scoring (single-user Relayhelm memory plugin)."""
 
 import os
 import re

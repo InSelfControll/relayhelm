@@ -1,8 +1,8 @@
 ---
 name: inspecting-hermes-desktop-dom
-description: "Read the live Hermes desktop DOM/CSS over CDP."
+description: "Read the live Relayhelm desktop DOM/CSS over CDP."
 version: 1.0.0
-author: Hermes Agent
+author: Relayhelm
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
@@ -11,7 +11,7 @@ metadata:
     related_skills: [node-inspect-debugger, systematic-debugging, dogfood]
 ---
 
-# Inspecting the live Hermes desktop DOM
+# Inspecting the live Relayhelm desktop DOM
 
 ## Overview
 

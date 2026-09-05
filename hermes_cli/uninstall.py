@@ -1,4 +1,4 @@
-"""Hermes Agent Uninstaller."""
+"""Relayhelm Uninstaller."""
 
 import os
 import shutil
@@ -71,18 +71,18 @@ _SHELL_RC_NAMES = (".bashrc", ".bash_profile", ".profile", ".zshrc", ".zprofile"
 
 
 def _strip_hermes_path_lines(content: str) -> str:
-    """Drop the ``# Hermes Agent`` marker (+ its PATH line) and any hermes PATH line; squash blank runs."""
+    """Drop the ``# Relayhelm`` marker (+ its PATH line) and any hermes PATH line; squash blank runs."""
     new_lines = []
     skip_next = False
     for line in content.split('\n'):
-        if '# Hermes Agent' in line or '# hermes-agent' in line:
+        if '# Relayhelm' in line or '# relayhelm' in line:
             skip_next = True
             continue
-        if skip_next and ('hermes' in line.lower() and 'PATH' in line):
+        if skip_next and ('relayhelm' in line.lower() and 'PATH' in line):
             skip_next = False
             continue
         skip_next = False
-        if 'hermes' in line.lower() and ('PATH=' in line or 'path=' in line.lower()):
+        if 'relayhelm' in line.lower() and ('PATH=' in line or 'path=' in line.lower()):
             continue
         new_lines.append(line)
     new_content = '\n'.join(new_lines)
@@ -92,7 +92,7 @@ def _strip_hermes_path_lines(content: str) -> str:
 
 
 def remove_path_from_shell_configs():
-    """Remove Hermes PATH entries from shell configuration files."""
+    """Remove Relayhelm PATH entries from shell configuration files."""
     removed_from = []
     for config_path in (c for c in (Path.home() / n for n in _SHELL_RC_NAMES) if c.exists()):
         try:
@@ -113,14 +113,14 @@ def remove_path_from_shell_configs():
 def remove_wrapper_script():
     """Remove the hermes wrapper script if it exists."""
     def _unlink_ours(wrapper: Path) -> bool:
-        # Only our wrapper (contains a hermes_cli / hermes-agent reference).
+        # Only our wrapper (contains a hermes_cli / relayhelm reference).
         content = wrapper.read_text(encoding="utf-8")
-        return _unlink_if('hermes_cli' in content or 'hermes-agent' in content, wrapper)
+        return _unlink_if('hermes_cli' in content or 'relayhelm' in content, wrapper)
 
     candidates = (
         bin_dir / name
         for bin_dir in (Path.home() / ".local" / "bin", Path("/usr/local/bin"))
-        for name in ("hermes", "hermes-acp", "hermes-agent"))
+        for name in ("relayhelm", "relayhelm-acp", "relayhelm-agent"))
     return _remove_each((w for w in candidates if w.exists()), _unlink_ours)
 
 
@@ -264,7 +264,7 @@ def _hermes_path_markers(hermes_home: Path, *, include_managed_bin: bool = False
     node...). ``include_managed_bin`` adds ``<root>\bin`` (launchers + managed uv) — only when that
     dir is about to be deleted, so a keep-data uninstall keeps the working uv resolvable."""
     root = str(hermes_home).rstrip("\\/")
-    subs = ("hermes-agent", "git", "node", "venv") + (("bin",) if include_managed_bin else ())
+    subs = ("relayhelm", "git", "node", "venv") + (("bin",) if include_managed_bin else ())
     return [f"{root}\\{sub}" for sub in subs]
 
 
@@ -385,7 +385,7 @@ def _discover_named_profiles():
 
 def _uninstall_profile(profile) -> None:
     """Fully uninstall a named profile: stop its gateway, remove its alias, wipe its home. Shells
-    out to ``hermes -p <name> gateway stop|uninstall`` because service names / unit paths derive
+    out to ``relayhelm -p <name> gateway stop|uninstall`` because service names / unit paths derive
     from the current HERMES_HOME and can't be switched in-process."""
     name = profile.name
     log_info(f"Uninstalling profile '{name}'...")
@@ -423,15 +423,15 @@ def run_gui_uninstall(args):
     skip_confirm = bool(getattr(args, "yes", False))
 
     print()
-    _print_box("│         ⚕ Hermes Chat GUI Uninstaller                  │", Colors.MAGENTA)
+    _print_box("│         ⚕ Relayhelm Chat GUI Uninstaller                  │", Colors.MAGENTA)
     print()
 
     if not summary["gui_installed"]:
-        print("No Hermes Chat GUI installation was found.")
+        print("No Relayhelm Chat GUI installation was found.")
         print(f"  Checked: {hermes_home}, and the standard app locations for this OS.")
         return
 
-    print(color("This removes the Chat GUI only. The Hermes agent stays installed.", Colors.CYAN))
+    print(color("This removes the Chat GUI only. The Relayhelm agent stays installed.", Colors.CYAN))
     print()
     print(color("Will remove:", Colors.YELLOW, Colors.BOLD))
     for p in (*summary["source_built_artifacts"], *summary["packaged_app_paths"]):
@@ -441,7 +441,7 @@ def run_gui_uninstall(args):
     print()
     if agent_is_installed(hermes_home):
         print(color("Kept intact:", Colors.GREEN, Colors.BOLD))
-        print(f"  • The Hermes agent at {hermes_home / 'hermes-agent'}")
+        print(f"  • The Relayhelm agent at {hermes_home / 'relayhelm'}")
         print(f"  • Your config, sessions, and secrets under {hermes_home}")
         print()
 
@@ -456,13 +456,13 @@ def run_gui_uninstall(args):
     print()
     _print_box("│            ✓ Chat GUI Uninstalled!                      │", Colors.GREEN)
     print()
-    print("The Hermes agent is still installed. Run 'hermes' to use the CLI,")
+    print("The Relayhelm agent is still installed. Run 'relayhelm' to use the CLI,")
     print("or 'hermes uninstall' to remove the agent too.")
     print()
 
 
 def run_uninstall(args):
-    """Interactive/``--yes`` uninstall: full removes code and ``~/.hermes/``; keep-data removes only
+    """Interactive/``--yes`` uninstall: full removes code and ``~/.relayhelm/``; keep-data removes only
     the code so configs, data and logs survive a reinstall."""
     project_root = get_project_root()
     hermes_home = get_hermes_home()
@@ -487,7 +487,7 @@ def run_uninstall(args):
         return
 
     print()
-    _print_box("│            ⚕ Hermes Agent Uninstaller                  │", Colors.MAGENTA)
+    _print_box("│            ⚕ Relayhelm Uninstaller                  │", Colors.MAGENTA)
     print()
 
     # Show what will be affected
@@ -544,12 +544,12 @@ def run_uninstall(args):
     # Final confirmation
     print()
     if full_uninstall:
-        print(color("⚠️  WARNING: This will permanently delete ALL Hermes data!", Colors.RED, Colors.BOLD))
+        print(color("⚠️  WARNING: This will permanently delete ALL Relayhelm data!", Colors.RED, Colors.BOLD))
         print(color("   Including: configs, API keys, sessions, scheduled jobs, logs", Colors.RED))
         if remove_profiles:
             print(color(f"   Plus {n_profiles} profile(s): {profile_names}", Colors.RED))
     else:
-        print("This will remove the Hermes code but keep your configuration and data.")
+        print("This will remove the Relayhelm code but keep your configuration and data.")
 
     print()
     if not _confirm_yes("to confirm"):
@@ -567,14 +567,14 @@ def _print_uninstall_dry_run(*, project_root: Path, hermes_home: Path, full_unin
     print()
     print(color("Would inspect/remove:", Colors.YELLOW, Colors.BOLD))
     print("  • Gateway services and standalone gateway processes")
-    print("  • Hermes PATH entries from shell configs / Windows User PATH")
-    print("  • Hermes wrapper scripts and Hermes-managed node/npm/npx symlinks")
+    print("  • Relayhelm PATH entries from shell configs / Windows User PATH")
+    print("  • Relayhelm wrapper scripts and Hermes-managed node/npm/npx symlinks")
     print("  • Desktop Chat GUI artifacts")
     print(f"  • Code checkout: {project_root}")
     if not full_uninstall:
-        print(f"  • Keep Hermes config/data: {hermes_home}")
+        print(f"  • Keep Relayhelm config/data: {hermes_home}")
     else:
-        print(f"  • Hermes config/data: {hermes_home}")
+        print(f"  • Relayhelm config/data: {hermes_home}")
         profiles = _discover_named_profiles() if _is_default_hermes_home(hermes_home) else []
         if profiles:
             print("  • Named profiles (interactive uninstall asks before removing):")
@@ -669,7 +669,7 @@ def _perform_uninstall(
             lambda: remove_portable_tooling_windows(hermes_home), "Removed {}",
             "No Windows installer artifacts to remove")
 
-    # 5. Optionally remove ~/.hermes/ data directory (and named profiles)
+    # 5. Optionally remove ~/.relayhelm/ data directory (and named profiles)
     if full_uninstall:
         # 5a. Named profiles' homes live under <default>/profiles/ (swept by the rmtree below),
         #     but their services + alias scripts live OUTSIDE the default root.
@@ -695,13 +695,13 @@ def _perform_uninstall(
     for line, col in _RELOAD_HINT[windows]:
         print(color(line, col) if col else line)
     print()
-    print("Thank you for using Hermes Agent! ⚕")
+    print("Thank you for using Relayhelm! ⚕")
     print()
 
 
 _REINSTALL_HINT = {
-    True: "  iex (irm https://hermes-agent.nousresearch.com/install.ps1)",
-    False: "  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"}
+    True: "  iex (irm https://raw.githubusercontent.com/InSelfControll/relayhelm/main/scripts/install.ps1)",
+    False: "  curl -fsSL https://raw.githubusercontent.com/InSelfControll/relayhelm/main/scripts/install.sh | bash"}
 # windows -> [(line, color or None)]
 _RELOAD_HINT = {
     True: [("Open a new terminal (PowerShell / Windows Terminal) to pick up", Colors.YELLOW),

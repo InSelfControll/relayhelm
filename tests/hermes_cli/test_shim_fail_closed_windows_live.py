@@ -51,7 +51,7 @@ def held_shim(tmp_path: Path):
     scripts.mkdir(parents=True)
     shim = scripts / "hermes.exe"
     shim.write_bytes(b"MZ fake shim")
-    (scripts / "hermes-gateway.exe").write_bytes(b"MZ fake shim")
+    (scripts / "relayhelm-gateway.exe").write_bytes(b"MZ fake shim")
     holder = subprocess.Popen(
         [sys.executable, "-c", _HOLDER_CODE, str(shim)],
         stdout=subprocess.PIPE,
@@ -100,7 +100,7 @@ def test_strict_quarantine_refuses_against_real_lock(held_shim, monkeypatch):
     assert install_ran == [], "installer ran against a contended venv"
     assert "hermes.exe" in exc_info.value.failed_shims
     # The unlocked sibling's rename was rolled back — venv untouched.
-    assert (scripts / "hermes-gateway.exe").exists()
+    assert (scripts / "relayhelm-gateway.exe").exists()
     assert not list(scripts.glob("*.old.*"))
 
 

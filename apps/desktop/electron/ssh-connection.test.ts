@@ -28,7 +28,7 @@ import {
 } from './ssh-connection'
 
 test('redactSecrets scrubs the spawn-time session token env var', () => {
-  const line = 'setsid env HERMES_DASHBOARD_SESSION_TOKEN=abc123deadbeef HERMES_DESKTOP=1 hermes dashboard'
+  const line = 'setsid env HERMES_DASHBOARD_SESSION_TOKEN=abc123deadbeef HERMES_DESKTOP=1 relayhelm dashboard'
   const out = redactSecrets(line)
   assert.ok(!out.includes('abc123deadbeef'))
   assert.match(out, /HERMES_DASHBOARD_SESSION_TOKEN=<redacted>/)

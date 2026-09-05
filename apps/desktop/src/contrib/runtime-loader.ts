@@ -37,7 +37,7 @@ import { $pluginRecords, dropPlugin, pluginActive, type PluginKind, publishPlugi
 interface LoadOptions {
   /** Root-level default-enable CAP: `false` ships the plugin opt-in (inventory
    *  row, off until the user toggles) even if the plugin says otherwise. The
-   *  unified agent-plugin root sets this so `~/.hermes/plugins` keeps its
+   *  unified agent-plugin root sets this so `~/.relayhelm/plugins` keeps its
    *  installed-but-inert posture (GHSA-mcfc-hp25-cjv7) on the desktop side too. */
   defaultEnabled?: boolean
   /** Absolute plugin.js path (disk plugins) — recorded for reveal/inventory. */
@@ -259,7 +259,7 @@ async function diskRoots(): Promise<DiskRoot[]> {
   const unified = await desktop.agentPluginsRoot?.()
 
   if (unified) {
-    // Opt-in by default: `~/.hermes/plugins` is installed-but-inert until the
+    // Opt-in by default: `~/.relayhelm/plugins` is installed-but-inert until the
     // user allowlists the Python half (plugins.enabled), so the desktop half
     // matches that posture — inventoried in Settings → Plugins, off until
     // toggled. The standalone desktop-plugins door keeps its default-on trust.
@@ -318,7 +318,7 @@ async function readPluginSourceText(file: string): Promise<string> {
 
   if (result.truncated) {
     throw new PluginSourceOversizeError(
-      "plugin.js exceeds this shell's 512 KiB read limit — update Hermes Desktop to load larger plugins"
+      "plugin.js exceeds this shell's 512 KiB read limit — update Relayhelm Desktop to load larger plugins"
     )
   }
 

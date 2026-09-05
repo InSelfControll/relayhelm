@@ -35,7 +35,7 @@ def _layer_hex(palette: Dict[str, Any], key: str, default: str) -> str:
 
 def _render_active_theme_bootstrap_css() -> str:
     """Critical-CSS ``<style>`` shim for the active *user* theme, so the first paint uses the
-    target palette instead of flashing the bundle's default Hermes Teal until
+    target palette instead of flashing the bundle's default Relayhelm Teal until
     ``ThemeProvider.applyTheme()`` runs. Built-in themes return "" (the bundle owns them).
 
     Variable names MUST match what the bundle consumes (``layerVars()`` /
@@ -85,8 +85,8 @@ def _render_active_theme_bootstrap_css() -> str:
 _IMMUTABLE_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable"
 _NO_STORE = {"Cache-Control": "no-store, no-cache, must-revalidate"}
 _HEADLESS_MSG = (
-    "Headless backend (hermes serve): web UI disabled — use "
-    "`hermes dashboard` for the browser UI."
+    "Headless backend (relayhelm serve): web UI disabled — use "
+    "`relayhelm dashboard` for the browser UI."
 )
 
 
@@ -104,7 +104,7 @@ def mount_spa(application: FastAPI):
     """
     from hermes_cli.web_server import WEB_DIST, _DASHBOARD_EMBEDDED_CHAT_ENABLED, _SESSION_TOKEN, app
 
-    # `hermes serve` is the headless backend: it must NEVER serve the browser SPA, even if a
+    # `relayhelm serve` is the headless backend: it must NEVER serve the browser SPA, even if a
     # dist is lying around, so only the JSON-RPC/WS/API surface is reachable.
     if os.environ.get("HERMES_SERVE_HEADLESS") == "1":
 
@@ -112,7 +112,7 @@ def mount_spa(application: FastAPI):
         async def no_frontend(full_path: str):
             # Desktop token handshake: the Electron shell boots by fetching `/` and reading
             # ``window.__HERMES_SESSION_TOKEN__`` for /api/ws auth. When headless 404'd every
-            # path, a renderer whose spawn token no longer matched (e.g. after `hermes update`)
+            # path, a renderer whose spawn token no longer matched (e.g. after `relayhelm update`)
             # white-screened. Serve a token-only page at the exact root, but ONLY when the auth
             # gate is off: on a gated serve the token must never be readable without auth.
             # See #94227, #95575.
@@ -227,8 +227,8 @@ def mount_spa(application: FastAPI):
 
 # Built-in themes — label + description only; colors live in web/src/themes/presets.ts.
 _BUILTIN_DASHBOARD_THEMES = [
-    {"name": "default",       "label": "Hermes Teal",         "description": "Classic dark teal — the canonical Hermes look"},
-    {"name": "default-large", "label": "Hermes Teal (Large)", "description": "Hermes Teal with bigger fonts and roomier spacing"},
+    {"name": "default",       "label": "Relayhelm Teal",         "description": "Classic dark teal — the canonical Relayhelm look"},
+    {"name": "default-large", "label": "Relayhelm Teal (Large)", "description": "Relayhelm Teal with bigger fonts and roomier spacing"},
     {"name": "nous-blue",     "label": "Nous Blue",           "description": "Light mode — vivid Nous-blue accents on cream canvas"},
     {"name": "midnight",      "label": "Midnight",            "description": "Deep blue-violet with cool accents"},
     {"name": "ember",     "label": "Ember",          "description": "Warm crimson and bronze — forge vibes"},
@@ -307,7 +307,7 @@ def _normalise_theme_definition(data: Dict[str, Any]) -> Optional[Dict[str, Any]
     unusable. Accepts the full schema and a loose form (top-level ``colors``, bare hex).
 
     customCSS is clipped but intentionally NOT sanitised — themes are user-authored YAML in
-    ~/.hermes/, the same trust level as config.yaml. Empty asset values are dropped so a
+    ~/.relayhelm/, the same trust level as config.yaml. Empty asset values are dropped so a
     theme can explicitly clear a slot.
     """
     if not isinstance(data, dict):
@@ -469,7 +469,7 @@ def _dashboard_plugin_search_dirs() -> List[tuple]:
     # context-local HERMES_HOME override (e.g. embedded /chat under --open-profile). #87197: when the
     # process itself is profile-scoped (``--profile <name>`` sets ``HERMES_HOME=<root>/profiles/<name>``),
     # the launch home is the profile directory, which has no ``plugins/`` — user plugins are installed in
-    # the hermes root (``~/.hermes/plugins``). Scan the default root as well (``get_default_hermes_root()``
+    # the hermes root (``~/.relayhelm/plugins``). Scan the default root as well (``get_default_hermes_root()``
     # unwraps ``<root>/profiles/<name>`` → ``<root>`` and returns a custom ``HERMES_HOME`` unchanged when it
     # *is* the root), mirroring how ``hermes_cli.plugins`` resolves plugin install locations. The
     # ``seen_names`` dedupe below keeps profile-local plugins (if any) authoritative over same-named root
@@ -488,7 +488,7 @@ def _dashboard_plugin_search_dirs() -> List[tuple]:
     # ``true`` / ``yes`` / ``on``) so the gate matches ``hermes_cli/plugins.py`` and the documented user
     # contract.
     if env_var_enabled("HERMES_ENABLE_PROJECT_PLUGINS"):
-        search_dirs.append((Path.cwd() / ".hermes" / "plugins", "project"))
+        search_dirs.append((Path.cwd() / ".relayhelm" / "plugins", "project"))
     return search_dirs
 
 
@@ -627,7 +627,7 @@ def _plugin_auth_hint(name: str, provides_tools: list) -> tuple:
             if cached_result is None:
                 _schedule_check_fn_probe(entry.check_fn)
             elif cached_result is False:
-                return True, f"hermes auth {name}"
+                return True, f"relayhelm auth {name}"
     except Exception:
         pass
     return False, ""
@@ -743,7 +743,7 @@ def _plugin_api_mount_skip_reason(plugin: Dict[str, Any], enabled_set: set, disa
 
     User plugins must be in ``plugins.enabled`` and not ``plugins.disabled`` before their
     Python runs (GHSA-mcfc-hp25-cjv7); bundled plugins are trusted but respect an explicit
-    disable; project plugins (``./.hermes/plugins/``) ship with the CWD and are
+    disable; project plugins (``./.relayhelm/plugins/``) ship with the CWD and are
     attacker-controlled when opening a malicious repo — never auto-imported (GHSA-5qr3-c538-wm9j).
     """
     source, plugin_name = plugin.get("source"), plugin.get("name", "")
@@ -761,7 +761,7 @@ def _mount_plugin_api_routes():
     ``/api/plugins/<name>/``. See ``_plugin_api_mount_skip_reason`` for the trust gates.
 
     Backend import is restricted to ``bundled`` and ``user`` sources. Project plugins
-    (``./.hermes/plugins/``) ship with the CWD and are therefore attacker-controlled in any threat model
+    (``./.relayhelm/plugins/``) ship with the CWD and are therefore attacker-controlled in any threat model
     where the user opens a malicious repo; they can extend the dashboard UI via static JS/CSS but their
     Python ``api`` file is never auto-imported by the web server. See GHSA-5qr3-c538-wm9j (#29156).
     Additionally, user plugins must be explicitly enabled via the ``plugins.enabled`` allow-list in
@@ -790,7 +790,7 @@ def _mount_plugin_api_routes():
             _log.warning(
                 "Plugin %s: ignoring backend api=%s (project plugins may "
                 "not auto-import Python code; move the plugin to "
-                "~/.hermes/plugins/ if you trust it)",
+                "~/.relayhelm/plugins/ if you trust it)",
                 plugin["name"], api_file_name,
             )
             continue

@@ -1,4 +1,4 @@
-"""`hermes memory setup` wizard for the Hindsight provider (``post_setup``)."""
+"""`relayhelm memory setup` wizard for the Hindsight provider (``post_setup``)."""
 
 from __future__ import annotations
 
